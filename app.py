@@ -8,6 +8,10 @@ import streamlit.components.v1 as components
 # 페이지 설정
 st.set_page_config(page_title="VR 시뮬레이터 V1.0", layout="wide")
 
+# 세션 상태 초기화
+if "simulation_results" not in st.session_state:
+    st.session_state.simulation_results = None
+
 # =============================================================================
 # 공통 함수 정의
 # =============================================================================
@@ -271,57 +275,67 @@ if st.sidebar.button("시뮬레이션 실행"):
     with st.spinner("시뮬레이션 실행 중..."):
         history, transaction_history = simulate_cycles(history, G, buy_ratio, deposit, cycles, manual_prices)
         df_result = pd.DataFrame(history)
-        st.success("시뮬레이션이 완료되었습니다!")
-        
-        st.subheader("1. 시뮬레이션 결과")
-        st.dataframe(df_result)
-        
-        st.subheader("2. 매수표 / 매도표 확인")
-        # For each cycle, display the Buy Table ("매수표") and Sell Table ("매도표")
-        for trans in transaction_history:
-            cycle = trans['Cycle']
-            with st.expander(f"Cycle {cycle} 매수표 / 매도표 확인"):
-                st.markdown("**매수표:**")
-                if trans['Buy Table']:
-                    df_buy = pd.DataFrame(trans['Buy Table'])
-                    st.dataframe(df_buy)
-                    csv_buy = df_buy.to_csv(index=False).encode('utf-8')
-                    st.download_button(label=f"Cycle {cycle} 매수표 다운로드", data=csv_buy,
-                                       file_name=f"cycle_{cycle}_buy_table.csv", mime="text/csv", key=f"download_buy_{cycle}")
-                else:
-                    st.write("매수표 없음")
-                st.markdown("**매도표:**")
-                if trans['Sell Table']:
-                    df_sell = pd.DataFrame(trans['Sell Table'])
-                    st.dataframe(df_sell)
-                    csv_sell = df_sell.to_csv(index=False).encode('utf-8')
-                    st.download_button(label=f"Cycle {cycle} 매도표 다운로드", data=csv_sell,
-                                       file_name=f"cycle_{cycle}_sell_table.csv", mime="text/csv", key=f"download_sell_{cycle}")
-                else:
-                    st.write("매도표 없음")
-        
-        st.subheader("3. 그래프 결과")
         fig = plot_results(history)
-        st.pyplot(fig)
-        
-        # CSV 파일 다운로드 (전체 기록)
-        csv_buffer = io.StringIO()
-        df_result.to_csv(csv_buffer, index=False)
-        csv_data = csv_buffer.getvalue().encode('utf-8')
-        st.download_button(
-            label="전체 결과 CSV 다운로드",
-            data=csv_data,
-            file_name="cycle_history.csv",
-            mime="text/csv"
-        )
-        
-        # PNG 파일 다운로드 (그래프)
-        png_buffer = io.BytesIO()
-        fig.savefig(png_buffer, format="png", dpi=600, bbox_inches="tight")
-        png_buffer.seek(0)
-        st.download_button(
-            label="그래프 PNG 다운로드",
-            data=png_buffer,
-            file_name="cycle_graph.png",
-            mime="image/png"
-        )
+        st.session_state.simulation_results = {
+            "history": history,
+            "transaction_history": transaction_history,
+            "df_result": df_result,
+            "fig": fig
+        }
+        st.success("시뮬레이션이 완료되었습니다!")
+
+# 만약 이전에 실행된 시뮬레이션 결과가 있다면 그대로 사용
+if st.session_state.simulation_results is not None:
+    simulation = st.session_state.simulation_results
+    df_result = simulation["df_result"]
+    fig = simulation["fig"]
+    transaction_history = simulation["transaction_history"]
+
+    st.subheader("1. 시뮬레이션 결과")
+    st.dataframe(df_result)
+
+    st.subheader("2. 매수표 / 매도표 확인")
+    for trans in transaction_history:
+        cycle = trans['Cycle']
+        with st.expander(f"Cycle {cycle} 매수표 / 매도표 확인"):
+            st.markdown("**매수표:**")
+            if trans['Buy Table']:
+                df_buy = pd.DataFrame(trans['Buy Table'])
+                st.dataframe(df_buy)
+                csv_buy = df_buy.to_csv(index=False).encode('utf-8')
+                st.download_button(label=f"Cycle {cycle} 매수표 다운로드", data=csv_buy,
+                                   file_name=f"cycle_{cycle}_buy_table.csv", mime="text/csv", key=f"download_buy_{cycle}")
+            else:
+                st.write("매수표 없음")
+            st.markdown("**매도표:**")
+            if trans['Sell Table']:
+                df_sell = pd.DataFrame(trans['Sell Table'])
+                st.dataframe(df_sell)
+                csv_sell = df_sell.to_csv(index=False).encode('utf-8')
+                st.download_button(label=f"Cycle {cycle} 매도표 다운로드", data=csv_sell,
+                                   file_name=f"cycle_{cycle}_sell_table.csv", mime="text/csv", key=f"download_sell_{cycle}")
+            else:
+                st.write("매도표 없음")
+
+    st.subheader("3. 그래프 결과")
+    st.pyplot(fig)
+    
+    csv_buffer = io.StringIO()
+    df_result.to_csv(csv_buffer, index=False)
+    csv_data = csv_buffer.getvalue().encode('utf-8')
+    st.download_button(
+        label="전체 결과 CSV 다운로드",
+        data=csv_data,
+        file_name="cycle_history.csv",
+        mime="text/csv"
+    )
+    
+    png_buffer = io.BytesIO()
+    fig.savefig(png_buffer, format="png", dpi=600, bbox_inches="tight")
+    png_buffer.seek(0)
+    st.download_button(
+        label="그래프 PNG 다운로드",
+        data=png_buffer,
+        file_name="cycle_graph.png",
+        mime="image/png"
+    )
