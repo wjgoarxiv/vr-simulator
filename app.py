@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import math
 import io
+import streamlit.components.v1 as components
 
 # 페이지 설정
 st.set_page_config(page_title="VR 시뮬레이터 V1.0", layout="wide")
@@ -168,6 +169,14 @@ def plot_results(history):
 # =============================================================================
 st.title("VR 시뮬레이터 V1.0")
 st.markdown("| Written by **[Woojin Go](https://woojingo.notion.site/)**")
+components.html(
+    """
+    <a href="https://www.buymeacoffee.com/woojingo" target="_blank">
+        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-red.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 145px !important;">
+    </a>
+    """,
+    height=80,
+)
 st.markdown("""
 #### **Value Rebalancing (VR) 공식 (변형 공식):**
 
