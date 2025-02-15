@@ -17,5 +17,5 @@ LINK: https://vr-simulator.streamlit.app/
 
 ## 실행 방법
 
-1. [이 곳]()을 입력하여 웹 앱에 접속합니다. 
+1. [이 곳](https://vr-simulator.streamlit.app/)을 입력하여 웹 앱에 접속합니다. 
 2. 구현된 기능들을 실행해봅니다.
