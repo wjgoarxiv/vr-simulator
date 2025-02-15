@@ -8,17 +8,21 @@ import streamlit.components.v1 as components
 # 페이지 설정
 st.set_page_config(page_title="VR 시뮬레이터 V1.0", layout="wide")
 
-# 세션 상태 초기화
+# 세션 상태 초기화 (시뮬레이션 결과 보존)
 if "simulation_results" not in st.session_state:
     st.session_state.simulation_results = None
 
+# =============================================================================
+# 공통 함수 정의
+# =============================================================================
 def calculate_transactions(LBand, HBand, current_shares, pool, buy_ratio):
+    """
+    매수표와 매도표를 계산합니다.
+    """
     buy_table = []
     allocated_cash = pool * buy_ratio
     remaining_cash = allocated_cash
     temp_shares = current_shares
-    
-    # 매수 테이블 계산
     while remaining_cash > 0:
         temp_shares += 1
         buy_price = LBand / temp_shares
@@ -30,8 +34,6 @@ def calculate_transactions(LBand, HBand, current_shares, pool, buy_ratio):
             'Buy Price ($)': round(buy_price, 2),
             'Remaining Pool ($)': round(pool - (allocated_cash - remaining_cash), 2)
         })
-    
-    # 매도 테이블 계산
     sell_table = []
     temp_sell_shares = current_shares
     while temp_sell_shares > 1:
@@ -47,70 +49,76 @@ def calculate_transactions(LBand, HBand, current_shares, pool, buy_ratio):
 def run_cycle(prev, G, buy_ratio, deposit, manual_price_for_cycle):
     """
     한 사이클을 실행합니다.
-      1) 임시로 new_V_temp = V_i + (pool_prev / G) 계산 -> 매수/매도 테이블 생성
-      2) 매수/매도 실행 후 E, final_V, final_pool 계산
-      3) LBand, HBand는 최종 final_V로부터 0.85/1.15 배로 계산
+    - 첫 사이클 (prev['Cycle'] == 0): 초기 상태 그대로 사용하여
+      LBand = 0.85*V, HBand = 1.15*V (매수/매도표는 계산만 하고, 실제 거래는 없다고 가정)
+    - 이후 사이클: 확장공식을 적용하여 V를 업데이트하고, LBand/HBand는 최종 V 기준으로 계산
     """
-    # 이전 사이클 정보
-    V_i = prev['Target Value (V)']
-    pool_prev = prev['Pool Balance ($)']
-    current_shares = prev['Shares Held']
-    
-    # (1) 임시 V 계산 -> 매수/매도 테이블 계산용
-    new_V_temp = V_i + (pool_prev / G)
-    buy_table, sell_table = calculate_transactions(
-        LBand=0.85 * new_V_temp,
-        HBand=1.15 * new_V_temp,
-        current_shares=current_shares,
-        pool=pool_prev,
-        buy_ratio=buy_ratio
-    )
-    
-    # (2) 실제 시장 종가 적용
-    price = manual_price_for_cycle
-    shares = current_shares
-    pool_after_transactions = pool_prev
-    
-    # 매수 주문 실행
-    for bt in buy_table:
-        if price <= bt['Buy Price ($)']:
-            shares = bt['Target Shares After Buy']
-            pool_after_transactions = bt['Remaining Pool ($)'] + (pool_prev * (1 - buy_ratio))
-        else:
-            break
-    
-    # 매도 주문 실행
-    for st_table in sell_table:
-        if price >= st_table['Sell Price ($)']:
-            shares = st_table['Target Shares After Sell']
-            pool_after_transactions = st_table['Accumulated Pool ($)']
-        else:
-            break
-    
-    # 최종 평가금 E
-    E = shares * price
-    
-    # (3) 최종 final_V, final_pool 계산
-    final_pool = pool_after_transactions + deposit
-    final_V = V_i + (pool_prev / G) + ((E - V_i) / (2 * math.sqrt(G))) + deposit
-    
-    # 이제 LBand, HBand는 최종 final_V로부터 계산
-    LBand_final = 0.85 * final_V
-    HBand_final = 1.15 * final_V
-    
-    # 새 사이클 정보
-    new_cycle = {
-        'Cycle': prev['Cycle'] + 1,
-        'Target Value (V)': final_V,
-        'Shares Held': shares,
-        'Pool Balance ($)': final_pool,
-        'Lower Band (LBand)': LBand_final,
-        'Upper Band (HBand)': HBand_final,
-        'Market Price ($)': price
-    }
-    return new_cycle, buy_table, sell_table
+    cycle_idx = prev['Cycle']
+    V_i = prev['Target Value (V)']         # 이전 목표 가치
+    pool_prev = prev['Pool Balance ($)']     # 이전 예수금
+    shares = prev['Shares Held']             # 이전 보유 주식 수
+    price = manual_price_for_cycle           # 이번 사이클의 종가 (수동 입력)
+    E = shares * price                       # 평가금
+
+    if cycle_idx == 0:
+        # 첫 사이클: 초기 상태 그대로 사용
+        LBand = 0.85 * V_i
+        HBand = 1.15 * V_i
+        buy_table, sell_table = calculate_transactions(LBand, HBand, shares, pool_prev, buy_ratio)
+        # 첫 사이클에서는 거래 발생 없이 초기값 그대로 유지 (예시 가정)
+        new_cycle = {
+            'Cycle': cycle_idx + 1,
+            'Target Value (V)': V_i,
+            'Shares Held': shares,
+            'Pool Balance ($)': pool_prev,
+            'Lower Band (LBand)': LBand,
+            'Upper Band (HBand)': HBand,
+            'Market Price ($)': price
+        }
+        return new_cycle, buy_table, sell_table
+    else:
+        # 이후 사이클: 확장공식 적용
+        new_V_temp = V_i + (pool_prev / G)
+        LBand_temp = 0.85 * new_V_temp
+        HBand_temp = 1.15 * new_V_temp
+        buy_table, sell_table = calculate_transactions(LBand_temp, HBand_temp, shares, pool_prev, buy_ratio)
+        new_shares = shares
+        new_pool = pool_prev
+        for bt in buy_table:
+            if price <= bt['Buy Price ($)']:
+                new_shares = bt['Target Shares After Buy']
+                new_pool = bt['Remaining Pool ($)'] + (pool_prev * (1 - buy_ratio))
+            else:
+                break
+        for st_table in sell_table:
+            if price >= st_table['Sell Price ($)']:
+                new_shares = st_table['Target Shares After Sell']
+                new_pool = st_table['Accumulated Pool ($)']
+            else:
+                break
+        # 확장공식 적용 (확장공식에 의해 거래가 없으면 (E-V_i)=0)
+        final_V = V_i + (pool_prev / G) + ((E - V_i) / (2 * math.sqrt(G))) + deposit
+        final_pool = new_pool + deposit
+        LBand_final = 0.85 * final_V
+        HBand_final = 1.15 * final_V
+
+        new_cycle = {
+            'Cycle': cycle_idx + 1,
+            'Target Value (V)': final_V,
+            'Shares Held': new_shares,
+            'Pool Balance ($)': final_pool,
+            'Lower Band (LBand)': LBand_final,
+            'Upper Band (HBand)': HBand_final,
+            'Market Price ($)': price
+        }
+        return new_cycle, buy_table, sell_table
 
 def simulate_cycles(history, G, buy_ratio, deposit, cycles, manual_prices):
+    """
+    주어진 사이클 수만큼 시뮬레이션을 실행하고,
+    기존 기록(history)에 새 사이클을 추가한 전체 기록과
+    각 사이클의 매수표, 매도표를 반환합니다.
+    """
     transaction_history = []
     for i in range(cycles):
         prev = history[-1]
@@ -169,9 +177,9 @@ def plot_results(history):
     fig.tight_layout()
     return fig
 
-# Streamlit 인터페이스 (필수 라이브러리, Buy Me a Coffee 버튼 등은 동일)
-# ==============================================================================
-
+# =============================================================================
+# Streamlit 인터페이스 구성
+# =============================================================================
 st.title("VR 시뮬레이터 V1.0")
 st.markdown("| Written by **[Woojin Go](https://woojingo.notion.site/)**")
 components.html(
@@ -182,7 +190,6 @@ components.html(
     """,
     height=80,
 )
-
 st.markdown("""
 #### **Value Rebalancing (VR) 공식 (변형 공식):**
 
@@ -205,7 +212,6 @@ uploaded_file = st.sidebar.file_uploader("이전 사이클 기록 CSV 파일 업
 if uploaded_file is not None:
     try:
         df_history = pd.read_csv(uploaded_file)
-        # CSV 파일로 불러온 전체 기록을 리스트로 변환
         loaded_history = df_history.to_dict('records')
         history = loaded_history[:]  # 전체 기록 유지
         st.sidebar.success("이전 기록이 성공적으로 로드되었습니다.")
@@ -215,7 +221,6 @@ if uploaded_file is not None:
 else:
     history = None
     st.sidebar.info("이전 기록 CSV 파일이 없는 경우, 아래 '템플릿 CSV 다운로드' 버튼을 통해 파일을 저장할 수 있습니다.")
-    # 템플릿 CSV 생성을 위한 기본값 입력 (템플릿용)
     st.sidebar.markdown("#### **템플릿 CSV 생성용 초기 시스템 설정**")
     template_shares = st.sidebar.number_input("현재 TQQQ 보유 주식 수 (템플릿)", min_value=0.0, value=110.0, step=1.0, key="template_shares")
     template_price = st.sidebar.number_input("현재 TQQQ 가격 ($) (템플릿)", min_value=0.0, value=45.45, step=0.1, key="template_price")
@@ -263,7 +268,7 @@ buy_ratio = st.sidebar.number_input("매수 예수금 비율 (0.0 ~ 1.0)", min_v
 deposit = st.sidebar.number_input("사이클 당 적립금 ($)", min_value=0.0, value=250.0, step=1.0)
 cycles = st.sidebar.number_input("실행할 사이클 수", min_value=1, value=2, step=1)
 
-# 수동 종가를 콤마로 구분하여 입력 (각 사이클마다 다른 값 사용)
+# 수동 종가를 콤마로 구분하여 입력
 manual_price_input = st.sidebar.text_input("수동 TQQQ 종가 (각 사이클마다 콤마로 구분)", value="44.34, 45")
 try:
     manual_prices = [float(x.strip()) for x in manual_price_input.split(",") if x.strip() != ""]
@@ -286,7 +291,6 @@ if st.sidebar.button("시뮬레이션 실행"):
         }
         st.success("시뮬레이션이 완료되었습니다!")
 
-# 만약 이전에 실행된 시뮬레이션 결과가 있다면 그대로 사용
 if st.session_state.simulation_results is not None:
     simulation = st.session_state.simulation_results
     df_result = simulation["df_result"]
