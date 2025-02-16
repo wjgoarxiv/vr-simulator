@@ -338,6 +338,9 @@ if st.session_state.simulation_results is not None:
             if trans['Buy Table']:
                 df_buy = pd.DataFrame(trans['Buy Table'])
                 st.dataframe(df_buy)
+                csv_buy = df_buy.to_csv(index=False).encode('utf-8-sig')
+                st.download_button(label=f"Cycle {cycle} 매수표 다운로드", data=csv_buy,
+                                   file_name=f"cycle_{cycle}_buy_table.csv", mime="text/csv", key=f"download_buy_{cycle}")
             else:
                 st.write("매수표 없음")
                 
@@ -345,6 +348,9 @@ if st.session_state.simulation_results is not None:
             if trans['Sell Table']:
                 df_sell = pd.DataFrame(trans['Sell Table'])
                 st.dataframe(df_sell)
+                csv_sell = df_sell.to_csv(index=False).encode('utf-8-sig')
+                st.download_button(label=f"Cycle {cycle} 매도표 다운로드", data=csv_sell,
+                                   file_name=f"cycle_{cycle}_sell_table.csv", mime="text/csv", key=f"download_sell_{cycle}")
             else:
                 st.write("매도표 없음")
 
@@ -355,7 +361,7 @@ if st.session_state.simulation_results is not None:
     df_result.to_csv(csv_buffer, index=False)
     csv_data = csv_buffer.getvalue().encode('utf-8-sig')
     st.download_button(
-        label="전체 결과 CSV 다운로드",
+        label="전체 결과 CSV 다운로드하기",
         data=csv_data,
         file_name="cycle_history.csv",
         mime="text/csv"
@@ -365,7 +371,7 @@ if st.session_state.simulation_results is not None:
     fig.savefig(png_buffer, format="png", dpi=600, bbox_inches="tight")
     png_buffer.seek(0)
     st.download_button(
-        label="그래프 PNG 다운로드",
+        label="그래프 PNG 다운로드하기",
         data=png_buffer,
         file_name="cycle_graph.png",
         mime="image/png"
