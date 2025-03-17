@@ -287,6 +287,7 @@ def get_market_status():
 
 current_time, market_status, dst_status, is_trading, is_reservation = get_market_status()
 
+st.sidebar.header("VR 시뮬레이터 설정")
 st.sidebar.header("📈 미국 마켓 정보")
 st.sidebar.write(f"**현재 한국 시간:** {current_time}")
 st.sidebar.write(f"**미국 마켓 상태:** {market_status}")
@@ -321,6 +322,9 @@ tabs = st.tabs(["현재 매수/매도표 계산", "장기 시뮬레이션"])
 with tabs[0]:
     st.header("📊 현재 매수/매도표 계산")
     st.markdown("현재 시장 상황에 맞는 매수/매도표를 바로 계산합니다. 이전 사이클 기록에 영향을 받지 않아 더 현실적인 거래 포인트를 제공합니다.")
+    
+    # TQQQ 링크 추가
+    st.markdown("[TQQQ 차트 및 가격 정보 확인하기](https://kr.investing.com/etfs/proshares-trust-ultrapro-qqq)")
     
     col1, col2 = st.columns(2)
     
@@ -383,6 +387,9 @@ with tabs[0]:
 with tabs[1]:
     st.header("📈 장기 시뮬레이션")
     st.markdown("여러 사이클에 걸친 VR 전략의 성과를 시뮬레이션하고 시각화합니다. 이전 기록을 활용해 밴드 추이를 추적할 수 있습니다.")
+    
+    # TQQQ 링크 추가
+    st.markdown("[TQQQ 차트 및 가격 정보 확인하기](https://kr.investing.com/etfs/proshares-trust-ultrapro-qqq)")
     
     # --- 이전 사이클 기록 CSV 파일 업로드 ---
     st.subheader("1. 이전 사이클 기록 로드하기")
