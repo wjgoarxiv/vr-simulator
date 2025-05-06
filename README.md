@@ -16,7 +16,7 @@
 
 ## APP LINK
 
-LINK: https://vr-simulator.streamlit.app/ (링크는 V1.1 기준이며, V2.1 배포 시 업데이트 필요)
+LINK: https://vr-simulator.streamlit.app/
 
 ## 주요 업데이트 (V2.1)
 
