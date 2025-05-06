@@ -2,3 +2,6 @@ scipy
 numpy
 matplotlib
 streamlit
+pandas
+pytz
+plotly
