@@ -2,7 +2,20 @@
 
 :: TQQQ VR (Value Rebalancing) 투자 전략 시뮬레이터 ::
 
-## V2.1 지원 기능 (@2025-05-06 updated)
+## V2.1 Modern Web Version (JavaScript/React Implementation)
+
+This is a complete modern web reimplementation of the original Streamlit-based VR Simulator, built with React, Vite, and modern JavaScript technologies for superior performance and user experience.
+
+### 🚀 New Features in Web Version:
+- **Modern React UI**: Clean, responsive design with Tailwind CSS
+- **Interactive Charts**: High-quality visualizations using Chart.js
+- **Real-time Market Status**: Live US market status display
+- **Enhanced UX**: Smooth animations and transitions
+- **Local Storage**: Automatic session persistence
+- **Mobile Responsive**: Works perfectly on all devices
+- **Fast Performance**: Built with Vite for lightning-fast loading
+
+## V2.1 지원 기능 (Original Streamlit Version)
 
 * [TQQQ](https://kr.investing.com/etfs/proshares-trust-ultrapro-qqq) 대상 VR (Value Rebalancing) 시뮬레이션 (Cycle-by-Cycle 진행 방식)
 * 각 사이클별 **목표 가치(V), LBand/HBand 및 추천 매수/매도 목표가 확인** (단순 +/- 1주 목표가 및 상세 테이블 제공)
@@ -32,7 +45,27 @@ LINK: https://vr-simulator.streamlit.app/
 
 * VR 이론 및 공식은 [『미국주식 밸류 리밸런싱』](https://product.kyobobook.co.kr/detail/S000061695672)을 참고하였으며, 시뮬레이터에는 일부 변형된 공식이 사용되었습니다. (앱 내 공식 참고)
 
-## 실행 방법 (V2.1 기준)
+## 실행 방법
+
+### Web Version (React/JavaScript)
+
+1. **Dependencies 설치:**
+   ```bash
+   npm install
+   ```
+
+2. **Development 서버 시작:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Production 빌드:**
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+### Original Streamlit Version
 
 1.  [앱 링크](https://vr-simulator.streamlit.app/)를 통해 웹 앱에 접속합니다.
 2.  **초기 설정**:
