@@ -6,6 +6,8 @@
 
 This is a complete modern web reimplementation of the original Streamlit-based VR Simulator, built with React, Vite, and modern JavaScript technologies for superior performance and user experience.
 
+**LINK:** https://wjgoarxiv.github.io/vr-simulator/
+
 ### 🚀 New Features in Web Version:
 - **Modern React UI**: Clean, responsive design with Tailwind CSS
 - **Interactive Charts**: High-quality visualizations using Chart.js
