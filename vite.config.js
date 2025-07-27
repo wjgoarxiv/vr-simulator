@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/vr-simulator/', // 여기에 GitHub 레포지토리 이름을 넣으세요
   server: {
     port: 3000,
     open: true
