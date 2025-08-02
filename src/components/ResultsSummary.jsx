@@ -22,11 +22,16 @@ export function ResultsSummary() {
           button.textContent = 'Generating...';
         }
 
+        // Wait a bit to ensure charts are fully rendered
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         // Get all Chart.js instances within the charts container
         const chartCanvases = chartsRef.current.querySelectorAll('canvas');
         
+        console.log('Found canvases:', chartCanvases.length);
+        
         if (chartCanvases.length === 0) {
-          throw new Error('No charts found to download');
+          throw new Error('차트를 찾을 수 없습니다. 시뮬레이션을 실행한 후 다시 시도해주세요.');
         }
 
         // Create a new canvas to combine all charts
@@ -41,22 +46,50 @@ export function ResultsSummary() {
         // Convert each chart to image and calculate dimensions
         for (let i = 0; i < chartCanvases.length; i++) {
           const canvas = chartCanvases[i];
-          const imageData = canvas.toDataURL('image/png');
-          const img = new Image();
           
-          await new Promise((resolve) => {
-            img.onload = () => {
-              chartImages.push({
-                img,
-                width: img.width,
-                height: img.height
-              });
-              totalHeight += img.height + (i > 0 ? 20 : 0); // Add spacing between charts
-              maxWidth = Math.max(maxWidth, img.width);
-              resolve();
-            };
-            img.src = imageData;
-          });
+          // Check if canvas has content
+          if (canvas.width === 0 || canvas.height === 0) {
+            console.warn(`Canvas ${i} has zero dimensions`);
+            continue;
+          }
+          
+          try {
+            const imageData = canvas.toDataURL('image/png');
+            
+            // Check if imageData is valid
+            if (!imageData || imageData === 'data:,') {
+              console.warn(`Canvas ${i} returned empty data`);
+              continue;
+            }
+            
+            const img = new Image();
+            
+            await new Promise((resolve, reject) => {
+              img.onload = () => {
+                chartImages.push({
+                  img,
+                  width: img.width,
+                  height: img.height
+                });
+                totalHeight += img.height + (chartImages.length > 1 ? 20 : 0); // Add spacing between charts
+                maxWidth = Math.max(maxWidth, img.width);
+                console.log(`Chart ${i} processed: ${img.width}x${img.height}`);
+                resolve();
+              };
+              img.onerror = () => {
+                console.error(`Failed to load image from canvas ${i}`);
+                reject(new Error(`차트 ${i + 1} 이미지 로드에 실패했습니다.`));
+              };
+              img.src = imageData;
+            });
+          } catch (canvasError) {
+            console.error(`Error processing canvas ${i}:`, canvasError);
+            throw new Error(`차트 ${i + 1} 처리 중 오류가 발생했습니다: ${canvasError.message}`);
+          }
+        }
+        
+        if (chartImages.length === 0) {
+          throw new Error('유효한 차트 데이터를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
         }
         
         // Set combined canvas size
@@ -77,13 +110,16 @@ export function ResultsSummary() {
 
         // Create download link
         const link = document.createElement('a');
-        link.download = `vr_simulation_charts_${new Date().toISOString().split('T')[0]}.png`;
-        link.href = combinedCanvas.toDataURL('image/png');
+        const timestamp = new Date().toISOString().split('T')[0];
+        link.download = `vr_simulation_charts_${timestamp}.png`;
+        link.href = combinedCanvas.toDataURL('image/png', 0.9); // Add quality parameter
         
         // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        console.log(`Successfully downloaded chart with ${chartImages.length} charts`);
 
         // Reset button state
         if (button) {
@@ -92,7 +128,7 @@ export function ResultsSummary() {
         }
       } catch (error) {
         console.error('Error capturing charts:', error);
-        alert('차트 다운로드 중 오류가 발생했습니다. 차트가 로드된 후 다시 시도해주세요.');
+        alert(`차트 다운로드 중 오류가 발생했습니다: ${error.message}`);
         
         // Reset button state
         const button = document.querySelector('[data-download-charts]');
@@ -101,6 +137,8 @@ export function ResultsSummary() {
           button.textContent = '📊 Download Charts';
         }
       }
+    } else {
+      alert('차트 영역을 찾을 수 없습니다. 페이지를 새로고침한 후 다시 시도해주세요.');
     }
   };
 

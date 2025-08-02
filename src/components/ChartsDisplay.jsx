@@ -50,6 +50,7 @@ export function ChartsDisplay() {
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false, // Disable animations for better chart capture
     plugins: {
       legend: {
         position: 'top',
