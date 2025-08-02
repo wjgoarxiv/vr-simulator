@@ -2,8 +2,28 @@
 
 :: TQQQ VR (Value Rebalancing) 투자 전략 시뮬레이터 ::
 
-## V2.1 지원 기능 (@2025-05-06 updated)
+## V3.0 Modern Web Version (JavaScript/React Implementation)
 
+This is a complete modern web reimplementation of the original Streamlit-based VR Simulator, built with React, Vite, and modern JavaScript technologies for superior performance and user experience.
+
+### 🚀 New Features in Web Version:
+- **Modern React UI**: Clean, responsive design with Tailwind CSS
+- **Interactive Charts**: High-quality visualizations using Chart.js
+- **Real-time Market Status**: Live US market status display
+- **Enhanced UX**: Smooth animations and transitions
+- **Local Storage**: Automatic session persistence
+- **Mobile Responsive**: Works perfectly on all devices
+- **Fast Performance**: Built with Vite for lightning-fast loading
+
+## V3.0 지원 기능 (Modern Web Version)
+
+### 🎯 새로운 주요 기능:
+- **다중 자산 지원**: TQQQ, TECL, SOXL, SPXL, UPRO, FNGU, FAS, GUSH, TNA 등 9개 레버리지 ETF 지원
+- **실시간 정보 링크**: 각 자산별 Yahoo Finance, Google Finance, MarketWatch, 공식 사이트 링크 제공
+- **가격 표시 제거**: 부정확한 실시간 가격 대신 신뢰할 수 있는 외부 사이트 연결
+- **개선된 UI/UX**: 모던 React 기반 반응형 웹 디자인
+
+### 📊 기존 V2.1 기능 (Original Streamlit Version):
 * [TQQQ](https://kr.investing.com/etfs/proshares-trust-ultrapro-qqq) 대상 VR (Value Rebalancing) 시뮬레이션 (Cycle-by-Cycle 진행 방식)
 * 각 사이클별 **목표 가치(V), LBand/HBand 및 추천 매수/매도 목표가 확인** (단순 +/- 1주 목표가 및 상세 테이블 제공)
 * **과거 사이클 기록 조회 기능** (이전/다음 버튼)
@@ -18,7 +38,15 @@
 
 LINK: https://vr-simulator.streamlit.app/
 
-## 주요 업데이트 (V2.1)
+## 주요 업데이트 (V3.0)
+
+### 🔥 Version 3.0 Major Updates:
+- **Multi-Asset Support**: Extended from TQQQ-only to 9 leveraged ETFs across different sectors
+- **External Links Integration**: Removed potentially inaccurate price displays, replaced with direct links to reliable financial sites
+- **Enhanced Asset Information**: Comprehensive asset metadata including leverage ratios, expense ratios, and volatility indicators
+- **Improved User Experience**: Streamlined interface focusing on simulation functionality rather than real-time pricing
+
+### 📈 Previous Updates (V2.1):
 
 * **워크플로우 통합**: '현재 계산'과 '장기 시뮬레이션' 탭을 통합하여, 단일 페이지 내에서 초기 설정부터 사이클별 진행까지 일관된 사용자 경험 제공
 * **사이클 네비게이션**: '이전/다음 사이클' 버튼을 추가하여 과거 시뮬레이션 기록 및 해당 시점의 목표값들을 쉽게 조회 가능
@@ -32,7 +60,27 @@ LINK: https://vr-simulator.streamlit.app/
 
 * VR 이론 및 공식은 [『미국주식 밸류 리밸런싱』](https://product.kyobobook.co.kr/detail/S000061695672)을 참고하였으며, 시뮬레이터에는 일부 변형된 공식이 사용되었습니다. (앱 내 공식 참고)
 
-## 실행 방법 (V2.1 기준)
+## 실행 방법
+
+### Web Version (React/JavaScript)
+
+1. **Dependencies 설치:**
+   ```bash
+   npm install
+   ```
+
+2. **Development 서버 시작:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Production 빌드:**
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+### Original Streamlit Version
 
 1.  [앱 링크](https://vr-simulator.streamlit.app/)를 통해 웹 앱에 접속합니다.
 2.  **초기 설정**:
