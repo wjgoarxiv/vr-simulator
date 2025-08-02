@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { FileText, Download, BarChart3, Image } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { useVRContext } from '../App';
 import { downloadCSV } from '../utils/csvHandling';
 import { ChartsDisplay } from './ChartsDisplay';
@@ -12,22 +13,52 @@ export function ResultsSummary() {
     downloadCSV(history, 'vr_simulation_history.csv');
   };
 
-  const handleDownloadCharts = () => {
+  const handleDownloadCharts = async () => {
     if (chartsRef.current) {
-      // Create a canvas element to capture the charts
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Get the charts container
-      const chartsContainer = chartsRef.current;
-      const rect = chartsContainer.getBoundingClientRect();
-      
-      canvas.width = rect.width * 2; // Higher resolution
-      canvas.height = rect.height * 2;
-      
-      // Use html2canvas library for better chart capture (would need to be installed)
-      // For now, show a simple alert
-      alert('Chart download feature would require additional libraries like html2canvas. This is a placeholder implementation.');
+      try {
+        // Show loading state
+        const button = document.querySelector('[data-download-charts]');
+        if (button) {
+          button.disabled = true;
+          button.textContent = 'Generating...';
+        }
+
+        // Use html2canvas to capture the charts
+        const canvas = await html2canvas(chartsRef.current, {
+          backgroundColor: '#ffffff',
+          scale: 2, // Higher resolution
+          useCORS: true,
+          allowTaint: true,
+          foreignObjectRendering: true,
+          logging: false
+        });
+
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `vr_simulation_charts_${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Reset button state
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Download Charts';
+        }
+      } catch (error) {
+        console.error('Error capturing charts:', error);
+        alert('차트 다운로드 중 오류가 발생했습니다. 다시 시도해주세요.');
+        
+        // Reset button state
+        const button = document.querySelector('[data-download-charts]');
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Download Charts';
+        }
+      }
     }
   };
 
@@ -105,6 +136,7 @@ export function ResultsSummary() {
             
           <button
             onClick={handleDownloadCharts}
+            data-download-charts
             className="btn-secondary flex items-center space-x-2"
           >
             <Image className="w-4 h-4" />
