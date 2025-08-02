@@ -1,7 +1,7 @@
 {
   "name": "vr-simulator-web",
   "private": true,
-  "version": "3.0.2",
+  "version": "3.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,6 @@
     "chart.js": "^4.4.0",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
-    "html2canvas": "^1.4.1",
     "lucide-react": "^0.294.0",
     "papaparse": "^5.4.1",
     "react": "^18.2.0",

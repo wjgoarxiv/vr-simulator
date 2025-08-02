@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { FileText, Download, BarChart3, Image } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { useVRContext } from '../App';
 import { downloadCSV } from '../utils/csvHandling';
 import { ChartsDisplay } from './ChartsDisplay';
@@ -23,20 +22,63 @@ export function ResultsSummary() {
           button.textContent = 'Generating...';
         }
 
-        // Use html2canvas to capture the charts
-        const canvas = await html2canvas(chartsRef.current, {
-          backgroundColor: '#ffffff',
-          scale: 2, // Higher resolution
-          useCORS: true,
-          allowTaint: true,
-          foreignObjectRendering: true,
-          logging: false
-        });
+        // Get all Chart.js instances within the charts container
+        const chartCanvases = chartsRef.current.querySelectorAll('canvas');
+        
+        if (chartCanvases.length === 0) {
+          throw new Error('No charts found to download');
+        }
+
+        // Create a new canvas to combine all charts
+        const combinedCanvas = document.createElement('canvas');
+        const ctx = combinedCanvas.getContext('2d');
+        
+        // Calculate total height and max width
+        let totalHeight = 0;
+        let maxWidth = 0;
+        const chartImages = [];
+        
+        // Convert each chart to image and calculate dimensions
+        for (let i = 0; i < chartCanvases.length; i++) {
+          const canvas = chartCanvases[i];
+          const imageData = canvas.toDataURL('image/png');
+          const img = new Image();
+          
+          await new Promise((resolve) => {
+            img.onload = () => {
+              chartImages.push({
+                img,
+                width: img.width,
+                height: img.height
+              });
+              totalHeight += img.height + (i > 0 ? 20 : 0); // Add spacing between charts
+              maxWidth = Math.max(maxWidth, img.width);
+              resolve();
+            };
+            img.src = imageData;
+          });
+        }
+        
+        // Set combined canvas size
+        combinedCanvas.width = maxWidth;
+        combinedCanvas.height = totalHeight;
+        
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, maxWidth, totalHeight);
+        
+        // Draw each chart onto combined canvas
+        let currentY = 0;
+        for (const chartImage of chartImages) {
+          const x = (maxWidth - chartImage.width) / 2; // Center horizontally
+          ctx.drawImage(chartImage.img, x, currentY);
+          currentY += chartImage.height + 20; // Add spacing
+        }
 
         // Create download link
         const link = document.createElement('a');
         link.download = `vr_simulation_charts_${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.href = combinedCanvas.toDataURL('image/png');
         
         // Trigger download
         document.body.appendChild(link);
@@ -46,17 +88,17 @@ export function ResultsSummary() {
         // Reset button state
         if (button) {
           button.disabled = false;
-          button.textContent = 'Download Charts';
+          button.textContent = '📊 Download Charts';
         }
       } catch (error) {
         console.error('Error capturing charts:', error);
-        alert('차트 다운로드 중 오류가 발생했습니다. 다시 시도해주세요.');
+        alert('차트 다운로드 중 오류가 발생했습니다. 차트가 로드된 후 다시 시도해주세요.');
         
         // Reset button state
         const button = document.querySelector('[data-download-charts]');
         if (button) {
           button.disabled = false;
-          button.textContent = 'Download Charts';
+          button.textContent = '📊 Download Charts';
         }
       }
     }
