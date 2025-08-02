@@ -284,11 +284,18 @@ export function LanguageProvider({ children }) {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('vr-simulator-theme');
-    return saved || 'light';
+    // Check for version compatibility, default to dark theme for V3.0
+    const savedVersion = localStorage.getItem('vr-simulator-theme-version');
+    if (savedVersion !== '3.0.0') {
+      localStorage.setItem('vr-simulator-theme-version', '3.0.0');
+      return 'dark'; // Default to dark for V3.0
+    }
+    return saved || 'dark'; // Default to dark theme
   });
 
   useEffect(() => {
     localStorage.setItem('vr-simulator-theme', theme);
+    localStorage.setItem('vr-simulator-theme-version', '3.0.0');
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {

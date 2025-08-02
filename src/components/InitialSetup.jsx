@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Play } from 'lucide-react';
+import { Upload, FileText, Play, RotateCcw } from 'lucide-react';
 import { useVRContext } from '../App';
 import { parseCSVFile, createInitialHistoryEntry } from '../utils/csvHandling';
 import { AssetSelector } from './AssetSelector';
@@ -101,6 +101,28 @@ export function InitialSetup() {
       setSimulationStarted(true);
     } else {
       alert('Please upload a CSV file or uncheck the CSV option to enter initial values manually.');
+    }
+  };
+
+  const handleResetSimulation = () => {
+    if (confirm('Are you sure you want to reset the simulation? All current data will be lost.')) {
+      // Clear all state
+      setHistory([]);
+      setViewCycleIndex(0);
+      setSimulationStarted(false);
+      setUseCSV(false);
+      setCsvFile(null);
+      setCsvError('');
+      setCsvSuccess('');
+      
+      // Reset to default values
+      const assetInfo = getAssetInfo(selectedAsset);
+      setInitShares(1);
+      setInitPrice(assetInfo?.defaultPrice || 36.62);
+      setInitPool(300);
+      
+      // Clear localStorage V3.0 data to force fresh start
+      localStorage.removeItem('vr-simulator-state');
     }
   };
 
@@ -245,8 +267,8 @@ export function InitialSetup() {
           </div>
         )}
 
-        {/* Start Button */}
-        <div className="pt-4 border-t border-gray-200">
+        {/* Action Buttons */}
+        <div className="pt-4 border-t border-gray-200 space-y-3">
           <button
             onClick={handleStartSimulation}
             disabled={isLoading || (useCSV && !csvFile)}
@@ -260,9 +282,17 @@ export function InitialSetup() {
             ) : (
               <>
                 <Play className="w-5 h-5" />
-                <span>🚀 Start / Reset Simulation</span>
+                <span>🚀 Start Simulation</span>
               </>
             )}
+          </button>
+          
+          <button
+            onClick={handleResetSimulation}
+            className="btn-secondary w-full md:w-auto flex items-center justify-center space-x-2 text-lg py-3 px-8 border border-gray-300 hover:bg-gray-50"
+          >
+            <RotateCcw className="w-5 h-5" />
+            <span>🔄 Reset All Settings</span>
           </button>
         </div>
       </div>

@@ -36,16 +36,23 @@ function App() {
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState);
-        setHistory(parsedState.history || []);
-        setCurrentG(parsedState.currentG || 10.0);
-        setDefaultDeposit(parsedState.defaultDeposit || 50.0);
-        setSimulationStarted(parsedState.simulationStarted || false);
-        setViewCycleIndex(parsedState.viewCycleIndex || 0);
-        setBuyRatioForTable(parsedState.buyRatioForTable || 0.75);
-        setSidebarCollapsed(parsedState.sidebarCollapsed || false);
-        setSelectedAsset(parsedState.selectedAsset || 'TQQQ');
+        // Only load if version matches, otherwise reset
+        if (parsedState.version === '3.0.0') {
+          setHistory(parsedState.history || []);
+          setCurrentG(parsedState.currentG || 10.0);
+          setDefaultDeposit(parsedState.defaultDeposit || 250.0); // Keep 250 as default
+          setSimulationStarted(parsedState.simulationStarted || false);
+          setViewCycleIndex(parsedState.viewCycleIndex || 0);
+          setBuyRatioForTable(parsedState.buyRatioForTable || 0.75);
+          setSidebarCollapsed(parsedState.sidebarCollapsed || true); // Default to collapsed
+          setSelectedAsset(parsedState.selectedAsset || 'TQQQ');
+        } else {
+          // Clear old version data
+          localStorage.removeItem('vr-simulator-state');
+        }
       } catch (error) {
         console.error('Error loading saved state:', error);
+        localStorage.removeItem('vr-simulator-state'); // Clear corrupted data
       }
     }
   }, []);
@@ -53,6 +60,7 @@ function App() {
   // Save to localStorage whenever state changes
   useEffect(() => {
     const stateToSave = {
+      version: '3.0.0', // Add version to prevent compatibility issues
       history,
       currentG,
       defaultDeposit,
