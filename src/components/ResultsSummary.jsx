@@ -1,15 +1,131 @@
 import React, { useRef } from 'react';
-import { FileText, Download, BarChart3, Image } from 'lucide-react';
+import { FileText, Download, BarChart3, Image, Palette } from 'lucide-react';
 import { useVRContext } from '../App';
 import { downloadCSV } from '../utils/csvHandling';
 import { ChartsDisplay } from './ChartsDisplay';
+import { MatplotlibStyleCharts } from './MatplotlibStyleCharts';
 
 export function ResultsSummary() {
   const { history } = useVRContext();
   const chartsRef = useRef(null);
+  const matplotlibChartsRef = useRef(null);
 
-  const handleDownloadCSV = () => {
-    downloadCSV(history, 'vr_simulation_history.csv');
+  const handleDownloadMatplotlibCharts = async () => {
+    if (matplotlibChartsRef.current) {
+      try {
+        // Show loading state
+        const button = document.querySelector('[data-download-matplotlib-charts]');
+        if (button) {
+          button.disabled = true;
+          button.textContent = 'Generating...';
+        }
+
+        // Wait for charts to be fully rendered
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Get all Plotly charts
+        const plotlyDivs = matplotlibChartsRef.current.querySelectorAll('[id$="-chart"]');
+        
+        console.log('Found Plotly charts:', plotlyDivs.length);
+        
+        if (plotlyDivs.length === 0) {
+          throw new Error('Matplotlib 스타일 차트를 찾을 수 없습니다. 시뮬레이션을 실행한 후 다시 시도해주세요.');
+        }
+
+        // Create a combined canvas for all charts
+        const combinedCanvas = document.createElement('canvas');
+        const ctx = combinedCanvas.getContext('2d');
+        
+        // Set high resolution
+        const dpr = window.devicePixelRatio || 1;
+        const chartWidth = 800;
+        const chartHeight = 600;
+        const padding = 40;
+        const chartsPerRow = 2;
+        
+        const totalWidth = (chartWidth + padding) * chartsPerRow - padding;
+        const totalHeight = Math.ceil(plotlyDivs.length / chartsPerRow) * (chartHeight + padding) - padding;
+        
+        combinedCanvas.width = totalWidth * dpr;
+        combinedCanvas.height = totalHeight * dpr;
+        combinedCanvas.style.width = totalWidth + 'px';
+        combinedCanvas.style.height = totalHeight + 'px';
+        ctx.scale(dpr, dpr);
+        
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, totalWidth, totalHeight);
+        
+        // Export each Plotly chart and combine
+        const { default: Plotly } = await import('plotly.js-dist-min');
+        
+        for (let i = 0; i < plotlyDivs.length; i++) {
+          const plotlyDiv = plotlyDivs[i];
+          
+          try {
+            // Export Plotly chart as image
+            const imgData = await Plotly.toImage(plotlyDiv, {
+              format: 'png',
+              width: chartWidth,
+              height: chartHeight,
+              scale: 2 // High resolution
+            });
+            
+            // Create image element
+            const img = document.createElement('img');
+            await new Promise((resolve, reject) => {
+              img.onload = resolve;
+              img.onerror = reject;
+              img.src = imgData;
+            });
+            
+            // Calculate position in grid
+            const row = Math.floor(i / chartsPerRow);
+            const col = i % chartsPerRow;
+            const x = col * (chartWidth + padding);
+            const y = row * (chartHeight + padding);
+            
+            // Draw image onto combined canvas
+            ctx.drawImage(img, x, y, chartWidth, chartHeight);
+            console.log(`Matplotlib chart ${i} drawn at position (${x}, ${y})`);
+          } catch (plotlyError) {
+            console.error(`Error exporting Plotly chart ${i}:`, plotlyError);
+            // Continue with other charts
+          }
+        }
+
+        // Create download link
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().split('T')[0];
+        link.download = `vr_simulation_matplotlib_charts_${timestamp}.png`;
+        link.href = combinedCanvas.toDataURL('image/png', 1.0);
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        console.log(`Successfully downloaded Matplotlib-style charts with ${plotlyDivs.length} charts`);
+
+        // Reset button state
+        if (button) {
+          button.disabled = false;
+          button.textContent = '🎨 Download Matplotlib Charts';
+        }
+      } catch (error) {
+        console.error('Error capturing Matplotlib charts:', error);
+        alert(`Matplotlib 차트 다운로드 중 오류가 발생했습니다: ${error.message}`);
+        
+        // Reset button state
+        const button = document.querySelector('[data-download-matplotlib-charts]');
+        if (button) {
+          button.disabled = false;
+          button.textContent = '🎨 Download Matplotlib Charts';
+        }
+      }
+    } else {
+      alert('Matplotlib 차트 영역을 찾을 수 없습니다. 페이지를 새로고침한 후 다시 시도해주세요.');
+    }
   };
 
   const handleDownloadCharts = async () => {
@@ -115,6 +231,10 @@ export function ResultsSummary() {
     }
   };
 
+  const handleDownloadCSV = () => {
+    downloadCSV(history, 'vr_simulation_history.csv');
+  };
+
   if (!history || history.length === 0) {
     return (
       <div className="card">
@@ -194,6 +314,15 @@ export function ResultsSummary() {
           >
             <Image className="w-4 h-4" />
             <span>📊 Download Charts</span>
+          </button>
+
+          <button
+            onClick={handleDownloadMatplotlibCharts}
+            data-download-matplotlib-charts
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <Palette className="w-4 h-4" />
+            <span>🎨 Download Matplotlib Charts</span>
           </button>
         </div>
       </div>
@@ -287,6 +416,11 @@ export function ResultsSummary() {
       {/* Charts Display */}
       <div ref={chartsRef}>
         <ChartsDisplay />
+      </div>
+
+      {/* Matplotlib Style Charts */}
+      <div ref={matplotlibChartsRef}>
+        <MatplotlibStyleCharts />
       </div>
     </div>
   );
