@@ -2,7 +2,13 @@
 
 :: TQQQ VR (Value Rebalancing) 투자 전략 시뮬레이터 ::
 
-## V3.0 Modern Web Version (JavaScript/React Implementation)
+## 🌐 Live Web Application
+
+**Try the latest version online:** [https://wjgoarxiv.github.io/vr-simulator/](https://wjgoarxiv.github.io/vr-simulator/)
+
+---
+
+## V3.1.2 Modern Web Version (JavaScript/React Implementation)
 
 This is a complete modern web reimplementation of the original Streamlit-based VR Simulator, built with React, Vite, and modern JavaScript technologies for superior performance and user experience.
 
@@ -15,32 +21,39 @@ This is a complete modern web reimplementation of the original Streamlit-based V
 - **Mobile Responsive**: Works perfectly on all devices
 - **Fast Performance**: Built with Vite for lightning-fast loading
 
-## V3.0 지원 기능 (Modern Web Version)
+## V3.1.2 지원 기능 (Modern Web Version)
 
-### 🎯 새로운 주요 기능:
+### 🎯 새로운 주요 기능
 - **다중 자산 지원**: TQQQ, TECL, SOXL, SPXL, UPRO, FNGU, FAS, GUSH, TNA 등 9개 레버리지 ETF 지원
 - **실시간 정보 링크**: 각 자산별 Yahoo Finance, Google Finance, MarketWatch, 공식 사이트 링크 제공
 - **가격 표시 제거**: 부정확한 실시간 가격 대신 신뢰할 수 있는 외부 사이트 연결
 - **개선된 UI/UX**: 모던 React 기반 반응형 웹 디자인
+- **Matplotlib-style 차트 다운로드**: 고품질 PNG 차트 내보내기
+- **단일 차트 다운로드 버튼**: 사용자 친화적인 통합 인터페이스
 
-### 📊 기존 V2.1 기능 (Original Streamlit Version):
-* [TQQQ](https://kr.investing.com/etfs/proshares-trust-ultrapro-qqq) 대상 VR (Value Rebalancing) 시뮬레이션 (Cycle-by-Cycle 진행 방식)
-* 각 사이클별 **목표 가치(V), LBand/HBand 및 추천 매수/매도 목표가 확인** (단순 +/- 1주 목표가 및 상세 테이블 제공)
-* **과거 사이클 기록 조회 기능** (이전/다음 버튼)
-* 시뮬레이션 **전체 기록 테이블 확인 및 CSV 파일 다운로드** 제공
-* 시뮬레이션 결과 **핵심 지표 시각화** (Streamlit 네이티브 차트 2x2 표시)
-* 시각화된 **전체 차트 이미지(PNG) 다운로드** 기능 (Matplotlib 기반)
-* **신규!** 초기 투자 시 매수 목표가와 현재가 차이가 클 경우 **'월요일 시초가 매수' 고려 제안** 기능 (조건부)
-* 시뮬레이션 **사이클 기록 CSV 업로드/로드** 기능
-* 한국 시간 기준 **미국 주식 시장 상태 실시간 표시** (사이드바 내 주문 가능 여부 확인)
+### 📊 기존 V2.1 기능 (Original Streamlit Version)
 
-## APP LINK
+- [TQQQ](https://kr.investing.com/etfs/proshares-trust-ultrapro-qqq) 대상 VR (Value Rebalancing) 시뮬레이션 (Cycle-by-Cycle 진행 방식)
+- 각 사이클별 **목표 가치(V), LBand/HBand 및 추천 매수/매도 목표가 확인** (단순 +/- 1주 목표가 및 상세 테이블 제공)
+- **과거 사이클 기록 조회 기능** (이전/다음 버튼)
+- 시뮬레이션 **전체 기록 테이블 확인 및 CSV 파일 다운로드** 제공
+- 시뮬레이션 결과 **핵심 지표 시각화** (Streamlit 네이티브 차트 2x2 표시)
+- 시각화된 **전체 차트 이미지(PNG) 다운로드** 기능 (Matplotlib 기반)
+- **신규!** 초기 투자 시 매수 목표가와 현재가 차이가 클 경우 **'월요일 시초가 매수' 고려 제안** 기능 (조건부)
+- 시뮬레이션 **사이클 기록 CSV 업로드/로드** 기능
+- 한국 시간 기준 **미국 주식 시장 상태 실시간 표시** (사이드바 내 주문 가능 여부 확인)
 
-LINK: https://vr-simulator.streamlit.app/
+## APP LINKS
 
-## 주요 업데이트 (V3.0)
+### 🌐 Web Version (V3.1.2 - Recommended)
+**Live Demo:** [https://wjgoarxiv.github.io/vr-simulator/](https://wjgoarxiv.github.io/vr-simulator/)
 
-### 🔥 Version 3.0 Major Updates:
+### 📱 Legacy Streamlit Version (V2.1)
+**Streamlit App:** [https://vr-simulator.streamlit.app/](https://vr-simulator.streamlit.app/)
+
+## 주요 업데이트 (V3.1.2)
+
+### 🔥 Version 3.1.2 Major Updates
 - **Multi-Asset Support**: Extended from TQQQ-only to 9 leveraged ETFs across different sectors
 - **External Links Integration**: Removed potentially inaccurate price displays, replaced with direct links to reliable financial sites
 - **Enhanced Asset Information**: Comprehensive asset metadata including leverage ratios, expense ratios, and volatility indicators

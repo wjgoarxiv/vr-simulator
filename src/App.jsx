@@ -61,7 +61,7 @@ function App() {
       try {
         const parsedState = JSON.parse(savedState);
         // Only load if version matches, otherwise reset
-        if (parsedState.version === '3.0.0') {
+        if (parsedState.version === '3.1.2') {
           setHistory(parsedState.history || []);
           setCurrentG(parsedState.currentG || 10.0);
           setDefaultDeposit(parsedState.defaultDeposit || 250.0); // Keep 250 as default
@@ -87,7 +87,7 @@ function App() {
   // Save to localStorage whenever state changes
   useEffect(() => {
     const stateToSave = {
-      version: '3.0.0', // Add version to prevent compatibility issues
+      version: '3.1.2', // Add version to prevent compatibility issues
       history,
       currentG,
       defaultDeposit,

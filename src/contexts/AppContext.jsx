@@ -8,7 +8,7 @@ const ThemeContext = createContext();
 const translations = {
   'en': {
     // Header
-    appTitle: 'VR Simulator V3.0',
+    appTitle: 'VR Simulator V3.1.2',
     appSubtitle: 'Multi-Asset Value Rebalancing Investment Simulator',
     writtenBy: 'Written by',
     
@@ -131,7 +131,7 @@ const translations = {
   },
   'ko': {
     // Header
-    appTitle: 'VR 시뮬레이터 V3.0',
+    appTitle: 'VR 시뮬레이터 V3.1.2',
     appSubtitle: '다중 자산 밸류 리밸런싱 투자 시뮬레이터',
     writtenBy: '제작자',
     
@@ -284,18 +284,18 @@ export function LanguageProvider({ children }) {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('vr-simulator-theme');
-    // Check for version compatibility, default to dark theme for V3.0
+    // Check for version compatibility, default to dark theme for V3.1.2
     const savedVersion = localStorage.getItem('vr-simulator-theme-version');
-    if (savedVersion !== '3.0.0') {
-      localStorage.setItem('vr-simulator-theme-version', '3.0.0');
-      return 'dark'; // Default to dark for V3.0
+    if (savedVersion !== '3.1.2') {
+      localStorage.setItem('vr-simulator-theme-version', '3.1.2');
+      return 'dark'; // Default to dark for V3.1.2
     }
     return saved || 'dark'; // Default to dark theme
   });
 
   useEffect(() => {
     localStorage.setItem('vr-simulator-theme', theme);
-    localStorage.setItem('vr-simulator-theme-version', '3.0.0');
+    localStorage.setItem('vr-simulator-theme-version', '3.1.2');
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
