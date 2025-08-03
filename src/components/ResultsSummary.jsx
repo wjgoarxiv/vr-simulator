@@ -23,7 +23,7 @@ export function ResultsSummary() {
         }
 
         // Wait a bit to ensure charts are fully rendered
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Get all Chart.js instances within the charts container
         const chartCanvases = chartsRef.current.querySelectorAll('canvas');
@@ -38,12 +38,24 @@ export function ResultsSummary() {
         const combinedCanvas = document.createElement('canvas');
         const ctx = combinedCanvas.getContext('2d');
         
-        // Calculate total height and max width
-        let totalHeight = 0;
-        let maxWidth = 0;
-        const chartImages = [];
+        // Calculate dimensions for 2x2 grid
+        const chartsPerRow = 2;
+        const chartWidth = 400;
+        const chartHeight = 300;
+        const padding = 20;
         
-        // Convert each chart to image and calculate dimensions
+        const totalWidth = (chartWidth + padding) * chartsPerRow - padding;
+        const totalHeight = Math.ceil(chartCanvases.length / chartsPerRow) * (chartHeight + padding) - padding;
+        
+        // Set combined canvas size
+        combinedCanvas.width = totalWidth;
+        combinedCanvas.height = totalHeight;
+        
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, totalWidth, totalHeight);
+        
+        // Draw each chart onto combined canvas
         for (let i = 0; i < chartCanvases.length; i++) {
           const canvas = chartCanvases[i];
           
@@ -53,73 +65,34 @@ export function ResultsSummary() {
             continue;
           }
           
+          // Calculate position in grid
+          const row = Math.floor(i / chartsPerRow);
+          const col = i % chartsPerRow;
+          const x = col * (chartWidth + padding);
+          const y = row * (chartHeight + padding);
+          
           try {
-            const imageData = canvas.toDataURL('image/png');
-            
-            // Check if imageData is valid
-            if (!imageData || imageData === 'data:,') {
-              console.warn(`Canvas ${i} returned empty data`);
-              continue;
-            }
-            
-            const img = new Image();
-            
-            await new Promise((resolve, reject) => {
-              img.onload = () => {
-                chartImages.push({
-                  img,
-                  width: img.width,
-                  height: img.height
-                });
-                totalHeight += img.height + (chartImages.length > 1 ? 20 : 0); // Add spacing between charts
-                maxWidth = Math.max(maxWidth, img.width);
-                console.log(`Chart ${i} processed: ${img.width}x${img.height}`);
-                resolve();
-              };
-              img.onerror = () => {
-                console.error(`Failed to load image from canvas ${i}`);
-                reject(new Error(`차트 ${i + 1} 이미지 로드에 실패했습니다.`));
-              };
-              img.src = imageData;
-            });
-          } catch (canvasError) {
-            console.error(`Error processing canvas ${i}:`, canvasError);
-            throw new Error(`차트 ${i + 1} 처리 중 오류가 발생했습니다: ${canvasError.message}`);
+            // Draw canvas directly onto combined canvas
+            ctx.drawImage(canvas, x, y, chartWidth, chartHeight);
+            console.log(`Chart ${i} drawn at position (${x}, ${y})`);
+          } catch (drawError) {
+            console.error(`Error drawing canvas ${i}:`, drawError);
+            // Continue with other charts instead of failing completely
           }
-        }
-        
-        if (chartImages.length === 0) {
-          throw new Error('유효한 차트 데이터를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
-        }
-        
-        // Set combined canvas size
-        combinedCanvas.width = maxWidth;
-        combinedCanvas.height = totalHeight;
-        
-        // Fill with white background
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, maxWidth, totalHeight);
-        
-        // Draw each chart onto combined canvas
-        let currentY = 0;
-        for (const chartImage of chartImages) {
-          const x = (maxWidth - chartImage.width) / 2; // Center horizontally
-          ctx.drawImage(chartImage.img, x, currentY);
-          currentY += chartImage.height + 20; // Add spacing
         }
 
         // Create download link
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().split('T')[0];
         link.download = `vr_simulation_charts_${timestamp}.png`;
-        link.href = combinedCanvas.toDataURL('image/png', 0.9); // Add quality parameter
+        link.href = combinedCanvas.toDataURL('image/png', 0.9);
         
         // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        console.log(`Successfully downloaded chart with ${chartImages.length} charts`);
+        console.log(`Successfully downloaded combined chart with ${chartCanvases.length} charts`);
 
         // Reset button state
         if (button) {
