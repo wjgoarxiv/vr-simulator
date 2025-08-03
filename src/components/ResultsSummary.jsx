@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { FileText, Download, BarChart3, Image, Palette } from 'lucide-react';
+import { FileText, Download, BarChart3, Image } from 'lucide-react';
 import { useVRContext } from '../App';
 import { downloadCSV } from '../utils/csvHandling';
 import { ChartsDisplay } from './ChartsDisplay';
@@ -10,11 +10,11 @@ export function ResultsSummary() {
   const chartsRef = useRef(null);
   const matplotlibChartsRef = useRef(null);
 
-  const handleDownloadMatplotlibCharts = async () => {
+  const handleDownloadCharts = async () => {
     if (matplotlibChartsRef.current) {
       try {
         // Show loading state
-        const button = document.querySelector('[data-download-matplotlib-charts]');
+        const button = document.querySelector('[data-download-charts]');
         if (button) {
           button.disabled = true;
           button.textContent = 'Generating...';
@@ -29,7 +29,7 @@ export function ResultsSummary() {
         console.log('Found Plotly charts:', plotlyDivs.length);
         
         if (plotlyDivs.length === 0) {
-          throw new Error('Matplotlib 스타일 차트를 찾을 수 없습니다. 시뮬레이션을 실행한 후 다시 시도해주세요.');
+          throw new Error('차트를 찾을 수 없습니다. 시뮬레이션을 실행한 후 다시 시도해주세요.');
         }
 
         // Create a combined canvas for all charts
@@ -97,7 +97,7 @@ export function ResultsSummary() {
         // Create download link
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().split('T')[0];
-        link.download = `vr_simulation_matplotlib_charts_${timestamp}.png`;
+        link.download = `vr_simulation_charts_${timestamp}.png`;
         link.href = combinedCanvas.toDataURL('image/png', 1.0);
         
         // Trigger download
@@ -106,109 +106,6 @@ export function ResultsSummary() {
         document.body.removeChild(link);
 
         console.log(`Successfully downloaded Matplotlib-style charts with ${plotlyDivs.length} charts`);
-
-        // Reset button state
-        if (button) {
-          button.disabled = false;
-          button.textContent = '🎨 Download Matplotlib Charts';
-        }
-      } catch (error) {
-        console.error('Error capturing Matplotlib charts:', error);
-        alert(`Matplotlib 차트 다운로드 중 오류가 발생했습니다: ${error.message}`);
-        
-        // Reset button state
-        const button = document.querySelector('[data-download-matplotlib-charts]');
-        if (button) {
-          button.disabled = false;
-          button.textContent = '🎨 Download Matplotlib Charts';
-        }
-      }
-    } else {
-      alert('Matplotlib 차트 영역을 찾을 수 없습니다. 페이지를 새로고침한 후 다시 시도해주세요.');
-    }
-  };
-
-  const handleDownloadCharts = async () => {
-    if (chartsRef.current) {
-      try {
-        // Show loading state
-        const button = document.querySelector('[data-download-charts]');
-        if (button) {
-          button.disabled = true;
-          button.textContent = 'Generating...';
-        }
-
-        // Wait a bit to ensure charts are fully rendered
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Get all Chart.js instances within the charts container
-        const chartCanvases = chartsRef.current.querySelectorAll('canvas');
-        
-        console.log('Found canvases:', chartCanvases.length);
-        
-        if (chartCanvases.length === 0) {
-          throw new Error('차트를 찾을 수 없습니다. 시뮬레이션을 실행한 후 다시 시도해주세요.');
-        }
-
-        // Create a new canvas to combine all charts
-        const combinedCanvas = document.createElement('canvas');
-        const ctx = combinedCanvas.getContext('2d');
-        
-        // Calculate dimensions for 2x2 grid
-        const chartsPerRow = 2;
-        const chartWidth = 400;
-        const chartHeight = 300;
-        const padding = 20;
-        
-        const totalWidth = (chartWidth + padding) * chartsPerRow - padding;
-        const totalHeight = Math.ceil(chartCanvases.length / chartsPerRow) * (chartHeight + padding) - padding;
-        
-        // Set combined canvas size
-        combinedCanvas.width = totalWidth;
-        combinedCanvas.height = totalHeight;
-        
-        // Fill with white background
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, totalWidth, totalHeight);
-        
-        // Draw each chart onto combined canvas
-        for (let i = 0; i < chartCanvases.length; i++) {
-          const canvas = chartCanvases[i];
-          
-          // Check if canvas has content
-          if (canvas.width === 0 || canvas.height === 0) {
-            console.warn(`Canvas ${i} has zero dimensions`);
-            continue;
-          }
-          
-          // Calculate position in grid
-          const row = Math.floor(i / chartsPerRow);
-          const col = i % chartsPerRow;
-          const x = col * (chartWidth + padding);
-          const y = row * (chartHeight + padding);
-          
-          try {
-            // Draw canvas directly onto combined canvas
-            ctx.drawImage(canvas, x, y, chartWidth, chartHeight);
-            console.log(`Chart ${i} drawn at position (${x}, ${y})`);
-          } catch (drawError) {
-            console.error(`Error drawing canvas ${i}:`, drawError);
-            // Continue with other charts instead of failing completely
-          }
-        }
-
-        // Create download link
-        const link = document.createElement('a');
-        const timestamp = new Date().toISOString().split('T')[0];
-        link.download = `vr_simulation_charts_${timestamp}.png`;
-        link.href = combinedCanvas.toDataURL('image/png', 0.9);
-        
-        // Trigger download
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        console.log(`Successfully downloaded combined chart with ${chartCanvases.length} charts`);
 
         // Reset button state
         if (button) {
@@ -315,15 +212,6 @@ export function ResultsSummary() {
             <Image className="w-4 h-4" />
             <span>📊 Download Charts</span>
           </button>
-
-          <button
-            onClick={handleDownloadMatplotlibCharts}
-            data-download-matplotlib-charts
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-          >
-            <Palette className="w-4 h-4" />
-            <span>🎨 Download Matplotlib Charts</span>
-          </button>
         </div>
       </div>
 
@@ -418,8 +306,8 @@ export function ResultsSummary() {
         <ChartsDisplay />
       </div>
 
-      {/* Matplotlib Style Charts */}
-      <div ref={matplotlibChartsRef}>
+      {/* Matplotlib Style Charts - Hidden but needed for download */}
+      <div ref={matplotlibChartsRef} style={{ display: 'none' }}>
         <MatplotlibStyleCharts />
       </div>
     </div>
