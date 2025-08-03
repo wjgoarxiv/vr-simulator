@@ -1,12 +1,28 @@
 import React, { useRef } from 'react';
-import { FileText, Download, BarChart3, Image } from 'lucide-react';
+import { FileText, Download, BarChart3, Image, RotateCcw } from 'lucide-react';
 import { useVRContext } from '../App';
 import { downloadCSV } from '../utils/csvHandling';
 import { ChartsDisplay } from './ChartsDisplay';
 import { MatplotlibStyleCharts } from './MatplotlibStyleCharts';
 
 export function ResultsSummary() {
-  const { history } = useVRContext();
+      const { 
+        history, 
+        initialMoney, 
+        setInitialMoney, 
+        currentMoney,
+        currentShares,
+        currentAverageCost,
+        totalCycles,
+        setHistory, 
+        currentSharesValue,
+        setCurrentMoney,
+        setCurrentShares,
+        setCurrentAverageCost,
+        setTotalCycles,
+        setCurrentSharesValue,
+        resetSimulation
+    } = useVRContext();
   const chartsRef = useRef(null);
   const matplotlibChartsRef = useRef(null);
 
@@ -132,6 +148,12 @@ export function ResultsSummary() {
     downloadCSV(history, 'vr_simulation_history.csv');
   };
 
+  const handleResetSimulation = () => {
+    if (window.confirm('모든 시뮬레이션 설정과 사이클을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      resetSimulation();
+    }
+  };
+
   if (!history || history.length === 0) {
     return (
       <div className="card">
@@ -158,7 +180,6 @@ export function ResultsSummary() {
   }));
 
   // Calculate overall statistics
-  const totalCycles = history.length;
   const initialValue = history[0]?.V_target || 0;
   const finalValue = history[history.length - 1]?.V_target || 0;
   const totalGrowth = initialValue > 0 ? ((finalValue - initialValue) / initialValue) * 100 : 0;
@@ -211,6 +232,14 @@ export function ResultsSummary() {
           >
             <Image className="w-4 h-4" />
             <span>📊 Download Charts</span>
+          </button>
+
+          <button
+            onClick={handleResetSimulation}
+            className="btn-danger flex items-center space-x-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>🔄 Reset Simulation</span>
           </button>
         </div>
       </div>

@@ -1,10 +1,18 @@
 import React from 'react';
-import { TrendingUp, Sun, Moon, Globe } from 'lucide-react';
+import { TrendingUp, Sun, Moon, Globe, RotateCcw } from 'lucide-react';
 import { useLanguage, useTheme } from '../contexts/AppContext';
+import { useVRContext } from '../App';
 
 export function Header() {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { simulationStarted, resetSimulation } = useVRContext();
+
+  const handleResetSimulation = () => {
+    if (confirm('🔄 Reset Simulation\n\nThis will clear all simulation data and return to the initial setup screen.\n\nAre you sure you want to continue?')) {
+      resetSimulation();
+    }
+  };
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -23,6 +31,18 @@ export function Header() {
           </div>
           
           <div className="flex items-center space-x-4">
+            {/* Reset Button - Only show when simulation is started */}
+            {simulationStarted && (
+              <button
+                onClick={handleResetSimulation}
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg transition-colors duration-200"
+                title="Reset simulation to initial state"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            )}
+
             {/* Language Toggle */}
             <div className="flex items-center space-x-2">
               <Globe className="w-4 h-4 text-gray-500 dark:text-gray-400" />
