@@ -32,8 +32,32 @@ function App() {
 
   // Load from localStorage on mount
   useEffect(() => {
+    // Check for reset parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldReset = urlParams.get('reset') === 'true';
+    
+    if (shouldReset) {
+      // Clear all localStorage and reload
+      localStorage.removeItem('vr-simulator-state');
+      localStorage.removeItem('vr-simulator-visited');
+      localStorage.removeItem('vr-simulator-language');
+      localStorage.removeItem('vr-simulator-theme');
+      localStorage.removeItem('vr-simulator-theme-version');
+      console.log('localStorage cleared due to reset parameter');
+      // Remove the reset parameter from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+    
     const savedState = localStorage.getItem('vr-simulator-state');
-    if (savedState) {
+    const isFirstVisit = !localStorage.getItem('vr-simulator-visited');
+    
+    // Mark as visited for future sessions
+    if (isFirstVisit) {
+      localStorage.setItem('vr-simulator-visited', 'true');
+    }
+    
+    if (savedState && !isFirstVisit) {
       try {
         const parsedState = JSON.parse(savedState);
         // Only load if version matches, otherwise reset
@@ -54,6 +78,9 @@ function App() {
         console.error('Error loading saved state:', error);
         localStorage.removeItem('vr-simulator-state'); // Clear corrupted data
       }
+    } else if (isFirstVisit) {
+      // For first-time visitors, ensure we start with a clean state
+      console.log('First-time visitor detected, starting with clean state');
     }
   }, []);
 
@@ -73,6 +100,20 @@ function App() {
     localStorage.setItem('vr-simulator-state', JSON.stringify(stateToSave));
   }, [history, currentG, defaultDeposit, simulationStarted, viewCycleIndex, buyRatioForTable, sidebarCollapsed, selectedAsset]);
 
+  // Reset function to clear all state
+  const resetSimulation = () => {
+    setHistory([]);
+    setCurrentG(10.0);
+    setDefaultDeposit(250.0);
+    setSimulationStarted(false);
+    setViewCycleIndex(0);
+    setBuyRatioForTable(0.75);
+    setSelectedAsset('TQQQ');
+    // Clear localStorage
+    localStorage.removeItem('vr-simulator-state');
+    console.log('Simulation reset to initial state');
+  };
+
   // Context value
   const contextValue = {
     history,
@@ -90,7 +131,8 @@ function App() {
     sidebarCollapsed,
     setSidebarCollapsed,
     selectedAsset,
-    setSelectedAsset
+    setSelectedAsset,
+    resetSimulation
   };
 
   // Navigation functions

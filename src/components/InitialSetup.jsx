@@ -16,7 +16,8 @@ export function InitialSetup() {
     defaultDeposit,
     setDefaultDeposit,
     selectedAsset,
-    setSelectedAsset
+    setSelectedAsset,
+    resetSimulation
   } = useVRContext();
 
   const [useCSV, setUseCSV] = useState(false);
@@ -106,10 +107,10 @@ export function InitialSetup() {
 
   const handleResetSimulation = () => {
     if (confirm('Are you sure you want to reset the simulation? All current data will be lost.')) {
-      // Clear all state
-      setHistory([]);
-      setViewCycleIndex(0);
-      setSimulationStarted(false);
+      // Use the global reset function
+      resetSimulation();
+      
+      // Reset local component state
       setUseCSV(false);
       setCsvFile(null);
       setCsvError('');
@@ -120,9 +121,6 @@ export function InitialSetup() {
       setInitShares(1);
       setInitPrice(assetInfo?.defaultPrice || 36.62);
       setInitPool(300);
-      
-      // Clear localStorage V3.0 data to force fresh start
-      localStorage.removeItem('vr-simulator-state');
     }
   };
 
