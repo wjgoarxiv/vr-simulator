@@ -66,9 +66,12 @@ export function CycleInput() {
           deposit_next: depositNext,
           G: gInput,
           V_target: V_next,
-          E_end: E_calc,
+          E_calc: E_calc,  // Portfolio value at end of cycle
+          V_i: V_i_calc,   // Initial V target for this cycle (previous cycle's V_target)
           LBand: L_next,
           HBand: H_next,
+          // Legacy fields for compatibility
+          E_end: E_calc,
           sellTargets: [],
           buyTargets: [],
           sellTable: [],
