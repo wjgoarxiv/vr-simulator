@@ -4,6 +4,13 @@
 
 ## 🌐 Live Web Application
 
+
+## V3.2.0 Latest Update (2025-08-10)
+### 🚀 What's New in V3.2.0:
+- **완전한 한국어 UI**: 모든 인터페이스가 한국어로 번역되었습니다
+- **G 값 표시 개선**: Streamlit 버전과 일치하도록 G 값이 백분율 없이 표시됩니다 (예: "10.0" not "1000.0%")
+- **Growth Factor 용어 제거**: 혼란을 방지하기 위해 "Growth Factor" 표현을 제거했습니다
+- **사용자 경험 일관성**: 원본 Streamlit 애플리케이션과 동일한 동작 방식
 **Try the latest version online:** [https://wjgoarxiv.github.io/vr-simulator/](https://wjgoarxiv.github.io/vr-simulator/)
 
 ---
