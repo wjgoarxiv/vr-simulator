@@ -31,7 +31,6 @@ function App() {
   const [selectedAsset, setSelectedAsset] = useState('TQQQ'); // Default to TQQQ for backward compatibility
 
   // Load from localStorage on mount
-  useEffect(() => {
   // Load saved state on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
