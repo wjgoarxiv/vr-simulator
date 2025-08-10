@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator } from 'lucide-react';
-import { useLanguage } from '../contexts/AppContext';import { useVRContext } from '../App';
+import { useVRContext } from '../App';
 import { calculateNextV, calculateBands } from '../utils/vrCalculations';
 
 export function CycleInput() {
@@ -14,7 +14,7 @@ export function CycleInput() {
     defaultDeposit,
     setDefaultDeposit
   } = useVRContext();
-  const { t } = useLanguage();
+
   const activeState = history[viewCycleIndex];
   const inputCycleNum = activeState.cycle_num + 1;
 
@@ -124,9 +124,9 @@ export function CycleInput() {
             <input
               type="number"
               value={priceEnd}
-              onChange={(e) => setPriceEnd(parseFloat(e.target.value) || 10.0)}
+              onChange={(e) => setPriceEnd(parseFloat(e.target.value) || 0)}
               min="0.01"
-              step="0.1"
+              step="0.01"
               className="input-field"
               required
             />
@@ -140,8 +140,8 @@ export function CycleInput() {
             <input
               type="number"
               value={sharesEnd}
-              onChange={(e) => setSharesEnd(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
+              onChange={(e) => setSharesEnd(parseFloat(e.target.value) || 0)}
+              min="0.0"
               step="1.0"
               className="input-field"
               required
@@ -156,9 +156,9 @@ export function CycleInput() {
             <input
               type="number"
               value={poolEnd}
-              onChange={(e) => setPoolEnd(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
-              step="0.1"
+              onChange={(e) => setPoolEnd(parseFloat(e.target.value) || 0)}
+              min="0.0"
+              step="0.01"
               className="input-field"
               required
             />
@@ -172,9 +172,9 @@ export function CycleInput() {
             <input
               type="number"
               value={depositNext}
-              onChange={(e) => setDepositNext(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
-              step="0.1"
+              onChange={(e) => setDepositNext(parseFloat(e.target.value) || 0)}
+              min="0.0"
+              step="0.01"
               className="input-field"
               required
             />
@@ -183,20 +183,20 @@ export function CycleInput() {
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Gradient Value (G) <span className="text-red-500">*</span>
+              Growth Factor (g) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={gInput}
-              onChange={(e) => setGInput(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
-              
-              step="0.1"
+              onChange={(e) => setGInput(parseFloat(e.target.value) || 0)}
+              min="0.0"
+              max="1.0"
+              step="0.01"
               className="input-field"
               required
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Gradient value for VR formula stability coefficient (10-20 recommended)
+              Growth factor for V calculation (0.0 to 1.0, typically 0.05)
             </p>
           </div>
         </div>

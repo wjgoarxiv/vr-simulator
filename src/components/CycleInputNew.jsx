@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/AppContext';
 import { Calculator } from 'lucide-react';
 import { useVRContext } from '../App';
 import { calculateNextV, calculateBands } from '../utils/vrCalculations';
 
 export function CycleInput() {
-  const {
+  const { t } = useLanguage();  const {
     history,
     setHistory,
     viewCycleIndex,
@@ -107,29 +108,29 @@ export function CycleInput() {
       <div className="flex items-center gap-3 mb-6">
         <Calculator className="w-6 h-6 text-blue-600" />
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Cycle {inputCycleNum} Input
+          {t('cycle')} {inputCycleNum} {t('cycleInputTitle')}
         </h2>
       </div>
 
       <div className="space-y-6">
         {/* Current Values Display */}
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Current Cycle Summary</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('currentCycleSummary')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-gray-500 dark:text-gray-400">Cycle:</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('cycle')}: </span>
               <div className="font-medium text-gray-900 dark:text-gray-100">{activeState.cycle_num}</div>
             </div>
             <div>
-              <span className="text-gray-500 dark:text-gray-400">V Target:</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('vTarget')}: </span>
               <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.V_target.toFixed(2)}</div>
             </div>
             <div>
-              <span className="text-gray-500 dark:text-gray-400">L Band:</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('lBand')}: </span>
               <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.LBand?.toFixed(2) || 'N/A'}</div>
             </div>
             <div>
-              <span className="text-gray-500 dark:text-gray-400">H Band:</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('hBand')}: </span>
               <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.HBand?.toFixed(2) || 'N/A'}</div>
             </div>
           </div>
@@ -139,84 +140,84 @@ export function CycleInput() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End Price ($) <span className="text-red-500">*</span>
+              {t('endPriceLabel')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={priceEnd}
-              onChange={(e) => setPriceEnd(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setPriceEnd(parseFloat(e.target.value) || 10.0)}
               min="0.01"
-              step="0.01"
+              step="0.1"
               className="input-field"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Final stock price at cycle end</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('endPriceHelp')}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End {selectedAsset} Shares <span className="text-red-500">*</span>
+              {t('endSharesLabel')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={sharesEnd}
-              onChange={(e) => setSharesEnd(parseFloat(e.target.value) || 0)}
-              min="0.0"
+              onChange={(e) => setSharesEnd(parseFloat(e.target.value) || 10.0)}
+              min="1.0"
               step="1.0"
               className="input-field"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Final number of {selectedAsset} shares held</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('endSharesHelp')}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End Pool ($) <span className="text-red-500">*</span>
+              {t('endPoolLabel')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={poolEnd}
-              onChange={(e) => setPoolEnd(parseFloat(e.target.value) || 0)}
-              min="0.0"
-              step="0.01"
+              onChange={(e) => setPoolEnd(parseFloat(e.target.value) || 10.0)}
+              min="1.0"
+              step="0.1"
               className="input-field"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cash pool before next deposit</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('endPoolHelp')}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Next Deposit ($) <span className="text-red-500">*</span>
+              {t('nextDepositLabel')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={depositNext}
-              onChange={(e) => setDepositNext(parseFloat(e.target.value) || 0)}
-              min="0.0"
-              step="0.01"
+              onChange={(e) => setDepositNext(parseFloat(e.target.value) || 10.0)}
+              min="1.0"
+              step="0.1"
               className="input-field"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cash to add for next cycle</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('nextDepositHelp')}</p>
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Growth Factor (g) <span className="text-red-500">*</span>
+              {t('gradientValueG')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={gInput}
-              onChange={(e) => setGInput(parseFloat(e.target.value) || 0)}
-              min="0.0"
-              max="1.0"
-              step="0.01"
+              onChange={(e) => setGInput(parseFloat(e.target.value) || 10.0)}
+              min="1.0"
+              
+              step="0.1"
               className="input-field"
               required
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Growth factor for V calculation (0.0 to 1.0, typically 0.05)
+              {t('cycleInputHelp')}
             </p>
           </div>
         </div>
@@ -231,19 +232,19 @@ export function CycleInput() {
             {isCalculating ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Calculating...
+                {t('calculating')}
               </>
             ) : (
               <>
                 <Calculator className="w-4 h-4" />
-                Calculate Next Cycle
+                {t('calculateNextCycle')}
               </>
             )}
           </button>
 
           {!isValid && (
             <div className="flex items-center text-sm text-red-600 dark:text-red-400">
-              <span>Please fill in all required fields with valid values</span>
+              <span>{t('fillAllFields')}</span>
             </div>
           )}
         </div>

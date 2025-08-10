@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator } from 'lucide-react';
-import { useLanguage } from '../contexts/AppContext';import { useVRContext } from '../App';
+import { useVRContext } from '../App';
 import { calculateNextV, calculateBands } from '../utils/vrCalculations';
 
 export function CycleInput() {
@@ -12,9 +12,10 @@ export function CycleInput() {
     currentG,
     setCurrentG,
     defaultDeposit,
-    setDefaultDeposit
+    setDefaultDeposit,
+    selectedAsset
   } = useVRContext();
-  const { t } = useLanguage();
+
   const activeState = history[viewCycleIndex];
   const inputCycleNum = activeState.cycle_num + 1;
 
@@ -27,6 +28,10 @@ export function CycleInput() {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const handleCalculateNext = () => {
+    console.log('Calculate Next button clicked');
+    console.log('Input values:', { priceEnd, sharesEnd, poolEnd, depositNext, gInput });
+    console.log('Active state:', activeState);
+    
     setIsCalculating(true);
     
     // Simulate brief calculation delay for UX
@@ -36,6 +41,8 @@ export function CycleInput() {
         const E_calc = sharesEnd * priceEnd;
         const poolEndBeforeDeposit = poolEnd;
         const V_i_calc = activeState.V_target;
+        
+        console.log('Calculated values:', { E_calc, poolEndBeforeDeposit, V_i_calc });
 
         const V_next = calculateNextV(
           V_i_calc,
@@ -44,32 +51,45 @@ export function CycleInput() {
           gInput,
           depositNext
         );
+        
+        console.log('V_next calculated:', V_next);
 
         const { LBand: L_next, HBand: H_next } = calculateBands(V_next);
+        
+        console.log('Bands calculated:', { L_next, H_next });
 
         const newState = {
           cycle_num: inputCycleNum,
           price_end: priceEnd,
           shares_end: sharesEnd,
           pool_end_before_deposit: poolEnd,
-          deposit: depositNext,
-          g: gInput,
+          deposit_next: depositNext,
+          G: gInput,
           V_target: V_next,
+          E_calc: E_calc,  // Portfolio value at end of cycle
+          V_i: V_i_calc,   // Initial V target for this cycle (previous cycle's V_target)
+          LBand: L_next,
+          HBand: H_next,
+          // Legacy fields for compatibility
           E_end: E_calc,
-          L_band: L_next,
-          H_band: H_next,
           sellTargets: [],
           buyTargets: [],
           sellTable: [],
           buyTable: []
         };
+        
+        console.log('New state created:', newState);
 
         // Update history and move to view new cycle
         const newHistory = [...history, newState];
+        console.log('New history:', newHistory);
+        
         setHistory(newHistory);
         setViewCycleIndex(newHistory.length - 1);
         setCurrentG(gInput);
         setDefaultDeposit(depositNext);
+        
+        console.log('State updated successfully');
 
       } catch (error) {
         console.error('Calculation error:', error);
@@ -106,11 +126,11 @@ export function CycleInput() {
             </div>
             <div>
               <span className="text-gray-500 dark:text-gray-400">L Band:</span>
-              <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.L_band.toFixed(2)}</div>
+              <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.LBand?.toFixed(2) || 'N/A'}</div>
             </div>
             <div>
               <span className="text-gray-500 dark:text-gray-400">H Band:</span>
-              <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.H_band.toFixed(2)}</div>
+              <div className="font-medium text-gray-900 dark:text-gray-100">${activeState.HBand?.toFixed(2) || 'N/A'}</div>
             </div>
           </div>
         </div>
@@ -124,9 +144,9 @@ export function CycleInput() {
             <input
               type="number"
               value={priceEnd}
-              onChange={(e) => setPriceEnd(parseFloat(e.target.value) || 10.0)}
+              onChange={(e) => setPriceEnd(parseFloat(e.target.value) || 0)}
               min="0.01"
-              step="0.1"
+              step="0.01"
               className="input-field"
               required
             />
@@ -135,18 +155,18 @@ export function CycleInput() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End Shares <span className="text-red-500">*</span>
+              End {selectedAsset} Shares <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={sharesEnd}
-              onChange={(e) => setSharesEnd(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
+              onChange={(e) => setSharesEnd(parseFloat(e.target.value) || 0)}
+              min="0.0"
               step="1.0"
               className="input-field"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Final number of shares held</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Final number of {selectedAsset} shares held</p>
           </div>
 
           <div>
@@ -156,9 +176,9 @@ export function CycleInput() {
             <input
               type="number"
               value={poolEnd}
-              onChange={(e) => setPoolEnd(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
-              step="0.1"
+              onChange={(e) => setPoolEnd(parseFloat(e.target.value) || 0)}
+              min="0.0"
+              step="0.01"
               className="input-field"
               required
             />
@@ -172,9 +192,9 @@ export function CycleInput() {
             <input
               type="number"
               value={depositNext}
-              onChange={(e) => setDepositNext(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
-              step="0.1"
+              onChange={(e) => setDepositNext(parseFloat(e.target.value) || 0)}
+              min="0.0"
+              step="0.01"
               className="input-field"
               required
             />
@@ -183,20 +203,20 @@ export function CycleInput() {
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Gradient Value (G) <span className="text-red-500">*</span>
+              Growth Factor (g) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={gInput}
-              onChange={(e) => setGInput(parseFloat(e.target.value) || 10.0)}
-              min="1.0"
-              
-              step="0.1"
+              onChange={(e) => setGInput(parseFloat(e.target.value) || 0)}
+              min="0.0"
+              max="1.0"
+              step="0.01"
               className="input-field"
               required
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Gradient value for VR formula stability coefficient (10-20 recommended)
+              Growth factor for V calculation (0.0 to 1.0, typically 0.05)
             </p>
           </div>
         </div>
