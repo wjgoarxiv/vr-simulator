@@ -32,10 +32,12 @@ function App() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    // Check for reset parameter in URL
+  // Load saved state on mount
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldReset = urlParams.get('reset') === 'true';
-    
+    const shouldResume = urlParams.get('resume') === 'true';
+
     if (shouldReset) {
       // Clear all localStorage and reload
       localStorage.removeItem('vr-simulator-state');
@@ -50,31 +52,38 @@ function App() {
     }
     
     const savedState = localStorage.getItem('vr-simulator-state');
-    const isFirstVisit = !localStorage.getItem('vr-simulator-visited');
-    
-    // Mark as visited for future sessions
-    if (isFirstVisit) {
-      localStorage.setItem('vr-simulator-visited', 'true');
-    }
-    
-    if (savedState && !isFirstVisit) {
+
+    if (shouldResume && savedState) {
+      // Only resume if explicitly requested
       try {
         const parsedState = JSON.parse(savedState);
         // Only load if version matches, otherwise reset
-        if (parsedState.version === '3.1.2') {
+        if (parsedState.version === '3.2.0') {
           setHistory(parsedState.history || []);
           setCurrentG(parsedState.currentG || 10.0);
-          setDefaultDeposit(parsedState.defaultDeposit || 250.0); // Keep 250 as default
+          setDefaultDeposit(parsedState.defaultDeposit || 250.0);
           setSimulationStarted(parsedState.simulationStarted || false);
           setViewCycleIndex(parsedState.viewCycleIndex || 0);
           setBuyRatioForTable(parsedState.buyRatioForTable || 0.75);
-          setSidebarCollapsed(parsedState.sidebarCollapsed || true); // Default to collapsed
+          setSidebarCollapsed(parsedState.sidebarCollapsed || true);
           setSelectedAsset(parsedState.selectedAsset || 'TQQQ');
         } else {
           // Clear old version data
           localStorage.removeItem('vr-simulator-state');
         }
       } catch (error) {
+        console.error('Error loading saved state:', error);
+        localStorage.removeItem('vr-simulator-state');
+      }
+    } else {
+      // Default: always start fresh (ignore cache)
+      localStorage.removeItem('vr-simulator-state');
+      setHistory([]);
+      setSimulationStarted(false);
+      setViewCycleIndex(0);
+      console.log('Starting with fresh state (cache ignored)');
+    }
+  }, []);      } catch (error) {
         console.error('Error loading saved state:', error);
         localStorage.removeItem('vr-simulator-state'); // Clear corrupted data
       }
@@ -87,7 +96,7 @@ function App() {
   // Save to localStorage whenever state changes
   useEffect(() => {
     const stateToSave = {
-      version: '3.1.2', // Add version to prevent compatibility issues
+      version: '3.2.0', // Add version to prevent compatibility issues
       history,
       currentG,
       defaultDeposit,
