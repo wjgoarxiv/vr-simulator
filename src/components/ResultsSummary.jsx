@@ -173,7 +173,7 @@ export function ResultsSummary() {
     endPool: entry.pool_end_before_deposit,
     portfolioValue: entry.E_end,
     nextDeposit: entry.deposit_next || entry.deposit || 0,
-    appliedG: (entry.G || entry.g || 0) * 100,
+    appliedG: (entry.G || entry.g || 0),
     nextTargetV: entry.V_target,
     nextLBand: entry.LBand || entry.L_band || 0,
     nextHBand: entry.HBand || entry.H_band || 0,
@@ -312,7 +312,7 @@ export function ResultsSummary() {
                     ${(row.nextDeposit || 0).toFixed(2)}
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    {(row.appliedG || 0).toFixed(1)}%
+                    {(row.appliedG || 0).toFixed(1)}
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-medium">
                     ${(row.nextTargetV || 0).toFixed(2)}
