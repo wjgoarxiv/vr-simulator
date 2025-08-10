@@ -82,14 +82,6 @@ function App() {
       setViewCycleIndex(0);
       console.log('Starting with fresh state (cache ignored)');
     }
-  }, []);      } catch (error) {
-        console.error('Error loading saved state:', error);
-        localStorage.removeItem('vr-simulator-state'); // Clear corrupted data
-      }
-    } else if (isFirstVisit) {
-      // For first-time visitors, ensure we start with a clean state
-      console.log('First-time visitor detected, starting with clean state');
-    }
   }, []);
 
   // Save to localStorage whenever state changes
