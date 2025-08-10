@@ -1,18 +1,17 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt # Re-introduced for saving graph image
+import matplotlib.pyplot as plt
 import math
 import io
 import datetime
 import pytz
 import streamlit.components.v1 as components
-import copy # To deep copy history states
+import copy
 
 # --- 페이지 설정 ---
-st.set_page_config(page_title="VR 시뮬레이터 V2.1", layout="wide") # Version remains 2.1
+st.set_page_config(page_title="VR 시뮬레이터 V2.2", layout="wide")
 
 # --- 세션 상태 초기화 ---
-# 'history'는 각 사이클 *종료 후* 상태를 저장
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'current_G' not in st.session_state:
@@ -21,9 +20,11 @@ if 'default_deposit' not in st.session_state:
     st.session_state.default_deposit = 50.0
 if 'simulation_started' not in st.session_state:
     st.session_state.simulation_started = False
-# Navigation state
 if 'view_cycle_index' not in st.session_state:
     st.session_state.view_cycle_index = 0
+# V2.2: 종목명을 세션 상태에 추가
+if 'ticker_name' not in st.session_state:
+    st.session_state.ticker_name = "TQQQ"
 
 # =============================================================================
 # 핵심 계산 함수 (변경 없음)
@@ -64,7 +65,6 @@ def calculate_simple_targets(shares_start, LBand, HBand):
     return round(buy_target_price, 2), round(sell_target_price, 2)
 
 
-# 상세 매수/매도표 (기존 로직 유지)
 def calculate_detailed_tables(LBand, HBand, current_shares, pool, buy_ratio):
     buy_table = []
     allocated_cash = pool * buy_ratio
@@ -122,15 +122,10 @@ def calculate_detailed_tables(LBand, HBand, current_shares, pool, buy_ratio):
 def get_market_status():
     korea_tz = pytz.timezone('Asia/Seoul')
     now = datetime.datetime.now(korea_tz)
-    current_hour = now.hour
-    current_minute = now.minute
-    current_time_kst = now
 
     us_eastern = pytz.timezone('US/Eastern')
-    us_time = current_time_kst.astimezone(us_eastern)
+    us_time = now.astimezone(us_eastern)
     us_weekday = us_time.weekday()
-    us_hour = us_time.hour
-    us_minute = us_time.minute
 
     is_market_open = (us_weekday < 5) and (datetime.time(9, 30) <= us_time.time() < datetime.time(16, 0))
     status = "정규장 운영 중" if is_market_open else "정규장 종료"
@@ -186,19 +181,16 @@ def go_next():
     if st.session_state.view_cycle_index < len(st.session_state.history) - 1:
         st.session_state.view_cycle_index += 1
 
-# --- Matplotlib 그래프 생성 함수 (for Download) ---
+# --- Matplotlib 그래프 생성 함수 (변경 없음) ---
 def plot_results_matplotlib(history_df):
-    """Generates a 2x2 Matplotlib figure for download."""
     if history_df.empty or len(history_df) < 1:
         return None
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
-    plt.style.use('seaborn-v0_8-whitegrid') # Example style
+    plt.style.use('seaborn-v0_8-whitegrid')
 
-    # Use index if it's set to cycle number, otherwise use 'cycle_num' column
     x_axis = history_df.index if history_df.index.name == 'cycle_num_display' else history_df['cycle_num']
 
-    # 1. Value Band Tracking
     axs[0,0].plot(x_axis, history_df['V_target'], marker='o', linestyle='-', label='Target Value (V)')
     axs[0,0].plot(x_axis, history_df['LBand'], marker='^', linestyle='--', color='green', label='Lower Band (LBand)')
     axs[0,0].plot(x_axis, history_df['HBand'], marker='v', linestyle='--', color='red', label='Upper Band (HBand)')
@@ -209,7 +201,6 @@ def plot_results_matplotlib(history_df):
     axs[0,0].legend()
     axs[0,0].grid(True)
 
-    # 2. Portfolio Value (E) vs Target (V)
     axs[0,1].plot(x_axis, history_df['E_calc'], marker='s', linestyle='-', color='purple', label='Portfolio Value (E)')
     axs[0,1].plot(x_axis, history_df['V_target'], marker='o', linestyle=':', label='Target Value (V)')
     axs[0,1].set_title('Portfolio Value (E) vs Target (V)')
@@ -218,7 +209,6 @@ def plot_results_matplotlib(history_df):
     axs[0,1].legend()
     axs[0,1].grid(True)
 
-    # 3. Pool Balance (Start of Cycle)
     pool_start_of_cycle = history_df['pool_end_before_deposit'] + history_df['deposit_next']
     axs[1,0].bar(x_axis, pool_start_of_cycle, color='skyblue', label='Pool Balance (Start of Cycle)')
     axs[1,0].set_title('Pool Balance Trend')
@@ -227,7 +217,6 @@ def plot_results_matplotlib(history_df):
     axs[1,0].legend()
     axs[1,0].grid(axis='y')
 
-    # 4. Shares Held Trend
     axs[1,1].plot(x_axis, history_df['shares_end'], marker='D', linestyle='-', color='brown', label='Shares Held')
     axs[1,1].set_title('Shares Held Trend')
     axs[1,1].set_xlabel('Cycle Number')
@@ -241,16 +230,20 @@ def plot_results_matplotlib(history_df):
 # =============================================================================
 # Streamlit UI 구성
 # =============================================================================
-st.title("🔄 VR 시뮬레이터 V2.1")
+st.title("🔄 VR 시뮬레이터 V2.2")
 st.markdown("| Written by **[Woojin Go](https://woojingo.notion.site/)**")
 
 # --- 사이드바 ---
 with st.sidebar:
     st.header("⚙️ 시뮬레이션 설정")
     if not st.session_state.simulation_started:
+        # V2.2: 종목명 입력 필드를 설정으로 이동
+        st.session_state.ticker_name = st.text_input("분석 종목명/티커", value=st.session_state.ticker_name)
         st.session_state.current_G = st.number_input("초기 G 값 (Gradient)", min_value=1.0, value=st.session_state.current_G, step=0.1, help="VR 공식의 안정성 계수 (10~20 추천)")
         st.session_state.default_deposit = st.number_input("기본 적립금 ($)", min_value=0.0, value=st.session_state.default_deposit, step=1.0, help="매 사이클 종료 후 추가될 기본 예수금")
     else:
+        # V2.2: 시뮬레이션 시작 후에도 현재 분석 중인 종목명 표시
+        st.write(f"**분석 종목:** {st.session_state.ticker_name}")
         st.write(f"**현재 기준 G 값:** {st.session_state.current_G}")
         st.write(f"**현재 기준 적립금:** ${st.session_state.default_deposit:,.2f}")
 
@@ -276,15 +269,13 @@ with st.sidebar:
     with st.expander("ℹ️ 도움말 및 VR 공식"):
         st.markdown("""
         #### 사용 방법:
-        1.  **초기 설정**: 시뮬레이션 시작 전, 초기 보유 주식 수, 현재 가격, 초기 예수금을 입력하거나 이전 기록 CSV 파일을 업로드하세요. 초기 G값과 기본 적립금을 설정합니다.
-        2.  **시뮬레이션 시작**: '시뮬레이션 시작/재설정' 버튼을 클릭합니다.
-        3.  **사이클 조회**: 상단의 '⏮️ 이전 사이클' / '다음 사이클 ⏭️' 버튼으로 과거 기록을 조회할 수 있습니다.
-        4.  **다음 사이클 진행 (가장 마지막 사이클에서만 가능)**:
-            * 현재 사이클의 목표 V, LBand/HBand, 추천 매수/매도 목표가를 확인합니다.
-            * 실제 투자 기간 동안 거래를 수행합니다.
-            * 기간 종료 후, **실제 결과 (최종 가격, 최종 주식 수, 최종 예수금)**와 다음 사이클에 추가할 **적립금**, 이번 사이클에 적용할 **G값**을 입력합니다.
-            * '다음 사이클 계산' 버튼을 클릭하여 다음 단계로 넘어갑니다.
-        5.  **결과 확인**: 하단의 기록 테이블과 차트를 통해 전체 시뮬레이션 결과를 확인하고, 기록 데이터(CSV)와 차트 이미지(PNG)를 다운로드할 수 있습니다.
+        1.  **초기 설정**: 시뮬레이션 시작 전, 사이드바에서 **분석할 종목명**, **초기 G값**, **기본 적립금**을 설정합니다.
+        2.  **초기값 입력 또는 로드**: 메인 화면에서 **초기 보유 주식 수, 현재 가격, 초기 예수금**을 직접 입력하거나, **CSV 파일**을 업로드하여 이전 기록을 불러옵니다.
+        3.  **시뮬레이션 시작**: '시뮬레이션 시작/재설정' 버튼을 클릭합니다.
+        4.  **사이클 조회 및 진행**:
+            * 상단의 '⏮️ 이전 사이클' / '다음 사이클 ⏭️' 버튼으로 과거 기록을 조회합니다.
+            * 가장 마지막 사이클에서, 실제 투자 결과를 입력하고 '다음 사이클 계산' 버튼을 클릭하여 시뮬레이션을 이어갑니다.
+        5.  **결과 확인**: 하단의 기록 테이블과 차트를 통해 전체 결과를 확인하고, CSV 파일이나 차트 이미지(PNG)를 다운로드할 수 있습니다.
 
         #### Value Rebalancing (VR) 공식 (변형):
         $$
@@ -323,6 +314,8 @@ if not st.session_state.simulation_started:
                     st.session_state.history = df_history.to_dict('records')
                     st.session_state.view_cycle_index = len(st.session_state.history) -1
                     st.success(f"{len(st.session_state.history)}개 사이클 기록 로드 완료.")
+                    # V2.2: CSV 로드 시 종목명은 기본값 또는 현재 설정값 유지
+                    st.info(f"분석 종목: **{st.session_state.ticker_name}**. 필요한 경우 사이드바에서 변경하세요.")
                 else:
                     st.error(f"CSV 파일에 필요한 컬럼({', '.join(required_cols)})이 모두 존재하지 않습니다.")
                     st.session_state.history = []
@@ -333,14 +326,16 @@ if not st.session_state.simulation_started:
              st.info("⚠️ 이전 기록 CSV가 없다면, 아래 설정 후 '시뮬레이션 시작' 시 자동으로 생성/다운로드됩니다.")
 
     else:
-        st.markdown("**직접 초기값 입력:**")
+        st.markdown(f"**`{st.session_state.ticker_name}` 초기값 직접 입력:**")
         col1, col2, col3 = st.columns(3)
         with col1:
-            init_shares = st.number_input("초기 TQQQ 보유 주식 수", min_value=0.0, value=1.0, step=1.0, key="init_shares")
+            # V2.2: 라벨을 동적으로 변경
+            init_shares = st.number_input(f"초기 보유 주식 수", min_value=0.0, value=1.0, step=1.0, key="init_shares")
         with col2:
-            init_price = st.number_input("현재 TQQQ 가격 ($)", min_value=0.01, value=36.62, step=0.01, key="init_price")
+            # V2.2: 라벨을 동적으로 변경
+            init_price = st.number_input(f"현재 가격 ($)", min_value=0.01, value=60.0, step=0.01, key="init_price")
         with col3:
-            init_pool = st.number_input("초기 예수금 ($)", min_value=0.0, value=13.36, step=0.01, key="init_pool")
+            init_pool = st.number_input("초기 예수금 ($)", min_value=0.0, value=1000.0, step=0.01, key="init_pool")
 
     if st.button("🚀 시뮬레이션 시작 / 재설정", key="start_button"):
         if use_csv and uploaded_file and st.session_state.history:
@@ -366,7 +361,7 @@ if not st.session_state.simulation_started:
                     'price_end': init_price,
                     'G': st.session_state.current_G,
                     'E_calc': V0,
-                    'V_i': V0 # Cycle 1 계산 시 V_i는 Cycle 0의 V_target
+                    'V_i': V0
                 }
                 st.session_state.history = [initial_state]
                 st.session_state.view_cycle_index = 0
@@ -374,24 +369,22 @@ if not st.session_state.simulation_started:
                 st.rerun()
         elif use_csv and not uploaded_file:
              st.warning("CSV 파일을 업로드하거나, 체크박스를 해제하고 초기값을 입력해주세요.")
-        # Removed redundant else block from previous version
 
 
 # --- 2. 시뮬레이션 진행 및 조회 ---
 if st.session_state.simulation_started and st.session_state.history:
 
-    # --- 네비게이션 버튼 ---
     nav_cols = st.columns([1, 1, 5, 1, 1])
     with nav_cols[0]:
         st.button("⏮️ 이전 사이클", on_click=go_previous, disabled=(st.session_state.view_cycle_index <= 0), use_container_width=True, key="prev_cycle")
     with nav_cols[1]:
         st.button("다음 사이클 ⏭️", on_click=go_next, disabled=(st.session_state.view_cycle_index >= len(st.session_state.history) - 1), use_container_width=True, key="next_cycle")
 
-    # --- 현재 조회 중인 사이클 정보 표시 ---
     try:
         active_state = copy.deepcopy(st.session_state.history[st.session_state.view_cycle_index])
         display_cycle_num = active_state['cycle_num'] + 1
-        st.header(f"2. CYCLE {display_cycle_num} 조회")
+        # V2.2: 헤더에 종목명 표시
+        st.header(f"2. `{st.session_state.ticker_name}` CYCLE {display_cycle_num} 조회")
         st.info(f"현재 **Cycle {active_state['cycle_num']}** 의 종료 시점 기록을 보고 있습니다. (다음 사이클인 Cycle {display_cycle_num}의 시작 정보)")
 
         V_i_display = active_state['V_target']
@@ -422,7 +415,6 @@ if st.session_state.simulation_started and st.session_state.history:
         else:
              target_col.warning(f"⚠️ 매도 불가 (보유량 부족 또는 1주)")
 
-        # --- 월요일 시초가 매수 제안 로직 ---
         price_diff_ratio = (last_price_display - buy_target_simple) / last_price_display if last_price_display > 0 else 0
         if buy_target_simple > 0 and price_diff_ratio > 0.20 and display_cycle_num < 5:
              st.warning(f"⚠️ 매수 목표가(${buy_target_simple:,.2f}$)가 이전 가격(${last_price_display:,.2f}$)과 차이가 큽니다. 다음 거래일 시초가 매수를 고려해볼 수 있습니다.")
@@ -453,7 +445,6 @@ if st.session_state.simulation_started and st.session_state.history:
         st.error(f"데이터 표시 중 오류 발생: {e}")
 
 
-    # --- 사이클 결과 입력 폼 (가장 마지막 기록을 볼 때만 표시) ---
     if st.session_state.view_cycle_index == len(st.session_state.history) - 1:
         st.divider()
         input_cycle_num = active_state['cycle_num'] + 1
@@ -477,7 +468,6 @@ if st.session_state.simulation_started and st.session_state.history:
             submitted = st.form_submit_button(f"➡️ Cycle {input_cycle_num + 1} 계산하기")
 
             if submitted:
-                # --- 다음 사이클 계산 로직 ---
                 E_calc = shares_end_input * price_end_input
                 pool_end_before_deposit = pool_end_input
                 V_i_calc = active_state['V_target']
@@ -509,13 +499,12 @@ if st.session_state.simulation_started and st.session_state.history:
 # --- 3. 결과 요약 및 다운로드 ---
 if st.session_state.simulation_started and st.session_state.history:
     st.divider()
-    st.header("3. 📜 시뮬레이션 결과 요약")
+    st.header(f"3. 📜 `{st.session_state.ticker_name}` 시뮬레이션 결과 요약")
 
     if len(st.session_state.history) > 0:
         df_full_history_display = pd.DataFrame(st.session_state.history)
         df_full_history_display['display_cycle'] = df_full_history_display['cycle_num'] + 1
 
-        # --- 결과 테이블 표시 ---
         df_display_formatted = df_full_history_display[[
             'display_cycle', 'V_i', 'price_end', 'shares_end', 'pool_end_before_deposit', 'E_calc', 'deposit_next', 'G', 'V_target', 'LBand', 'HBand'
         ]].rename(columns={
@@ -530,26 +519,26 @@ if st.session_state.simulation_started and st.session_state.history:
              '다음 목표 V (V_f)': '{:,.2f}', '다음 LBand': '{:,.2f}', '다음 HBand': '{:,.2f}'
         }, na_rep="-"))
 
-        # --- 전체 기록 CSV 다운로드 ---
         df_full_history_download = pd.DataFrame(st.session_state.history)
         csv_buffer = io.StringIO()
         df_full_history_download.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
+        # V2.2: 다운로드 파일명에 종목명 추가
+        csv_filename = f"vr_sim_history_{st.session_state.ticker_name}.csv"
         st.download_button(
             label="💾 전체 기록 CSV 다운로드",
             data=csv_buffer.getvalue(),
-            file_name="vr_simulation_history.csv",
+            file_name=csv_filename,
             mime="text/csv",
             key="download_csv"
         )
 
-        # --- Streamlit 네이티브 차트 생성 ---
         st.subheader(r"📊 시뮬레이션 차트")
         graph_df = pd.DataFrame(st.session_state.history)
 
         if len(graph_df) > 1:
             plot_data = graph_df.copy()
             plot_data['cycle_num_display'] = plot_data['cycle_num'] + 1
-            plot_data = plot_data.set_index('cycle_num_display') # Use display cycle num as index
+            plot_data = plot_data.set_index('cycle_num_display')
 
             chart_col1, chart_col2 = st.columns(2)
 
@@ -578,40 +567,34 @@ if st.session_state.simulation_started and st.session_state.history:
             st.info("사이클이 최소 1회 진행되어야 차트를 표시할 수 있습니다. (데이터 2개 이상 필요)")
 
 
-        # --- Matplotlib 기반 그래프 다운로드 ---
         st.markdown("---")
         st.subheader("📊 차트 다운로드 (PNG)")
 
-        # Prepare data for matplotlib function (ensure using display cycle num as index if needed)
         graph_df_mpl = pd.DataFrame(st.session_state.history)
         if len(graph_df_mpl) > 1:
-             # We need cycle_num column for the plot function, but index should be display num
             graph_df_mpl['cycle_num_display'] = graph_df_mpl['cycle_num'] + 1
             graph_df_mpl_indexed = graph_df_mpl.set_index('cycle_num_display')
 
-            # Generate matplotlib figure but don't display it here
-            fig_mpl = plot_results_matplotlib(graph_df_mpl_indexed) # Pass dataframe with correct index
+            fig_mpl = plot_results_matplotlib(graph_df_mpl_indexed)
 
             if fig_mpl:
                 png_buffer = io.BytesIO()
                 try:
-                     # Explicitly use Agg backend for non-interactive saving
-                     # plt.switch_backend('Agg') # Might cause issues in Streamlit Cloud, try without first
                      fig_mpl.savefig(png_buffer, format="png", dpi=300, bbox_inches="tight")
-                     plt.close(fig_mpl) # Close the figure to free memory
+                     plt.close(fig_mpl)
+                     # V2.2: 다운로드 파일명에 종목명 추가
+                     png_filename = f"vr_sim_charts_{st.session_state.ticker_name}.png"
                      st.download_button(
                         label="📊 전체 차트 PNG 다운로드",
                         data=png_buffer.getvalue(),
-                        file_name="vr_simulation_charts.png",
+                        file_name=png_filename,
                         mime="image/png",
                         key="download_mpl_png"
                      )
                 except Exception as e:
                      st.error(f"차트 이미지 생성 중 오류 발생: {e}")
-                     # Ensure figure is closed even if error occurs
                      if 'fig_mpl' in locals() and plt.fignum_exists(fig_mpl.number):
                           plt.close(fig_mpl)
-                # No finally block needed here as plt.close handles non-existent figures gracefully
 
             else:
                 st.info("차트 이미지를 생성하기 위한 데이터가 부족합니다.")
