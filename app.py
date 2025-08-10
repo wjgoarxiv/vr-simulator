@@ -22,7 +22,6 @@ if 'simulation_started' not in st.session_state:
     st.session_state.simulation_started = False
 if 'view_cycle_index' not in st.session_state:
     st.session_state.view_cycle_index = 0
-# V2.2: 종목명을 세션 상태에 추가
 if 'ticker_name' not in st.session_state:
     st.session_state.ticker_name = "TQQQ"
 
@@ -233,16 +232,17 @@ def plot_results_matplotlib(history_df):
 st.title("🔄 VR 시뮬레이터 V2.2")
 st.markdown("| Written by **[Woojin Go](https://woojingo.notion.site/)**")
 
+# --- 오늘 날짜 가져오기 ---
+today_date = datetime.datetime.now().strftime("%Y%m%d")
+
 # --- 사이드바 ---
 with st.sidebar:
     st.header("⚙️ 시뮬레이션 설정")
     if not st.session_state.simulation_started:
-        # V2.2: 종목명 입력 필드를 설정으로 이동
         st.session_state.ticker_name = st.text_input("분석 종목명/티커", value=st.session_state.ticker_name)
         st.session_state.current_G = st.number_input("초기 G 값 (Gradient)", min_value=1.0, value=st.session_state.current_G, step=0.1, help="VR 공식의 안정성 계수 (10~20 추천)")
         st.session_state.default_deposit = st.number_input("기본 적립금 ($)", min_value=0.0, value=st.session_state.default_deposit, step=1.0, help="매 사이클 종료 후 추가될 기본 예수금")
     else:
-        # V2.2: 시뮬레이션 시작 후에도 현재 분석 중인 종목명 표시
         st.write(f"**분석 종목:** {st.session_state.ticker_name}")
         st.write(f"**현재 기준 G 값:** {st.session_state.current_G}")
         st.write(f"**현재 기준 적립금:** ${st.session_state.default_deposit:,.2f}")
@@ -314,7 +314,6 @@ if not st.session_state.simulation_started:
                     st.session_state.history = df_history.to_dict('records')
                     st.session_state.view_cycle_index = len(st.session_state.history) -1
                     st.success(f"{len(st.session_state.history)}개 사이클 기록 로드 완료.")
-                    # V2.2: CSV 로드 시 종목명은 기본값 또는 현재 설정값 유지
                     st.info(f"분석 종목: **{st.session_state.ticker_name}**. 필요한 경우 사이드바에서 변경하세요.")
                 else:
                     st.error(f"CSV 파일에 필요한 컬럼({', '.join(required_cols)})이 모두 존재하지 않습니다.")
@@ -329,10 +328,8 @@ if not st.session_state.simulation_started:
         st.markdown(f"**`{st.session_state.ticker_name}` 초기값 직접 입력:**")
         col1, col2, col3 = st.columns(3)
         with col1:
-            # V2.2: 라벨을 동적으로 변경
             init_shares = st.number_input(f"초기 보유 주식 수", min_value=0.0, value=1.0, step=1.0, key="init_shares")
         with col2:
-            # V2.2: 라벨을 동적으로 변경
             init_price = st.number_input(f"현재 가격 ($)", min_value=0.01, value=60.0, step=0.01, key="init_price")
         with col3:
             init_pool = st.number_input("초기 예수금 ($)", min_value=0.0, value=1000.0, step=0.01, key="init_pool")
@@ -345,10 +342,17 @@ if not st.session_state.simulation_started:
             st.session_state.simulation_started = True
             st.rerun()
         elif not use_csv:
-            if init_price <= 0:
-                 st.warning("현재 가격은 0보다 커야 합니다.")
-            else:
+            # 시작 주식 수가 0일 경우 초기 V를 예수금 기준으로 설정 (Workaround)
+            if init_shares == 0 and init_pool > 0:
+                V0 = init_pool
+            # 일반적인 경우
+            elif init_price > 0:
                 V0 = init_shares * init_price
+            else:
+                st.warning("현재 가격은 0보다 커야 합니다.")
+                V0 = -1 # 오류 플래그
+
+            if V0 >= 0:
                 L0, H0 = calculate_bands(V0)
                 initial_state = {
                     'cycle_num': 0,
@@ -360,7 +364,7 @@ if not st.session_state.simulation_started:
                     'deposit_next': st.session_state.default_deposit,
                     'price_end': init_price,
                     'G': st.session_state.current_G,
-                    'E_calc': V0,
+                    'E_calc': init_shares * init_price,
                     'V_i': V0
                 }
                 st.session_state.history = [initial_state]
@@ -383,7 +387,6 @@ if st.session_state.simulation_started and st.session_state.history:
     try:
         active_state = copy.deepcopy(st.session_state.history[st.session_state.view_cycle_index])
         display_cycle_num = active_state['cycle_num'] + 1
-        # V2.2: 헤더에 종목명 표시
         st.header(f"2. `{st.session_state.ticker_name}` CYCLE {display_cycle_num} 조회")
         st.info(f"현재 **Cycle {active_state['cycle_num']}** 의 종료 시점 기록을 보고 있습니다. (다음 사이클인 Cycle {display_cycle_num}의 시작 정보)")
 
@@ -419,20 +422,34 @@ if st.session_state.simulation_started and st.session_state.history:
         if buy_target_simple > 0 and price_diff_ratio > 0.20 and display_cycle_num < 5:
              st.warning(f"⚠️ 매수 목표가(${buy_target_simple:,.2f}$)가 이전 가격(${last_price_display:,.2f}$)과 차이가 큽니다. 다음 거래일 시초가 매수를 고려해볼 수 있습니다.")
 
-
         with st.expander("상세 매수/매도 테이블 보기"):
             buy_table_detail, sell_table_detail = calculate_detailed_tables(LBand_display, HBand_display, shares_start_display, pool_start_display, buy_ratio_for_table)
+            
             tcol1, tcol2 = st.columns(2)
             with tcol1:
                 st.write("**상세 매수표**")
                 if buy_table_detail:
-                    st.dataframe(pd.DataFrame(buy_table_detail).set_index('매수 후 목표 주식수'))
+                    df_buy = pd.DataFrame(buy_table_detail).set_index('매수 후 목표 주식수')
+                    st.dataframe(df_buy)
+                    st.download_button(
+                       label="📥 매수표 다운로드 (.csv)",
+                       data=df_buy.to_csv().encode('utf-8-sig'),
+                       file_name=f"{today_date}_buytable.csv",
+                       mime='text/csv',
+                    )
                 else:
                     st.info("계산된 매수 목표 없음")
             with tcol2:
                 st.write("**상세 매도표**")
                 if sell_table_detail:
-                    st.dataframe(pd.DataFrame(sell_table_detail).set_index('매도 후 목표 주식수'))
+                    df_sell = pd.DataFrame(sell_table_detail).set_index('매도 후 목표 주식수')
+                    st.dataframe(df_sell)
+                    st.download_button(
+                       label="📤 매도표 다운로드 (.csv)",
+                       data=df_sell.to_csv().encode('utf-8-sig'),
+                       file_name=f"{today_date}_selltable.csv",
+                       mime='text/csv',
+                    )
                 else:
                     st.info("계산된 매도 목표 없음")
 
@@ -522,8 +539,9 @@ if st.session_state.simulation_started and st.session_state.history:
         df_full_history_download = pd.DataFrame(st.session_state.history)
         csv_buffer = io.StringIO()
         df_full_history_download.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
-        # V2.2: 다운로드 파일명에 종목명 추가
-        csv_filename = f"vr_sim_history_{st.session_state.ticker_name}.csv"
+        
+        # 파일명 수정
+        csv_filename = f"{today_date}_vr_simulation_history.csv"
         st.download_button(
             label="💾 전체 기록 CSV 다운로드",
             data=csv_buffer.getvalue(),
@@ -582,8 +600,9 @@ if st.session_state.simulation_started and st.session_state.history:
                 try:
                      fig_mpl.savefig(png_buffer, format="png", dpi=300, bbox_inches="tight")
                      plt.close(fig_mpl)
-                     # V2.2: 다운로드 파일명에 종목명 추가
-                     png_filename = f"vr_sim_charts_{st.session_state.ticker_name}.png"
+                     
+                     # 파일명 수정
+                     png_filename = f"{today_date}_vr_simulation_charts.png"
                      st.download_button(
                         label="📊 전체 차트 PNG 다운로드",
                         data=png_buffer.getvalue(),
