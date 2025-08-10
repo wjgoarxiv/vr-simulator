@@ -258,7 +258,6 @@ export function CycleInput() {
             <div className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
               <div>Equity Value (E): ${(sharesEnd * priceEnd).toLocaleString()}</div>
               <div>Total Pool + Deposit: ${(poolEnd + depositNext).toLocaleString()}</div>
-              <div>Growth Factor: {(gInput * 100).toFixed(1)}%</div>
             </div>
           </div>
         )}
