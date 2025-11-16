@@ -222,7 +222,18 @@ export function CycleDisplay() {
             
             {/* {t('detailedBuyTable')} */}
             <div>
-              <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">{t('detailedBuyTable')}</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">{t('detailedBuyTable')}</h4>
+                {buyTable.length > 0 && (
+                  <button
+                    onClick={() => downloadTableCSV(buyTable, buyTableColumns, `${todayStr}_buy_ladder.csv`)}
+                    className="btn-secondary text-xs flex items-center gap-1 px-3 py-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    {t('downloadCSV')}
+                  </button>
+                )}
+              </div>
               {buyTable.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -281,7 +292,18 @@ export function CycleDisplay() {
 
             {/* {t('detailedSellTable')} */}
             <div>
-              <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">{t('detailedSellTable')}</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">{t('detailedSellTable')}</h4>
+                {sellTable.length > 0 && (
+                  <button
+                    onClick={() => downloadTableCSV(sellTable, sellTableColumns, `${todayStr}_sell_ladder.csv`)}
+                    className="btn-secondary text-xs flex items-center gap-1 px-3 py-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    {t('downloadCSV')}
+                  </button>
+                )}
+              </div>
               {sellTable.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -338,65 +360,6 @@ export function CycleDisplay() {
               )}
             </div>
 
-            {/* {t('detailedSellTable')} */}
-            <div>
-              <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">{t('detailedSellTable')}</h4>
-              {sellTable.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          {t('targetShares')}
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          {t('sellPrice')}
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          {t('totalPool')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
-                      {(showAllSellRows ? sellTable : sellTable.slice(0, 10)).map((row, index) => (
-                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {row.targetShares}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                            ${row.sellPrice.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                            ${row.totalPool.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {sellTable.length > 10 && (
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {showAllSellRows 
-                          ? `Showing all ${sellTable.length} entries` 
-                          : `${t('showingFirst')} 10 ${t('of')} ${buyTable.length} ${t('entries')}`
-                        }
-                      </div>
-                      <button
-                        onClick={() => setShowAllSellRows(!showAllSellRows)}
-                        className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors duration-200"
-                      >
-                        {showAllSellRows ? 'Show First 10' : 'Show All'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="alert-info">
-                  No calculated sell targets available
-                </div>
-              )}
-            </div>
-            
           </div>
         )}
       </div>

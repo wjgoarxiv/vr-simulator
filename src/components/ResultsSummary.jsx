@@ -145,7 +145,9 @@ export function ResultsSummary() {
   };
 
   const handleDownloadCSV = () => {
-    downloadCSV(history, 'vr_simulation_history.csv');
+    const today = new Date();
+    const yyyymmdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+    downloadCSV(history, `${yyyymmdd}_vr_simulation_history.csv`);
   };
 
   const handleResetSimulation = () => {
