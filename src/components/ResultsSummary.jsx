@@ -171,12 +171,17 @@ export function ResultsSummary() {
     endPrice: entry.price_end,
     endShares: entry.shares_end,
     endPool: entry.pool_end_before_deposit,
-    portfolioValue: entry.E_end,
+    portfolioValue: entry.E_calc || entry.E_end,
     nextDeposit: entry.deposit_next || entry.deposit || 0,
     appliedG: (entry.G || entry.g || 0),
     nextTargetV: entry.V_target,
     nextLBand: entry.LBand || entry.L_band || 0,
     nextHBand: entry.HBand || entry.H_band || 0,
+    poolCapLimit: entry.pool_cap_limit,
+    poolEffective: entry.pool_effective_for_v,
+    resetLower: entry.band_reset_range_min,
+    resetUpper: entry.band_reset_range_max,
+    resetType: entry.band_reset_type || 'none'
   }));
 
   // Calculate overall statistics
@@ -285,6 +290,21 @@ export function ResultsSummary() {
                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Next HBand
                 </th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Pool Cap Limit
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Pool Used for V
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Reset Min (80%)
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Reset Max (120%)
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Reset Type
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
@@ -322,6 +342,21 @@ export function ResultsSummary() {
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
                     ${(row.nextHBand || 0).toFixed(2)}
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    ${(row.poolCapLimit || 0).toFixed(2)}
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    ${(row.poolEffective || 0).toFixed(2)}
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    ${(row.resetLower || 0).toFixed(2)}
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    ${(row.resetUpper || 0).toFixed(2)}
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap text-sm capitalize text-gray-900 dark:text-gray-100">
+                    {row.resetType}
                   </td>
                 </tr>
               ))}

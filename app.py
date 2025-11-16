@@ -8,6 +8,11 @@ import pytz
 import streamlit.components.v1 as components
 import copy
 
+# --- VR 파라미터 상수 ---
+POOL_CAP_RATIO = 0.5  # 풀 한도: 평가금 대비 50%
+BAND_RESET_LOWER_FACTOR = 0.8  # 다음 V 하단 밴드
+BAND_RESET_UPPER_FACTOR = 1.2  # 다음 V 상단 밴드
+
 # --- 페이지 설정 ---
 st.set_page_config(page_title="VR 시뮬레이터 V2.3", layout="wide")
 
@@ -66,6 +71,61 @@ def calculate_simple_targets(shares_start, LBand, HBand):
         sell_target_price = HBand / s if s > 0 else 0
 
     return round(buy_target_price, 2), round(sell_target_price, 2)
+
+
+def enforce_pool_cap(pool_value, portfolio_value, cap_ratio=POOL_CAP_RATIO):
+    """풀(현금)이 평가금의 일정 비율을 초과하지 않도록 제한"""
+    cap_limit = max(0.0, cap_ratio * portfolio_value)
+    effective_pool = min(pool_value, cap_limit)
+    return effective_pool, cap_limit
+
+
+def apply_band_reset(V_candidate, portfolio_value, pool_value, cap_limit):
+    """평가금이 목표 밴드 밖으로 벗어나면 V를 재조정"""
+    reset_type = "none"
+    lower_bound = BAND_RESET_LOWER_FACTOR * V_candidate
+    upper_bound = BAND_RESET_UPPER_FACTOR * V_candidate
+
+    if BAND_RESET_LOWER_FACTOR > 0 and portfolio_value < lower_bound:
+        V_candidate = portfolio_value / BAND_RESET_LOWER_FACTOR
+        reset_type = "lower"
+    elif (
+        BAND_RESET_UPPER_FACTOR > 0
+        and cap_limit > 0
+        and pool_value >= cap_limit
+        and portfolio_value > upper_bound
+    ):
+        V_candidate = portfolio_value / BAND_RESET_UPPER_FACTOR
+        reset_type = "upper"
+
+    if reset_type != "none":
+        lower_bound = BAND_RESET_LOWER_FACTOR * V_candidate
+        upper_bound = BAND_RESET_UPPER_FACTOR * V_candidate
+
+    return V_candidate, reset_type, lower_bound, upper_bound
+
+
+def normalize_history_entry(entry):
+    """신규/기존 기록에 필요한 메타데이터 필드를 채운다"""
+    entry = copy.deepcopy(entry)
+    E_val = float(entry.get('E_calc', 0.0))
+    pool_val = float(entry.get('pool_end_before_deposit', 0.0))
+    V_target = float(entry.get('V_target', entry.get('V_i', 0.0)))
+
+    cap_limit = entry.get('pool_cap_limit')
+    if cap_limit is None:
+        cap_limit = POOL_CAP_RATIO * E_val
+        entry['pool_cap_limit'] = cap_limit
+
+    if 'pool_effective_for_v' not in entry:
+        entry['pool_effective_for_v'] = min(pool_val, cap_limit)
+
+    entry.setdefault('pool_cap_ratio_used', POOL_CAP_RATIO)
+    entry.setdefault('band_reset_type', 'none')
+    entry.setdefault('band_reset_range_min', BAND_RESET_LOWER_FACTOR * V_target)
+    entry.setdefault('band_reset_range_max', BAND_RESET_UPPER_FACTOR * V_target)
+
+    return entry
 
 # ========================= NEW: Hybrid Buy Tables ============================
 def calculate_buy_tables_v2(LBand, current_shares, pool, buy_ratio, current_price, max_levels=1000):
@@ -368,7 +428,9 @@ if not st.session_state.simulation_started:
                 df_history = pd.read_csv(uploaded_file)
                 required_cols = ['cycle_num', 'V_target', 'LBand', 'HBand', 'shares_end', 'pool_end_before_deposit', 'deposit_next', 'price_end', 'G', 'E_calc', 'V_i']
                 if all(col in df_history.columns for col in required_cols):
-                    st.session_state.history = df_history.to_dict('records')
+                    records = df_history.to_dict('records')
+                    normalized_records = [normalize_history_entry(rec) for rec in records]
+                    st.session_state.history = normalized_records
                     st.session_state.view_cycle_index = len(st.session_state.history) - 1
                     st.success(f"{len(st.session_state.history)}개 사이클 기록 로드 완료.")
                     st.info(f"분석 종목: **{st.session_state.ticker_name}**. 필요한 경우 사이드바에서 변경하세요.")
@@ -424,6 +486,7 @@ if not st.session_state.simulation_started:
                     'E_calc': init_shares * init_price,
                     'V_i': V0
                 }
+                initial_state = normalize_history_entry(initial_state)
                 st.session_state.history = [initial_state]
                 st.session_state.view_cycle_index = 0
                 st.session_state.simulation_started = True
@@ -442,6 +505,7 @@ if st.session_state.simulation_started and st.session_state.history:
 
     try:
         active_state = copy.deepcopy(st.session_state.history[st.session_state.view_cycle_index])
+        active_state = normalize_history_entry(active_state)
         display_cycle_num = active_state['cycle_num'] + 1
         st.header(f"2. `{st.session_state.ticker_name}` CYCLE {display_cycle_num} 조회")
         st.info(f"현재 **Cycle {active_state['cycle_num']}** 의 종료 시점 기록을 보고 있습니다. (다음 사이클인 Cycle {display_cycle_num}의 시작 정보)")
@@ -479,6 +543,33 @@ if st.session_state.simulation_started and st.session_state.history:
             )
         else:
             target_col.warning("⚠️ 매도 불가 (보유량 부족 또는 1주)")
+
+        band_display_cols = st.columns(2)
+        band_display_cols[0].metric(
+            "다음 사이클 리셋 하한 (80% V)",
+            f"${active_state.get('band_reset_range_min', BAND_RESET_LOWER_FACTOR * V_i_display):,.2f}"
+        )
+        band_display_cols[1].metric(
+            "다음 사이클 리셋 상한 (120% V)",
+            f"${active_state.get('band_reset_range_max', BAND_RESET_UPPER_FACTOR * V_i_display):,.2f}"
+        )
+
+        pool_cap_limit_display = active_state.get('pool_cap_limit', POOL_CAP_RATIO * active_state.get('E_calc', 0.0))
+        pool_effective_display = active_state.get(
+            'pool_effective_for_v',
+            min(active_state.get('pool_end_before_deposit', 0.0), pool_cap_limit_display)
+        )
+        st.caption(
+            f"풀 한도: 평가금의 {POOL_CAP_RATIO*100:.0f}% = ${pool_cap_limit_display:,.2f}. "
+            f"V 계산 반영 예수금은 ${pool_effective_display:,.2f} 입니다."
+        )
+
+        reset_flag_display = active_state.get('band_reset_type', 'none')
+        if reset_flag_display and reset_flag_display != 'none':
+            if reset_flag_display == 'lower':
+                st.warning("직전 사이클에서 밴드 하단 이탈로 목표 V가 하향 조정되었습니다.")
+            elif reset_flag_display == 'upper':
+                st.info("직전 사이클에서 밴드 상단 돌파 및 풀 한도 충족으로 목표 V가 상향 조정되었습니다.")
 
         price_diff_ratio = (last_price_display - buy_target_simple) / last_price_display if last_price_display > 0 else 0
         if buy_target_simple > 0 and price_diff_ratio > 0.20 and display_cycle_num < 5:
@@ -584,8 +675,25 @@ if st.session_state.simulation_started and st.session_state.history:
                 E_calc = shares_end_int * price_end_input
                 pool_end_before_deposit = pool_end_input
                 V_i_calc = active_state['V_target']
+                pool_effective, pool_cap_limit = enforce_pool_cap(pool_end_before_deposit, E_calc)
+                pool_excess = pool_end_before_deposit - pool_effective
+                if pool_excess > 0.01:
+                    st.info(
+                        f"풀 한도(평가금의 {POOL_CAP_RATIO*100:.0f}%)가 적용되어 V 계산 시 ${pool_excess:,.2f} 만큼 제외되었습니다."
+                    )
 
-                V_next = calculate_v_next(V_i_calc, pool_end_before_deposit, E_calc, g_input, deposit_next_input)
+                V_next_candidate = calculate_v_next(V_i_calc, pool_effective, E_calc, g_input, deposit_next_input)
+                V_next, reset_type, band_range_min, band_range_max = apply_band_reset(
+                    V_next_candidate, E_calc, pool_end_before_deposit, pool_cap_limit
+                )
+                if reset_type != "none":
+                    msg = "평가금이 밴드를 벗어나 목표 V가 재조정되었습니다."
+                    if reset_type == "lower":
+                        msg = "평가금이 밴드 하단 아래로 내려가 V가 하향 리셋되었습니다."
+                    elif reset_type == "upper":
+                        msg = "밴드 상단을 돌파했고 풀이 한도에 도달하여 V가 상향 리셋되었습니다."
+                    st.warning(msg)
+
                 L_next, H_next = calculate_bands(V_next)
 
                 new_state = {
@@ -599,8 +707,16 @@ if st.session_state.simulation_started and st.session_state.history:
                     'price_end': price_end_input,
                     'G': g_input,
                     'E_calc': E_calc,
-                    'V_i': V_i_calc
+                    'V_i': V_i_calc,
+                    'pool_effective_for_v': pool_effective,
+                    'pool_cap_limit': pool_cap_limit,
+                    'pool_cap_ratio_used': POOL_CAP_RATIO,
+                    'band_reset_range_min': band_range_min,
+                    'band_reset_range_max': band_range_max,
+                    'band_reset_type': reset_type
                 }
+
+                new_state = normalize_history_entry(new_state)
 
                 st.session_state.history.append(new_state)
                 st.session_state.current_G = g_input
@@ -619,17 +735,23 @@ if st.session_state.simulation_started and st.session_state.history:
         df_full_history_display['display_cycle'] = df_full_history_display['cycle_num'] + 1
 
         df_display_formatted = df_full_history_display[[
-            'display_cycle', 'V_i', 'price_end', 'shares_end', 'pool_end_before_deposit', 'E_calc', 'deposit_next', 'G', 'V_target', 'LBand', 'HBand'
+            'display_cycle', 'V_i', 'price_end', 'shares_end', 'pool_end_before_deposit', 'pool_cap_limit',
+            'pool_effective_for_v', 'E_calc', 'deposit_next', 'G', 'V_target', 'LBand', 'HBand',
+            'band_reset_range_min', 'band_reset_range_max', 'band_reset_type'
         ]].rename(columns={
              'display_cycle': '사이클', 'V_i': '시작 목표 V (V_i)', 'price_end': '종료 가격', 'shares_end': '종료 주식수',
-            'pool_end_before_deposit': '종료 예수금(적립전)', 'E_calc': '평가금(E)', 'deposit_next': '다음 적립금',
-             'G': '적용 G', 'V_target': '다음 목표 V (V_f)', 'LBand': '다음 LBand', 'HBand': '다음 HBand'
+            'pool_end_before_deposit': '종료 예수금(적립전)', 'pool_cap_limit': '풀 한도 (50% of E)',
+            'pool_effective_for_v': 'V 계산 반영 예수금', 'E_calc': '평가금(E)', 'deposit_next': '다음 적립금',
+             'G': '적용 G', 'V_target': '다음 목표 V (V_f)', 'LBand': '다음 LBand', 'HBand': '다음 HBand',
+            'band_reset_range_min': '다음 리셋 하한', 'band_reset_range_max': '다음 리셋 상한', 'band_reset_type': '리셋 타입'
         }).set_index('사이클')
 
         st.dataframe(df_display_formatted.style.format({
              '시작 목표 V (V_i)': '{:,.2f}', '종료 가격': '{:,.2f}', '종료 주식수': '{:.0f}', '종료 예수금(적립전)': '{:,.2f}',
+             '풀 한도 (50% of E)': '{:,.2f}', 'V 계산 반영 예수금': '{:,.2f}',
              '평가금(E)': '{:,.2f}', '다음 적립금': '{:,.2f}', '적용 G': '{:.1f}',
-             '다음 목표 V (V_f)': '{:,.2f}', '다음 LBand': '{:,.2f}', '다음 HBand': '{:,.2f}'
+             '다음 목표 V (V_f)': '{:,.2f}', '다음 LBand': '{:,.2f}', '다음 HBand': '{:,.2f}',
+             '다음 리셋 하한': '{:,.2f}', '다음 리셋 상한': '{:,.2f}'
         }, na_rep="-"))
 
         df_full_history_download = pd.DataFrame(st.session_state.history)

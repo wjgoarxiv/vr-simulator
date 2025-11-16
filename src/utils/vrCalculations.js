@@ -3,6 +3,10 @@
  * Ported from Python Streamlit app to JavaScript
  */
 
+export const POOL_CAP_RATIO = 0.5; // 최대 50%의 평가금만 풀로 사용
+export const BAND_RESET_LOWER_FACTOR = 0.8;
+export const BAND_RESET_UPPER_FACTOR = 1.2;
+
 /**
  * Calculate next target value (V_f) using VR formula
  * V_f = V_i + (pool_prev / G) + ((E - V_i) / (2 * sqrt(G))) + deposit_next
@@ -68,6 +72,62 @@ export function calculateSimpleTargets(sharesStart, LBand, HBand) {
     buyTargetPrice: Math.round(buyTargetPrice * 100) / 100,
     sellTargetPrice: Math.round(sellTargetPrice * 100) / 100
   };
+}
+
+export function enforcePoolCap(poolValue = 0, portfolioValue = 0, capRatio = POOL_CAP_RATIO) {
+  const capLimit = Math.max(0, capRatio * portfolioValue);
+  const effectivePool = Math.min(Math.max(poolValue, 0), capLimit || 0);
+  return { effectivePool, capLimit };
+}
+
+export function applyBandReset(V_candidate, portfolioValue, poolValue, capLimit) {
+  let adjustedV = V_candidate;
+  let resetType = 'none';
+
+  let lowerBound = BAND_RESET_LOWER_FACTOR * adjustedV;
+  let upperBound = BAND_RESET_UPPER_FACTOR * adjustedV;
+
+  if (BAND_RESET_LOWER_FACTOR > 0 && portfolioValue < lowerBound) {
+    adjustedV = portfolioValue / BAND_RESET_LOWER_FACTOR;
+    resetType = 'lower';
+  } else if (
+    BAND_RESET_UPPER_FACTOR > 0 &&
+    capLimit > 0 &&
+    poolValue >= capLimit &&
+    portfolioValue > upperBound
+  ) {
+    adjustedV = portfolioValue / BAND_RESET_UPPER_FACTOR;
+    resetType = 'upper';
+  }
+
+  if (resetType !== 'none') {
+    lowerBound = BAND_RESET_LOWER_FACTOR * adjustedV;
+    upperBound = BAND_RESET_UPPER_FACTOR * adjustedV;
+  }
+
+  return {
+    V_adjusted: adjustedV,
+    resetType,
+    bandResetRangeMin: lowerBound,
+    bandResetRangeMax: upperBound
+  };
+}
+
+export function normalizeHistoryEntry(entry = {}) {
+  const normalized = { ...entry };
+  const E_calc = Number(normalized.E_calc ?? normalized.E_end ?? 0);
+  const pool = Number(normalized.pool_end_before_deposit ?? 0);
+  const V_target = Number(normalized.V_target ?? normalized.V_i ?? 0);
+
+  const capLimit = normalized.pool_cap_limit ?? (POOL_CAP_RATIO * E_calc);
+  normalized.pool_cap_limit = capLimit || 0;
+  normalized.pool_cap_ratio_used = normalized.pool_cap_ratio_used ?? POOL_CAP_RATIO;
+  normalized.pool_effective_for_v = normalized.pool_effective_for_v ?? Math.min(pool, capLimit || 0);
+  normalized.band_reset_range_min = normalized.band_reset_range_min ?? (BAND_RESET_LOWER_FACTOR * V_target);
+  normalized.band_reset_range_max = normalized.band_reset_range_max ?? (BAND_RESET_UPPER_FACTOR * V_target);
+  normalized.band_reset_type = normalized.band_reset_type ?? 'none';
+
+  return normalized;
 }
 
 /**

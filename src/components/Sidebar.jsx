@@ -37,29 +37,37 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className={`fixed left-0 top-0 h-full transition-all duration-300 bg-white dark:bg-gray-800 shadow-lg border-r border-gray-200 dark:border-gray-700 pt-20 overflow-y-auto ${
-      sidebarCollapsed ? 'w-4' : 'w-80'
-    }`}>
-      
-      {/* Toggle Button */}
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="fixed left-1 top-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-md hover:shadow-lg transition-all duration-200 z-20"
+    <>
+      {!sidebarCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/30 z-20 md:hidden"
+          onClick={() => setSidebarCollapsed(true)}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`fixed left-0 top-0 h-full transition-all duration-300 bg-white dark:bg-gray-800 shadow-lg border-r border-gray-200 dark:border-gray-700 pt-16 md:pt-20 overflow-y-auto z-30 ${
+          sidebarCollapsed ? 'w-0 md:w-4 overflow-hidden' : 'w-full md:w-80'
+        }`}
       >
-        {sidebarCollapsed ? (
-          <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        ) : (
-          <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        )}
-      </button>
+        
+        {/* Toggle Button */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="fixed left-2 top-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-md hover:shadow-lg transition-all duration-200 z-40"
+          aria-label="Toggle sidebar"
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          ) : (
+            <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          )}
+        </button>
 
-      {sidebarCollapsed ? (
-        /* Collapsed Sidebar - Empty */
-        <div className="p-3">
-          {/* Empty collapsed sidebar */}
-        </div>
-      ) : (
-        <div className="p-6 space-y-8">
+        {sidebarCollapsed ? (
+          <div className="p-4 hidden md:block" aria-hidden="true"></div>
+        ) : (
+          <div className="p-6 space-y-8">
           
           {/* Selected Asset Information */}
           {selectedAsset && (
@@ -319,7 +327,8 @@ export function Sidebar() {
           </div>
           
         </div>
-      )}
-    </aside>
+        )}
+      </aside>
+    </>
   );
 }

@@ -19,7 +19,7 @@ export function MatplotlibStyleCharts() {
         // Prepare data
         const cycles = history.map((_, index) => index + 1);
         const targetValues = history.map(entry => entry.V_target || 0);
-        const portfolioValues = history.map(entry => entry.E_end || 0);
+        const portfolioValues = history.map(entry => entry.E_calc || entry.E_end || 0);
         const poolValues = history.map(entry => entry.pool_end_before_deposit || 0);
         const shareValues = history.map(entry => entry.shares_end || 0);
 

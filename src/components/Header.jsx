@@ -16,21 +16,21 @@ export function Header() {
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start sm:items-center space-x-3">
             <div className="flex items-center justify-center w-10 h-10 bg-primary-600 rounded-lg">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🔄 {t('appTitle')}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">🔄 {t('appTitle')}</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t('writtenBy')} <a href="https://woojingo.notion.site/" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium">Woojin Go</a>
               </p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-3 justify-end">
             {/* Reset Button - Only show when simulation is started */}
             {simulationStarted && (
               <button
@@ -69,8 +69,8 @@ export function Header() {
               )}
             </button>
             
-            <div className="hidden md:block">
-              <div className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 px-4 py-2 rounded-lg border border-primary-200 dark:border-primary-700">
+            <div className="w-full md:w-auto">
+              <div className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 px-4 py-2 rounded-lg border border-primary-200 dark:border-primary-700 text-center md:text-left">
                 <p className="text-sm font-medium text-primary-700 dark:text-primary-300">
                   {t('appSubtitle')}
                 </p>

@@ -3,6 +3,14 @@
  */
 
 import Papa from 'papaparse';
+import {
+  calculateBands,
+  enforcePoolCap,
+  normalizeHistoryEntry,
+  POOL_CAP_RATIO,
+  BAND_RESET_LOWER_FACTOR,
+  BAND_RESET_UPPER_FACTOR
+} from './vrCalculations';
 
 /**
  * Required columns for VR simulation history CSV
@@ -21,6 +29,30 @@ export const REQUIRED_CSV_COLUMNS = [
   'V_i'
 ];
 
+export const EXTRA_CSV_COLUMNS = [
+  'pool_cap_limit',
+  'pool_effective_for_v',
+  'pool_cap_ratio_used',
+  'band_reset_range_min',
+  'band_reset_range_max',
+  'band_reset_type'
+];
+
+const NUMERIC_OPTIONAL_COLUMNS = [
+  'pool_cap_limit',
+  'pool_effective_for_v',
+  'pool_cap_ratio_used',
+  'band_reset_range_min',
+  'band_reset_range_max'
+];
+
+const NUMERIC_COLUMNS = [
+  ...REQUIRED_CSV_COLUMNS.filter(col => col !== 'cycle_num'),
+  ...NUMERIC_OPTIONAL_COLUMNS
+];
+
+export const CSV_EXPORT_COLUMNS = [...REQUIRED_CSV_COLUMNS, ...EXTRA_CSV_COLUMNS];
+
 /**
  * Parse CSV file for VR simulation history
  * @param {File} file - CSV file to parse
@@ -32,12 +64,11 @@ export function parseCSVFile(file) {
       header: true,
       skipEmptyLines: true,
       transform: (value, field) => {
-        // Convert numeric fields
-        if (REQUIRED_CSV_COLUMNS.includes(field) && field !== 'cycle_num') {
-          return parseFloat(value) || 0;
-        }
         if (field === 'cycle_num') {
           return parseInt(value) || 0;
+        }
+        if (NUMERIC_COLUMNS.includes(field)) {
+          return parseFloat(value) || 0;
         }
         return value;
       },
@@ -69,7 +100,14 @@ export function parseCSVFile(file) {
               }
               validatedRow[col] = value;
             });
-            return validatedRow;
+
+            EXTRA_CSV_COLUMNS.forEach(col => {
+              if (row[col] !== undefined) {
+                validatedRow[col] = row[col];
+              }
+            });
+
+            return normalizeHistoryEntry(validatedRow);
           });
           
           resolve(validatedData);
@@ -93,10 +131,12 @@ export function convertToCSV(historyData) {
   if (!historyData || historyData.length === 0) {
     return '';
   }
-  
-  const csv = Papa.unparse(historyData, {
+
+  const normalizedData = historyData.map(normalizeHistoryEntry);
+
+  const csv = Papa.unparse(normalizedData, {
     header: true,
-    columns: REQUIRED_CSV_COLUMNS
+    columns: CSV_EXPORT_COLUMNS
   });
   
   return csv;
@@ -152,8 +192,10 @@ export function validateHistoryEntry(entry) {
 export function createInitialHistoryEntry(shares, price, pool, G, deposit, asset = null) {
   const V0 = shares * price;
   const { LBand, HBand } = calculateBands(V0);
-  
-  const entry = {
+  const E_calc = V0;
+  const { effectivePool, capLimit } = enforcePoolCap(pool, E_calc);
+
+  const entry = normalizeHistoryEntry({
     cycle_num: 0,
     V_target: V0,
     LBand,
@@ -163,22 +205,19 @@ export function createInitialHistoryEntry(shares, price, pool, G, deposit, asset
     deposit_next: deposit,
     price_end: price,
     G,
-    E_calc: V0,
-    V_i: V0
-  };
+    E_calc,
+    V_i: V0,
+    pool_cap_limit: capLimit,
+    pool_effective_for_v: effectivePool,
+    pool_cap_ratio_used: POOL_CAP_RATIO,
+    band_reset_range_min: BAND_RESET_LOWER_FACTOR * V0,
+    band_reset_range_max: BAND_RESET_UPPER_FACTOR * V0,
+    band_reset_type: 'none'
+  });
 
-  // Add asset info if provided (for newer format)
   if (asset) {
     entry.asset_symbol = asset;
   }
 
   return entry;
-}
-
-// Import VR calculation function
-function calculateBands(V_target) {
-  return {
-    LBand: 0.85 * V_target,
-    HBand: 1.15 * V_target
-  };
 }

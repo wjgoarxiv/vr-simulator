@@ -7,6 +7,7 @@ import { CycleDisplay } from './components/CycleDisplay';
 import { CycleInput } from './components/CycleInputNew';
 import { ResultsSummary } from './components/ResultsSummary';
 import { LanguageProvider, ThemeProvider } from './contexts/AppContext';
+import { normalizeHistoryEntry } from './utils/vrCalculations';
 
 // Create context for global state management
 const VRContext = createContext();
@@ -58,7 +59,8 @@ function App() {
         const parsedState = JSON.parse(savedState);
         // Only load if version matches, otherwise reset
         if (parsedState.version === '3.2.0') {
-          setHistory(parsedState.history || []);
+          const normalizedHistory = (parsedState.history || []).map(normalizeHistoryEntry);
+          setHistory(normalizedHistory);
           setCurrentG(parsedState.currentG || 10.0);
           setDefaultDeposit(parsedState.defaultDeposit || 250.0);
           setSimulationStarted(parsedState.simulationStarted || false);
@@ -88,7 +90,7 @@ function App() {
   useEffect(() => {
     const stateToSave = {
       version: '3.2.0', // Add version to prevent compatibility issues
-      history,
+      history: history.map(normalizeHistoryEntry),
       currentG,
       defaultDeposit,
       simulationStarted,
@@ -161,8 +163,8 @@ function App() {
               <Sidebar />
               
               {/* Main Content */}
-              <main className={`flex-1 p-6 transition-all duration-300 ${
-                sidebarCollapsed ? 'ml-4' : 'ml-80'
+              <main className={`flex-1 p-4 sm:p-6 transition-all duration-300 ${
+                sidebarCollapsed ? 'md:ml-4 ml-0' : 'md:ml-80 ml-0'
               }`}>
                 <div className="max-w-7xl mx-auto space-y-8">
               

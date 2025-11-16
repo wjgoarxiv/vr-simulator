@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLanguage } from '../contexts/AppContext';
 import { Calculator } from 'lucide-react';
 import { useVRContext } from '../App';
-import { calculateNextV, calculateBands } from '../utils/vrCalculations';
+import {
+  calculateNextV,
+  calculateBands,
+  enforcePoolCap,
+  applyBandReset,
+  normalizeHistoryEntry,
+  POOL_CAP_RATIO
+} from '../utils/vrCalculations';
 
 export function CycleInput() {
   const { t } = useLanguage();  const {
@@ -28,6 +35,42 @@ export function CycleInput() {
   const [gInput, setGInput] = useState(currentG);
   const [isCalculating, setIsCalculating] = useState(false);
 
+  const computedPreview = useMemo(() => {
+    const E_calc = sharesEnd * priceEnd;
+    const poolEndBeforeDeposit = poolEnd;
+    const V_i_calc = activeState.V_target;
+    const { effectivePool, capLimit } = enforcePoolCap(poolEndBeforeDeposit, E_calc);
+    const V_candidate = calculateNextV(
+      V_i_calc,
+      effectivePool,
+      E_calc,
+      gInput,
+      depositNext
+    );
+    const { V_adjusted, resetType, bandResetRangeMin, bandResetRangeMax } = applyBandReset(
+      V_candidate,
+      E_calc,
+      poolEndBeforeDeposit,
+      capLimit
+    );
+    const { LBand: L_next, HBand: H_next } = calculateBands(V_adjusted);
+
+    return {
+      E_calc,
+      poolEndBeforeDeposit,
+      V_i_calc,
+      effectivePool,
+      capLimit,
+      poolExcess: Math.max(poolEndBeforeDeposit - effectivePool, 0),
+      V_next: V_adjusted,
+      L_next,
+      H_next,
+      resetType,
+      bandResetRangeMin,
+      bandResetRangeMax
+    };
+  }, [sharesEnd, priceEnd, poolEnd, depositNext, gInput, activeState.V_target]);
+
   const handleCalculateNext = () => {
     console.log('Calculate Next button clicked');
     console.log('Input values:', { priceEnd, sharesEnd, poolEnd, depositNext, gInput });
@@ -38,26 +81,9 @@ export function CycleInput() {
     // Simulate brief calculation delay for UX
     setTimeout(() => {
       try {
-        // Calculate next cycle values
-        const E_calc = sharesEnd * priceEnd;
-        const poolEndBeforeDeposit = poolEnd;
-        const V_i_calc = activeState.V_target;
-        
-        console.log('Calculated values:', { E_calc, poolEndBeforeDeposit, V_i_calc });
+        const nextValues = computedPreview;
 
-        const V_next = calculateNextV(
-          V_i_calc,
-          poolEndBeforeDeposit,
-          E_calc,
-          gInput,
-          depositNext
-        );
-        
-        console.log('V_next calculated:', V_next);
-
-        const { LBand: L_next, HBand: H_next } = calculateBands(V_next);
-        
-        console.log('Bands calculated:', { L_next, H_next });
+        console.log('Calculated values:', nextValues);
 
         const newState = {
           cycle_num: inputCycleNum,
@@ -66,23 +92,31 @@ export function CycleInput() {
           pool_end_before_deposit: poolEnd,
           deposit_next: depositNext,
           G: gInput,
-          V_target: V_next,
-          E_calc: E_calc,  // Portfolio value at end of cycle
-          V_i: V_i_calc,   // Initial V target for this cycle (previous cycle's V_target)
-          LBand: L_next,
-          HBand: H_next,
+          V_target: nextValues.V_next,
+          E_calc: nextValues.E_calc,
+          V_i: nextValues.V_i_calc,
+          LBand: nextValues.L_next,
+          HBand: nextValues.H_next,
+          pool_cap_limit: nextValues.capLimit,
+          pool_effective_for_v: nextValues.effectivePool,
+          pool_cap_ratio_used: POOL_CAP_RATIO,
+          band_reset_range_min: nextValues.bandResetRangeMin,
+          band_reset_range_max: nextValues.bandResetRangeMax,
+          band_reset_type: nextValues.resetType,
           // Legacy fields for compatibility
-          E_end: E_calc,
+          E_end: nextValues.E_calc,
           sellTargets: [],
           buyTargets: [],
           sellTable: [],
           buyTable: []
         };
-        
+
+        const normalizedState = normalizeHistoryEntry(newState);
+
         console.log('New state created:', newState);
 
         // Update history and move to view new cycle
-        const newHistory = [...history, newState];
+        const newHistory = [...history, normalizedState];
         console.log('New history:', newHistory);
         
         setHistory(newHistory);
@@ -258,6 +292,24 @@ export function CycleInput() {
             <div className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
               <div>Equity Value (E): ${(sharesEnd * priceEnd).toLocaleString()}</div>
               <div>Total Pool + Deposit: ${(poolEnd + depositNext).toLocaleString()}</div>
+              <div>
+                Pool Cap Limit ({(POOL_CAP_RATIO * 100).toFixed(0)}% of E): ${computedPreview.capLimit.toFixed(2)}
+                {computedPreview.poolExcess > 0 && (
+                  <span className="ml-2 text-red-500 dark:text-red-300">
+                    (Only ${computedPreview.effectivePool.toFixed(2)} used for V)
+                  </span>
+                )}
+              </div>
+              <div>
+                Next Reset Watch Range: ${computedPreview.bandResetRangeMin.toFixed(2)} ~ ${computedPreview.bandResetRangeMax.toFixed(2)}
+              </div>
+              {computedPreview.resetType !== 'none' && (
+                <div className="text-yellow-700 dark:text-yellow-300">
+                  {computedPreview.resetType === 'lower'
+                    ? 'V will be reduced to keep portfolio within band.'
+                    : 'V will be raised because portfolio exceeded the upper band with full pool.'}
+                </div>
+              )}
             </div>
           </div>
         )}

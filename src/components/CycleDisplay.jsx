@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Target, TrendingUp, TrendingDown, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useVRContext } from '../App';
-import { useLanguage } from '../contexts/AppContext';import { calculateSimpleTargets, calculateDetailedTables } from '../utils/vrCalculations';
+import { useLanguage } from '../contexts/AppContext';
+import {
+  calculateSimpleTargets,
+  calculateDetailedTables,
+  POOL_CAP_RATIO,
+  BAND_RESET_LOWER_FACTOR,
+  BAND_RESET_UPPER_FACTOR
+} from '../utils/vrCalculations';
 
 export function CycleDisplay() {
   const { history, viewCycleIndex, buyRatioForTable, selectedAsset } = useVRContext();
@@ -28,6 +35,11 @@ export function CycleDisplay() {
   const HBandDisplay = activeState.HBand || 0;
   const GDisplay = activeState.G || 0;
   const lastPriceDisplay = activeState.price_end || 0;
+  const poolCapLimitDisplay = activeState.pool_cap_limit ?? (POOL_CAP_RATIO * (activeState.E_calc || 0));
+  const poolEffectiveDisplay = activeState.pool_effective_for_v ?? Math.min(activeState.pool_end_before_deposit || 0, poolCapLimitDisplay || 0);
+  const bandResetRangeMin = activeState.band_reset_range_min ?? (BAND_RESET_LOWER_FACTOR * V_i_display);
+  const bandResetRangeMax = activeState.band_reset_range_max ?? (BAND_RESET_UPPER_FACTOR * V_i_display);
+  const resetFlag = activeState.band_reset_type ?? 'none';
 
   // Calculate buy/sell targets
   const { buyTargetPrice, sellTargetPrice } = calculateSimpleTargets(
@@ -102,6 +114,27 @@ export function CycleDisplay() {
             <div className="text-xs text-gray-500 dark:text-gray-400">{t('gradient')}</div>
           </div>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="metric-card">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('nextResetLower')}</div>
+            <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">${bandResetRangeMin.toFixed(2)}</div>
+          </div>
+          <div className="metric-card">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('nextResetUpper')}</div>
+            <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">${bandResetRangeMax.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+          {t('poolCapLimitLabel')}: ${poolCapLimitDisplay.toFixed(2)} / {t('poolEffectiveLabel')}: ${poolEffectiveDisplay.toFixed(2)}
+        </div>
+
+        {resetFlag !== 'none' && (
+          <div className="alert-warning mb-4">
+            {resetFlag === 'lower' ? t('bandResetLowerMsg') : t('bandResetUpperMsg')}
+          </div>
+        )}
 
         {/* Buy/Sell Targets */}
         <div className="space-y-4">
