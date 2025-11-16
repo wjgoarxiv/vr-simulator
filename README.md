@@ -59,9 +59,7 @@ $$
 
 ---
 
-## 개선된 Streamlit 버전 소개
-
-`improved_source/app.py`는 위 레거시 Streamlit 기반을 유지하되, 외부 VR 운용 가이드라인에서 강조하는 **풀 한도**와 **밴드 리셋** 개념을 추가하여 밴드 폭이 무한정 벌어지는 현상을 완화합니다.
+## Streamlit `app.py` 로직 업데이트 (@2025-11-16 Sunday updated!) 
 
 ### 추가된 핵심 로직
 
