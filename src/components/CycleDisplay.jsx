@@ -40,6 +40,35 @@ export function CycleDisplay() {
   const bandResetRangeMin = activeState.band_reset_range_min ?? (BAND_RESET_LOWER_FACTOR * V_i_display);
   const bandResetRangeMax = activeState.band_reset_range_max ?? (BAND_RESET_UPPER_FACTOR * V_i_display);
   const resetFlag = activeState.band_reset_type ?? 'none';
+  const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+  const downloadTableCSV = (rows, columns, filename) => {
+    if (!rows || rows.length === 0) return;
+    const header = columns.map(col => col.label).join(',');
+    const csvRows = rows.map(row => columns.map(col => row[col.key]).join(','));
+    const csvString = [header, ...csvRows].join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const buyTableColumns = [
+    { key: 'targetShares', label: 'targetShares' },
+    { key: 'buyPrice', label: 'buyPrice' },
+    { key: 'totalPool', label: 'totalPool' }
+  ];
+
+  const sellTableColumns = [
+    { key: 'targetShares', label: 'targetShares' },
+    { key: 'sellPrice', label: 'sellPrice' },
+    { key: 'totalPool', label: 'totalPool' }
+  ];
 
   // Calculate buy/sell targets
   const { buyTargetPrice, sellTargetPrice } = calculateSimpleTargets(
