@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, TrendingUp, TrendingDown, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown, AlertTriangle, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useVRContext } from '../App';
 import { useLanguage } from '../contexts/AppContext';
 import {
