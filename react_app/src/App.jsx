@@ -29,9 +29,14 @@ function App() {
   const [viewCycleIndex, setViewCycleIndex] = useState(0);
   const [buyRatioForTable, setBuyRatioForTable] = useState(0.75);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [selectedAsset, setSelectedAsset] = useState('TQQQ'); // Default to TQQQ for backward compatibility
+  const [selectedAsset, setSelectedAsset] = useState('TQQQ');
+  
+  // V3.0 State
+  const [v3Enabled, setV3Enabled] = useState(true);
+  const [tradeFriendlyEnabled, setTradeFriendlyEnabled] = useState(true);
+  const [enableMomentumFilter, setEnableMomentumFilter] = useState(true);
+  const [enableRiskManagement, setEnableRiskManagement] = useState(true);
 
-  // Load from localStorage on mount
   // Load saved state on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -39,14 +44,12 @@ function App() {
     const shouldResume = urlParams.get('resume') === 'true';
 
     if (shouldReset) {
-      // Clear all localStorage and reload
       localStorage.removeItem('vr-simulator-state');
       localStorage.removeItem('vr-simulator-visited');
       localStorage.removeItem('vr-simulator-language');
       localStorage.removeItem('vr-simulator-theme');
       localStorage.removeItem('vr-simulator-theme-version');
       console.log('localStorage cleared due to reset parameter');
-      // Remove the reset parameter from URL
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
@@ -54,10 +57,8 @@ function App() {
     const savedState = localStorage.getItem('vr-simulator-state');
 
     if (shouldResume && savedState) {
-      // Only resume if explicitly requested
       try {
         const parsedState = JSON.parse(savedState);
-        // Only load if version matches, otherwise reset
         if (parsedState.version === '3.2.0') {
           const normalizedHistory = (parsedState.history || []).map(normalizeHistoryEntry);
           setHistory(normalizedHistory);
@@ -68,8 +69,13 @@ function App() {
           setBuyRatioForTable(parsedState.buyRatioForTable || 0.75);
           setSidebarCollapsed(parsedState.sidebarCollapsed || true);
           setSelectedAsset(parsedState.selectedAsset || 'TQQQ');
+          
+          if (parsedState.v3Enabled !== undefined) setV3Enabled(parsedState.v3Enabled);
+          if (parsedState.v3Enabled !== undefined) setV3Enabled(parsedState.v3Enabled);
+          if (parsedState.tradeFriendlyEnabled !== undefined) setTradeFriendlyEnabled(parsedState.tradeFriendlyEnabled);
+          if (parsedState.enableMomentumFilter !== undefined) setEnableMomentumFilter(parsedState.enableMomentumFilter);
+          if (parsedState.enableRiskManagement !== undefined) setEnableRiskManagement(parsedState.enableRiskManagement);
         } else {
-          // Clear old version data
           localStorage.removeItem('vr-simulator-state');
         }
       } catch (error) {
@@ -77,7 +83,6 @@ function App() {
         localStorage.removeItem('vr-simulator-state');
       }
     } else {
-      // Default: always start fresh (ignore cache)
       localStorage.removeItem('vr-simulator-state');
       setHistory([]);
       setSimulationStarted(false);
@@ -89,7 +94,7 @@ function App() {
   // Save to localStorage whenever state changes
   useEffect(() => {
     const stateToSave = {
-      version: '3.2.0', // Add version to prevent compatibility issues
+      version: '3.2.0',
       history: history.map(normalizeHistoryEntry),
       currentG,
       defaultDeposit,
@@ -97,10 +102,14 @@ function App() {
       viewCycleIndex,
       buyRatioForTable,
       sidebarCollapsed,
-      selectedAsset
+      selectedAsset,
+      v3Enabled,
+      tradeFriendlyEnabled,
+      enableMomentumFilter,
+      enableRiskManagement
     };
     localStorage.setItem('vr-simulator-state', JSON.stringify(stateToSave));
-  }, [history, currentG, defaultDeposit, simulationStarted, viewCycleIndex, buyRatioForTable, sidebarCollapsed, selectedAsset]);
+  }, [history, currentG, defaultDeposit, simulationStarted, viewCycleIndex, buyRatioForTable, sidebarCollapsed, selectedAsset, v3Enabled, tradeFriendlyEnabled, enableMomentumFilter, enableRiskManagement]);
 
   // Reset function to clear all state
   const resetSimulation = () => {
@@ -111,6 +120,10 @@ function App() {
     setViewCycleIndex(0);
     setBuyRatioForTable(0.75);
     setSelectedAsset('TQQQ');
+    setV3Enabled(true);
+    setTradeFriendlyEnabled(true);
+    setEnableMomentumFilter(true);
+    setEnableRiskManagement(true);
     // Clear localStorage
     localStorage.removeItem('vr-simulator-state');
     console.log('Simulation reset to initial state');
@@ -134,7 +147,33 @@ function App() {
     setSidebarCollapsed,
     selectedAsset,
     setSelectedAsset,
-    resetSimulation
+    resetSimulation,
+    // V3.0
+    v3Enabled,
+    setV3Enabled,
+    tradeFriendlyEnabled,
+    setTradeFriendlyEnabled,
+    enableMomentumFilter,
+    setEnableMomentumFilter,
+    enableRiskManagement,
+    setEnableRiskManagement,
+    priceHistory: history.map(h => h.price_end), // Derived full history for volatility
+    // Missing derived values for ResultsSummary
+    totalCycles: history.length,
+    initialMoney: history.length > 0 ? (history[0].V_target || 0) : 0, 
+    // Note: initialMoney logic might need refinement if it tracks actual cash + stock. 
+    // For now, map to V_target of first cycle or similar proxy if simpler.
+    // Better: Derived from history.
+    currentMoney: history.length > 0 ? (history[history.length-1].pool_end_before_deposit || 0) : 0,
+    currentShares: history.length > 0 ? (history[history.length-1].shares_end || 0) : 0,
+    currentSharesValue: history.length > 0 ? ((history[history.length-1].shares_end || 0) * (history[history.length-1].price_end || 0)) : 0,
+    currentAverageCost: 0, // Not explicitly tracked in simple history yet, fallback to 0 or implement calc
+    setCurrentMoney: () => {}, // No-op setters/Legacy compatibility
+    setCurrentShares: () => {},
+    setCurrentAverageCost: () => {},
+    setInitialMoney: () => {},
+    setTotalCycles: () => {},
+    setCurrentSharesValue: () => {},
   };
 
   // Navigation functions
@@ -205,8 +244,10 @@ function App() {
             </main>
           </div>
         </div>
-      </VRContext.Provider>
-    </LanguageProvider>
-  </ThemeProvider>
+        </VRContext.Provider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
-}export default App;
+}
+
+export default App;

@@ -17,7 +17,9 @@ export function InitialSetup() {
     setDefaultDeposit,
     selectedAsset,
     setSelectedAsset,
-    resetSimulation
+    resetSimulation,
+    v3Enabled,
+    setV3Enabled
   } = useVRContext();
 
   const [useCSV, setUseCSV] = useState(false);
@@ -130,7 +132,14 @@ export function InitialSetup() {
         <div className="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg">
           <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">1. 🌱 Initial Setup</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+          1. 🌱 Initial Setup
+          {v3Enabled && (
+            <span className="px-2 py-1 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-sm animate-pulse">
+              Simulator V3.0
+            </span>
+          )}
+        </h2>
       </div>
 
       <div className="space-y-6">
@@ -143,6 +152,69 @@ export function InitialSetup() {
             selectedAsset={selectedAsset}
             onAssetChange={setSelectedAsset}
           />
+        </div>
+
+        {/* V3.0 Settings */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100">
+                        🚀 V3.0 Volatility Adaptive Mode
+                    </h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Enable adaptive bands and advanced risk management
+                    </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                        type="checkbox" 
+                        className="sr-only peer"
+                        checked={v3Enabled}
+                        onChange={(e) => setV3Enabled(e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            {v3Enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 animate-fade-in">
+                <div className="flex items-center space-x-3 bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                  <input
+                    type="checkbox"
+                    id="enableMomentum"
+                    checked={useVRContext().enableMomentumFilter}
+                    onChange={(e) => useVRContext().setEnableMomentumFilter(e.target.checked)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="enableMomentum" className="font-medium text-gray-700 dark:text-gray-200 cursor-pointer text-sm">
+                      Enable Momentum Filter
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Filter trades based on trend strength
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                  <input
+                    type="checkbox"
+                    id="enableRisk"
+                    checked={useVRContext().enableRiskManagement}
+                    onChange={(e) => useVRContext().setEnableRiskManagement(e.target.checked)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="enableRisk" className="font-medium text-gray-700 dark:text-gray-200 cursor-pointer text-sm">
+                      Enable Risk Management
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Trailing stops & position limits
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Stock Information Display */}

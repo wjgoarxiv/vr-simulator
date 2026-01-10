@@ -146,11 +146,11 @@ export function CycleDisplay() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="metric-card">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('nextResetLower')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('nextResetLower')} (80%)</div>
             <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">${bandResetRangeMin.toFixed(2)}</div>
           </div>
           <div className="metric-card">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('nextResetUpper')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('nextResetUpper')} (120%)</div>
             <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">${bandResetRangeMax.toFixed(2)}</div>
           </div>
         </div>

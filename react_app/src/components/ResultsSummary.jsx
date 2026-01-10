@@ -21,7 +21,7 @@ export function ResultsSummary() {
         setCurrentAverageCost,
         setTotalCycles,
         setCurrentSharesValue,
-        resetSimulation
+        v3Enabled
     } = useVRContext();
   const chartsRef = useRef(null);
   const matplotlibChartsRef = useRef(null);
@@ -183,7 +183,10 @@ export function ResultsSummary() {
     poolEffective: entry.pool_effective_for_v,
     resetLower: entry.band_reset_range_min,
     resetUpper: entry.band_reset_range_max,
-    resetType: entry.band_reset_type || 'none'
+    resetType: entry.band_reset_type || 'none',
+    divergence: (entry.V_target && (entry.E_calc || entry.E_end)) 
+      ? ((entry.V_target - (entry.E_calc || entry.E_end)) / (entry.E_calc || entry.E_end) * 100) 
+      : 0
   }));
 
   // Calculate overall statistics
@@ -307,6 +310,11 @@ export function ResultsSummary() {
                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Reset Type
                 </th>
+                {v3Enabled && (
+                  <th className="px-3 py-3 text-left text-xs font-medium text-purple-600 dark:text-purple-300 uppercase tracking-wider">
+                    V/E Div (%)
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
@@ -360,6 +368,13 @@ export function ResultsSummary() {
                   <td className="px-3 py-4 whitespace-nowrap text-sm capitalize text-gray-900 dark:text-gray-100">
                     {row.resetType}
                   </td>
+                  {v3Enabled && (
+                    <td className={`px-3 py-4 whitespace-nowrap text-sm font-medium ${
+                      Math.abs(row.divergence) > 5 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
+                    }`}>
+                      {row.divergence > 0 ? '+' : ''}{row.divergence.toFixed(2)}%
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -3,6 +3,7 @@
 :: 다중 레버리지 ETF VR (Value Rebalancing) 투자 전략 시뮬레이터 ::
 
 ## 🌐 라이브 웹 애플리케이션
+
 **최신 버전 이용하기:** [https://wjgoarxiv.github.io/vr-simulator/](https://wjgoarxiv.github.io/vr-simulator/)
 
 ---
@@ -12,6 +13,7 @@
 React, Vite 및 최신 JavaScript 기술을 활용하여 구현된 VR 시뮬레이터의 완전한 모던 웹 버전입니다 . 우수한 성능과 사용자 경험을 제공합니다.
 
 ### 🚀 주요 기능:
+
 - **다중 자산 지원**: TQQQ, TECL, SOXL, SPXL, UPRO, FNGU, FAS, GUSH, TNA 등 9개 레버리지 ETF 지원
 - **모던 React UI**: 반응형 디자인과 Tailwind CSS 적용
 - **인터랙티브 차트**: Chart.js 기반 고품질 시각화
@@ -35,14 +37,16 @@ React, Vite 및 최신 JavaScript 기술을 활용하여 구현된 VR 시뮬레�
 ## 앱 링크
 
 ### 🌐 웹 버전 (V3.2 - 권장)
+
 **라이브 데모:** [https://wjgoarxiv.github.io/vr-simulator/](https://wjgoarxiv.github.io/vr-simulator/)
 
-### 📱 레거시 Streamlit 버전 (V2.1)
+### 📱 Streamlit 버전 (V3.0)
+
 **Streamlit 앱:** [https://vr-simulator.streamlit.app/](https://vr-simulator.streamlit.app/)
 
 ## 참고
 
-* VR 이론 및 공식은 [『미국주식 밸류 리밸런싱』](https://product.kyobobook.co.kr/detail/S000061695672)을 참고하였으며, 시뮬레이터에는 일부 변형된 공식이 사용되었습니다.
+- VR 이론 및 공식은 [『미국주식 밸류 리밸런싱』](https://product.kyobobook.co.kr/detail/S000061695672)을 참고하였으며, 시뮬레이터에는 일부 변형된 공식이 사용되었습니다.
 
 ## 사용된 VR 공식 (변형)
 
@@ -50,34 +54,64 @@ $$
 V_f = V_i + \frac{pool_{prev}}{G} + \frac{(E - V_i)}{2\sqrt{G}} + deposit_{next}
 $$
 
-* $V_f$: 다음 사이클 목표 가치
-* $V_i$: 이전 사이클 목표 가치
-* $pool_{prev}$: 이전 사이클 종료 시점의 예수금 (적립금 추가 전)
-* $G$: 그라데이션 값
-* $E$: 이전 사이클 종료 시점의 평가금 (최종 주식 수 × 최종 가격)
-* $deposit_{next}$: 다음 사이클 시작 시 추가될 적립금
+- $V_f$: 다음 사이클 목표 가치
+- $V_i$: 이전 사이클 목표 가치
+- $pool_{prev}$: 이전 사이클 종료 시점의 예수금 (적립금 추가 전)
+- $G$: 그라데이션 값
+- $E$: 이전 사이클 종료 시점의 평가금 (최종 주식 수 × 최종 가격)
+- $deposit_{next}$: 다음 사이클 시작 시 추가될 적립금
 
 ---
 
-## Streamlit `app.py` 로직 업데이트 (@2025-11-16 Sunday updated!) 
+## Streamlit `app.py` 로직 업데이트 (@2026-01-10 Friday updated!)
 
-### 추가된 핵심 로직
+### V2.5 신규: 거래 친화적 밴드 (Trade-Friendly Band)
 
-| 항목 | 설명 |
-| --- | --- |
-| 풀 한도 (`POOL_CAP_RATIO = 0.5`) | 평가금의 50%까지만 `pool/G` 항에 반영합니다. 현금이 과도하게 쌓여도 목표 V가 비정상적으로 상승하지 않습니다. |
-| 밴드 리셋 (`BAND_RESET_LOWER_FACTOR = 0.8`, `BAND_RESET_UPPER_FACTOR = 1.2`) | 사이클 종료 시 평가금이 80% 하단을 밑돌면 V를 하향 리셋, 120% 상단을 넘고 풀도 한도에 도달했으면 상향 리셋합니다. |
-| 상태/CSV 메타데이터 | 각 사이클 기록에 풀 한도·실제 사용액·리셋 감시 범위·리셋 결과를 저장해, 언제 어떤 조건이 발생했는지 추적할 수 있습니다. |
+V2.5에서는 밴드 폭 발산 문제를 근본적으로 해결하는 **거래 친화적 밴드** 기능이 추가되었습니다.
+
+#### 문제점 (V2.4 이전)
+
+- 사이클이 진행됨에 따라 V가 계속 상승하면서 밴드 폭(±15%)도 함께 커짐
+- 예: Cycle 0에서 밴드 폭 $432 → Cycle 17에서 $2,094 (4.8배 증가)
+- 매수 임계가가 현재가 대비 10%+ 하락 필요, 매도 임계가가 24%+ 상승 필요
+- 결과적으로 매수/매도가 거의 발생하지 않고, 보유 주식 수가 고정되며 deposit만 쌓임
+
+#### 해결책 (V2.5)
+
+| 항목                                              | 설명                                                                                        |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| E 기반 앵커링 (`E_BASED_BAND_ANCHOR = True`)      | V 대신 E(평가금)를 기준으로 밴드를 계산하여 밴드 폭 발산을 방지합니다. `anchor = min(V, E)` |
+| 최대 거래 괴리율 (`MAX_TRADE_GAP_PERCENT = 0.12`) | 매수/매도 임계가가 현재가 대비 **±12% 범위 내**에서 유지되도록 밴드를 자동 조정합니다.      |
+| 최소 거래 주식 수 (`MIN_TRADABLE_SHARES = 2`)     | 최소 **±2주 거래**가 가능하도록 밴드를 자동 조정합니다.                                     |
+| 비대칭 수렴 (`VE_ASYMMETRIC_CONVERGENCE = True`)  | V > E일 때 수렴 계수를 **0.08 → 0.25**로 3배 강화하여 V가 빠르게 E에 수렴합니다.            |
+
+#### V2.5 CSV 컬럼 추가
+
+| 컬럼                     | 설명                                         |
+| ------------------------ | -------------------------------------------- |
+| `trade_friendly_enabled` | 해당 사이클에서 거래 친화적 밴드 활성화 여부 |
+| `trade_friendly_applied` | 밴드 자동 조정이 실제로 적용되었는지 여부    |
+| `band_anchor_value`      | 밴드 계산에 사용된 앵커값 (`min(V, E)`)      |
+
+---
+
+### V2.4 핵심 로직 (기존)
+
+| 항목                                                                         | 설명                                                                                                                    |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 풀 한도 (`POOL_CAP_RATIO = 0.5`)                                             | 평가금의 50%까지만 `pool/G` 항에 반영합니다. 현금이 과도하게 쌓여도 목표 V가 비정상적으로 상승하지 않습니다.            |
+| 밴드 리셋 (`BAND_RESET_LOWER_FACTOR = 0.8`, `BAND_RESET_UPPER_FACTOR = 1.2`) | 사이클 종료 시 평가금이 80% 하단을 밑돌면 V를 하향 리셋, 120% 상단을 넘고 풀도 한도에 도달했으면 상향 리셋합니다.       |
+| 상태/CSV 메타데이터                                                          | 각 사이클 기록에 풀 한도·실제 사용액·리셋 감시 범위·리셋 결과를 저장해, 언제 어떤 조건이 발생했는지 추적할 수 있습니다. |
 
 ### CSV 컬럼 안내 (추가/확장)
 
-| 컬럼 | 설명 |
-| --- | --- |
-| `pool_cap_limit` | 해당 사이클에서 풀로 사용할 수 있는 최대치. 기본값은 `E_calc × 0.5`. |
-| `pool_effective_for_v` | V 계산에 실제로 사용된 현금 (`min(pool_end_before_deposit, pool_cap_limit)`). |
-| `pool_cap_ratio_used` | 현재 적용 중인 풀 한도 비율. 기본 0.5이지만, 상수 조정 시 기록으로 남습니다. |
-| `band_reset_range_min` / `band_reset_range_max` | 다음 사이클 모니터링 범위(0.8×V, 1.2×V). |
-| `band_reset_type` | `none`, `lower`, `upper` 중 하나. 해당 사이클에서 밴드 리셋이 발생했는지 명시합니다. |
+| 컬럼                                            | 설명                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pool_cap_limit`                                | 해당 사이클에서 풀로 사용할 수 있는 최대치. 기본값은 `E_calc × 0.5`.                 |
+| `pool_effective_for_v`                          | V 계산에 실제로 사용된 현금 (`min(pool_end_before_deposit, pool_cap_limit)`).        |
+| `pool_cap_ratio_used`                           | 현재 적용 중인 풀 한도 비율. 기본 0.5이지만, 상수 조정 시 기록으로 남습니다.         |
+| `band_reset_range_min` / `band_reset_range_max` | 다음 사이클 모니터링 범위(0.8×V, 1.2×V).                                             |
+| `band_reset_type`                               | `none`, `lower`, `upper` 중 하나. 해당 사이클에서 밴드 리셋이 발생했는지 명시합니다. |
 
 > 기존 CSV를 불러올 때 이 필드가 없어도, 앱이 자동으로 계산하여 채워 줍니다.
 
@@ -99,3 +133,13 @@ $$
 2. **사이클 조회** → 리셋 하한/상한, 풀 한도/사용액, 직전 리셋 여부가 추가로 표시됩니다.
 3. **사이클 입력** → 풀 한도와 리셋 여부를 즉시 안내하며 다음 V, 밴드, 리셋 범위가 업데이트됩니다.
 4. **기록/차트 다운로드** → 강화된 CSV/PNG를 저장하여 외부 분석에서도 재현 가능합니다.
+
+## 📂 Repository Structure
+
+- **`react_app/`**: React Web Application Source Code (V3.2)
+  - Contains all JavaScript/React files, including `vite.config.js`, `package.json`.
+  - Run with `npm install && npm run dev`.
+
+- **`app.py`, `vr_v3_core.py`**: Streamlit Application Source Code (V3.0)
+  - Python-based simulator.
+  - Run with `streamlit run app.py`.

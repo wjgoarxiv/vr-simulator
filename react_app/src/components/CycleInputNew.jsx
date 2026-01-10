@@ -10,9 +10,11 @@ import {
   normalizeHistoryEntry,
   POOL_CAP_RATIO
 } from '../utils/vrCalculations';
+import { calculateAdaptiveBands, calculateTradeFriendlyBounds } from '../utils/vrV3Logic';
 
 export function CycleInput() {
-  const { t } = useLanguage();  const {
+  const { t } = useLanguage();
+  const {
     history,
     setHistory,
     viewCycleIndex,
@@ -21,7 +23,11 @@ export function CycleInput() {
     setCurrentG,
     defaultDeposit,
     setDefaultDeposit,
-    selectedAsset
+    selectedAsset,
+    v3Enabled,
+    tradeFriendlyEnabled,
+    setTradeFriendlyEnabled,
+    priceHistory // Need full history for V3 volatility
   } = useVRContext();
 
   const activeState = history[viewCycleIndex];
@@ -53,7 +59,26 @@ export function CycleInput() {
       poolEndBeforeDeposit,
       capLimit
     );
-    const { LBand: L_next, HBand: H_next } = calculateBands(V_adjusted);
+    let { LBand: L_next, HBand: H_next } = calculateBands(V_adjusted);
+    let v3Info = null;
+
+    // [V3.0 Logic Application]
+    if (v3Enabled) {
+        // Extract price history from context/history
+        const ph = history.map(h => h.price_end); 
+        
+        const adaptive = calculateAdaptiveBands(V_adjusted, E_calc, ph, selectedAsset);
+        L_next = adaptive.LBand;
+        H_next = adaptive.HBand;
+        v3Info = adaptive.info;
+    }
+
+    // [Trade Friendly Adjustment]
+    if (tradeFriendlyEnabled) {
+        const friendly = calculateTradeFriendlyBounds(priceEnd, L_next, H_next, sharesEnd);
+        L_next = friendly.LBand;
+        H_next = friendly.HBand;
+    }
 
     return {
       E_calc,
@@ -67,9 +92,10 @@ export function CycleInput() {
       H_next,
       resetType,
       bandResetRangeMin,
-      bandResetRangeMax
+      bandResetRangeMax,
+      v3Info
     };
-  }, [sharesEnd, priceEnd, poolEnd, depositNext, gInput, activeState.V_target]);
+  }, [sharesEnd, priceEnd, poolEnd, depositNext, gInput, activeState.V_target, v3Enabled, tradeFriendlyEnabled, history, selectedAsset]);
 
   const handleCalculateNext = () => {
     console.log('Calculate Next button clicked');
@@ -145,6 +171,23 @@ export function CycleInput() {
           {t('cycle')} {inputCycleNum} {t('cycleInputTitle')}
         </h2>
       </div>
+
+      {v3Enabled && (
+        <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg flex items-center justify-between">
+            <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
+                🔧 Trade Friendly Band
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={tradeFriendlyEnabled}
+                    onChange={(e) => setTradeFriendlyEnabled(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+            </label>
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Current Values Display */}
@@ -311,6 +354,16 @@ export function CycleInput() {
                 </div>
               )}
             </div>
+            {computedPreview.v3Info && (
+                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800 text-xs">
+                    <div className="font-semibold mb-1">📊 V3.0 Adaptive Metrics:</div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div>Vol Ratio: {(computedPreview.v3Info.rollingVolatility * 100).toFixed(2)}%</div>
+                        <div>Regime: {computedPreview.v3Info.volatilityRegime}</div>
+                        <div>Band Width: {(computedPreview.v3Info.bandWidthPct * 100).toFixed(1)}%</div>
+                    </div>
+                </div>
+            )}
           </div>
         )}
       </div>
