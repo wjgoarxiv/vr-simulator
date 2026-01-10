@@ -600,8 +600,8 @@ def apply_trade_friendly_bands(LBand, HBand, shares, current_price, anchor_value
 
     # [Safety Buffer] Minimum Band Width Logic
     # Prevent bands from becoming too narrow when share count is high
-    # Ensure at least +/- 3% width from anchor value
-    MIN_WIDTH_PERCENT = 0.03
+    # Ensure at least +/- 2% width from anchor value
+    MIN_WIDTH_PERCENT = 0.02
     safety_LBand = anchor_value * (1 - MIN_WIDTH_PERCENT)
     safety_HBand = anchor_value * (1 + MIN_WIDTH_PERCENT)
 
