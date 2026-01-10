@@ -598,6 +598,23 @@ def apply_trade_friendly_bands(LBand, HBand, shares, current_price, anchor_value
                 HBand = max_HBand_for_trade
                 was_adjusted = True
 
+    # [Safety Buffer] Minimum Band Width Logic
+    # Prevent bands from becoming too narrow when share count is high
+    # Ensure at least +/- 3% width from anchor value
+    MIN_WIDTH_PERCENT = 0.03
+    safety_LBand = anchor_value * (1 - MIN_WIDTH_PERCENT)
+    safety_HBand = anchor_value * (1 + MIN_WIDTH_PERCENT)
+
+    # If LBand is too high (close to anchor), push it down
+    if LBand > safety_LBand:
+        LBand = safety_LBand
+        was_adjusted = True
+    
+    # If HBand is too low (close to anchor), push it up
+    if HBand < safety_HBand:
+        HBand = safety_HBand
+        was_adjusted = True
+
     # V2.5: LBand <= HBand 불변 조건 보장
     if LBand > HBand:
         # 밴드가 역전된 경우 중간점 기준으로 재조정

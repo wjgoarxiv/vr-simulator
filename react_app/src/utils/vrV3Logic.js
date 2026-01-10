@@ -242,6 +242,23 @@ export function calculateTradeFriendlyBounds(currentPrice, LBand, HBand, shares,
     }
   }
 
+  // [Safety Buffer] Minimum Band Width Logic
+  // Prevent bands from becoming too narrow (e.g. ensure +/- 3% gap from current value)
+  // This overrides the "Min Tradable Shares" logic if it forces the bands too close to price.
+  const MIN_WIDTH_PERCENT = 0.03;
+  const safetyL = currentTotalValue * (1 - MIN_WIDTH_PERCENT);
+  const safetyH = currentTotalValue * (1 + MIN_WIDTH_PERCENT);
+
+  // If friendlyL is too high (too close to current value from below), cap it.
+  if (friendlyL > safetyL) {
+    friendlyL = safetyL;
+  }
+
+  // If friendlyH is too low (too close to current value from above), floor it.
+  if (friendlyH < safetyH) {
+    friendlyH = safetyH;
+  }
+
   return {
     LBand: friendlyL,
     HBand: friendlyH,
