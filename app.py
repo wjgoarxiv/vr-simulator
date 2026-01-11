@@ -556,7 +556,7 @@ def apply_trade_friendly_bands(LBand, HBand, shares, current_price, anchor_value
     sell_threshold = HBand / (s - 1) if s > 1 else (HBand / s if s > 0 else 0)  # 매도 최소 허용가
 
     # 매수 임계가 조정: 현재가에서 너무 멀면 조정
-    max_buy_price = current_price * (1 - MAX_TRADE_GAP_PERCENT)  # 현재가의 88%까지 하락하면 매수
+    max_buy_price = current_price * (1 - MAX_TRADE_GAP_PERCENT)  # 현재가의 95%까지 하락하면 매수
     if buy_threshold < max_buy_price:
         # LBand를 조정하여 매수 임계가를 max_buy_price로 설정
         # LBand / (s + 1) = max_buy_price → LBand = max_buy_price * (s + 1)
@@ -567,7 +567,7 @@ def apply_trade_friendly_bands(LBand, HBand, shares, current_price, anchor_value
         was_adjusted = True
 
     # 매도 임계가 조정: 현재가에서 너무 멀면 조정
-    min_sell_price = current_price * (1 + MAX_TRADE_GAP_PERCENT)  # 현재가의 112%까지 상승하면 매도
+    min_sell_price = current_price * (1 + MAX_TRADE_GAP_PERCENT)  # 현재가의 105%까지 상승하면 매도
     if s > 1 and sell_threshold > min_sell_price:
         # HBand를 조정하여 매도 임계가를 min_sell_price로 설정
         # HBand / (s - 1) = min_sell_price → HBand = min_sell_price * (s - 1)
@@ -1302,7 +1302,7 @@ with st.sidebar:
         "거래 친화적 밴드 활성화",
         value=st.session_state.trade_friendly_enabled,
         key="trade_friendly_toggle",
-        help="현재 주가에서 ±12% 이내에서 거래가 가능하도록 자동 조정합니다. 예: 현재가 $100이면 $88~$112 범위에서 거래 신호가 발생합니다."
+        help="현재 주가에서 ±5% 이내에서 거래가 가능하도록 자동 조정합니다. 예: 현재가 $100이면 $95~$105 범위에서 거래 신호가 발생합니다."
     )
     st.session_state.trade_friendly_enabled = trade_friendly_ui
 
@@ -1465,11 +1465,11 @@ with st.sidebar:
         **왜 필요한가요?**
         - 적응형 밴드로도 거래 조건이 현재가와 너무 멀어질 수 있습니다
         - 예: 현재가 $100인데 매수는 $70 이하, 매도는 $130 이상에서만 가능 → 거래 불가!
-        - 이 기능은 현재가 기준 **±12% 이내**에서 거래가 가능하도록 강제 조정합니다
+        - 이 기능은 현재가 기준 **±5% 이내**에서 거래가 가능하도록 강제 조정합니다
 
         **4가지 자동 조정:**
         1. 🎯 **현재 자산 기준 계산**: 과대평가된 목표 대신 실제 자산 기준으로 계산
-        2. 📊 **±12% 범위 보장**: 현재가 $100이면 $88~$112 범위에서 거래 가능
+        2. 📊 **±5% 범위 보장**: 현재가 $100이면 $95~$105 범위에서 거래 가능
         3. 📈 **최소 2주 거래 보장**: 아무리 조건이 엄격해도 최소 2주는 거래 가능
         4. ⚡ **빠른 목표 조정**: 목표가 너무 높으면 빠르게 현실에 맞춰 조정
         """)
@@ -1848,7 +1848,7 @@ if st.session_state.simulation_started and st.session_state.history:
                 "✅ 적용됨" if trade_friendly_applied else "미적용",
                 delta="자동 조정 활성" if trade_friendly_applied else None,
                 delta_color="normal" if trade_friendly_applied else "off",
-                help="적용됨: 현재가 대비 ±12% 이내에서 거래 가능하도록 밴드가 자동 조정됨\n미적용: 기본 설정대로 거래 조건 유지"
+                help="적용됨: 현재가 대비 ±5% 이내에서 거래 가능하도록 밴드가 자동 조정됨\n미적용: 기본 설정대로 거래 조건 유지"
             )
             # 현재 매수/매도 임계가와 현재가의 괴리율 표시
             if last_price_display > 0:
