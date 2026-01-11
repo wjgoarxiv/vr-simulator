@@ -2,6 +2,10 @@
 
 Value Rebalancing 투자 전략 시뮬레이터
 
+## 🌐 Live Demo
+
+**Streamlit App**: [https://vr-simulator.streamlit.app/](https://vr-simulator.streamlit.app/)
+
 ## 🚀 실행 방법
 
 ```bash
