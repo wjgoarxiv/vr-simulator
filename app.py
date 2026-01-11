@@ -44,7 +44,7 @@ VE_CONVERGENCE_ALPHA = 0.08  # V-E 수렴 계수 (V가 E로 수렴하는 속도)
 # --- 거래 친화적 밴드 파라미터 (밴드 발산 방지) ---
 TRADE_FRIENDLY_BAND_ENABLED = True  # 거래 친화적 밴드 활성화
 E_BASED_BAND_ANCHOR = True  # V 대신 E 기반으로 밴드 앵커링
-MAX_TRADE_GAP_PERCENT = 0.12  # 매수/매도 임계가 최대 허용 괴리율 (현재가 대비 ±12%)
+MAX_TRADE_GAP_PERCENT = 0.05  # 매수/매도 임계가 최대 허용 괴리율 (현재가 대비 ±5%)
 MIN_TRADABLE_SHARES = 2  # 최소 거래 가능 주식 수 보장 (±2주 범위 내 거래 가능하도록)
 VE_ASYMMETRIC_CONVERGENCE = True  # V > E일 때 더 강한 수렴 적용
 VE_CONVERGENCE_ALPHA_STRONG = 0.25  # V > E일 때 강화된 수렴 계수
