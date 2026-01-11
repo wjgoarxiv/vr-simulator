@@ -211,15 +211,27 @@ export function calculateTradeFriendlyBounds(currentPrice, LBand, HBand, shares,
   const guaranteedMaxVal = currentTotalValue * 1.05;
 
 
+  let wasAdjusted = false;
+
   // Trade Friendly Logic:
   // We want to ensure the bands are "reachable" or "reasonable" relative to current price.
   // Converting the logic to Value terms:
 
   // If LBand is lower than guaranteedMinVal, raise it. (Buying is triggered when Value < LBand. If LBand is too low, it's hard to buy. Raising it makes it easier.)
-  let friendlyL = Math.max(LBand, guaranteedMinVal);
+  if (LBand < guaranteedMinVal) {
+    friendlyL = guaranteedMinVal;
+    wasAdjusted = true;
+  } else {
+    friendlyL = LBand;
+  }
 
   // If HBand is higher than guaranteedMaxVal, lower it. (Selling is triggered when Value > HBand. If HBand is too high, it's hard to sell. Lowering it makes it easier.)
-  let friendlyH = Math.min(HBand, guaranteedMaxVal);
+  if (HBand > guaranteedMaxVal) {
+    friendlyH = guaranteedMaxVal;
+    wasAdjusted = true;
+  } else {
+    friendlyH = HBand;
+  }
 
   // [Advanced] Min Tradable Shares Logic
   // Ensure that if we are close to the band, we allow at least minTradeShares to be traded.
@@ -229,6 +241,7 @@ export function calculateTradeFriendlyBounds(currentPrice, LBand, HBand, shares,
     const minLBandForTrade = currentPrice * targetBuyShares * 0.98; // 2% margin
     if (friendlyL < minLBandForTrade) {
       friendlyL = minLBandForTrade;
+      wasAdjusted = true;
     }
 
     // Python Logic: target_sell_shares = max(0, s - MIN_TRADABLE_SHARES)
@@ -238,6 +251,7 @@ export function calculateTradeFriendlyBounds(currentPrice, LBand, HBand, shares,
       const maxHBandForTrade = currentPrice * targetSellShares * 1.02; // 2% margin
       if (friendlyH > maxHBandForTrade) {
         friendlyH = maxHBandForTrade;
+        wasAdjusted = true;
       }
     }
   }
@@ -250,19 +264,23 @@ export function calculateTradeFriendlyBounds(currentPrice, LBand, HBand, shares,
   const safetyH = currentTotalValue * (1 + MIN_WIDTH_PERCENT);
 
   // If friendlyL is too high (too close to current value from below), cap it.
-  if (friendlyL > safetyL) {
+  // (Only enforce this if we haven't already forced a specific trade-friendly level)
+  if (!wasAdjusted && friendlyL > safetyL) {
     friendlyL = safetyL;
+    wasAdjusted = true;
   }
 
   // If friendlyH is too low (too close to current value from above), floor it.
-  if (friendlyH < safetyH) {
+  // (Only enforce this if we haven't already forced a specific trade-friendly level)
+  if (!wasAdjusted && friendlyH < safetyH) {
     friendlyH = safetyH;
+    wasAdjusted = true;
   }
 
   return {
     LBand: friendlyL,
     HBand: friendlyH,
-    isAdjusted: friendlyL !== LBand || friendlyH !== HBand
+    isAdjusted: wasAdjusted
   };
 }
 
