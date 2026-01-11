@@ -6,7 +6,7 @@ Value Rebalancing 투자 전략 시뮬레이터
 
 **Streamlit App**: [https://vr-simulator.streamlit.app/](https://vr-simulator.streamlit.app/)
 
-## � Screenshots
+## 🖼️ Screenshots
 
 ### Main Dashboard
 
@@ -16,7 +16,7 @@ Value Rebalancing 투자 전략 시뮬레이터
 
 <img src="Assets/demo_charts.png" width="100%" alt="Charts">
 
-## �🚀 실행 방법
+## 🚀 실행 방법
 
 ```bash
 pip install -r requirements.txt
