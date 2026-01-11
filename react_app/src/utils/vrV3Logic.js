@@ -204,11 +204,11 @@ export function calculateTradeFriendlyBounds(currentPrice, LBand, HBand, shares,
   // Calculate current Total Value (E)
   const currentTotalValue = currentPrice * shares;
 
-  // Guaranteed range: +/- 12% around current Total Value
+  // Guaranteed range: +/- 5% around current Total Value
   // This ensures that the LBand/HBand (which are Value thresholds) do not deviate too far from current Value,
   // preventing "impossible to trade" scenarios or extreme divergences.
-  const guaranteedMinVal = currentTotalValue * 0.88;
-  const guaranteedMaxVal = currentTotalValue * 1.12;
+  const guaranteedMinVal = currentTotalValue * 0.95;
+  const guaranteedMaxVal = currentTotalValue * 1.05;
 
 
   // Trade Friendly Logic:
