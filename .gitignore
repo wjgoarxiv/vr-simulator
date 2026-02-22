@@ -38,3 +38,7 @@ coverage/
 
 # OS generated files
 Thumbs.db
+
+# Claude Code
+CLAUDE.md
+.claude/
