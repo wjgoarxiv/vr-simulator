@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.1"
+VR_VERSION = "3.1.1"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -19,6 +19,7 @@ MIN_BAND_LOWER = 0.92  # 최소(압축 시) LBand 비율
 MAX_BAND_UPPER = 1.08  # 최대(압축 시) HBand 비율
 VE_DIVERGENCE_THRESHOLD = 0.05  # V/E 괴리율 임계값 (5% 초과 시 압축 시작)
 VE_MAX_DIVERGENCE = 0.50  # 최대 괴리율 (50%에서 최대 압축)
+MAX_V_E_RATIO = 1.15  # V/E 비율 상한: V가 E의 115%를 초과하지 않도록 제한
 
 # --- 페이지 설정 ---
 st.set_page_config(page_title=f"VR 시뮬레이터 V{VR_VERSION}", layout="wide", page_icon="📊")
@@ -224,6 +225,9 @@ def calculate_v_next(V_i, pool_before_deposit, E_calc, G, deposit_next):
         term3 = (E_calc - V_i) / (2 * math.sqrt(G))
         term4 = deposit_next
         V_f = term1 + term2 + term3 + term4
+        # V3.1.1: V 성장 상한 - V가 E를 과도하게 초과하면 억제
+        if E_calc > 0 and V_f > E_calc * MAX_V_E_RATIO:
+            V_f = E_calc * MAX_V_E_RATIO
         return max(V_f, 0.01)
     except Exception as e:
         st.error(f"V 계산 오류: {e}")
@@ -278,8 +282,10 @@ def calculate_adaptive_bands(V_target, E_calc):
     compressed_lower = BASE_BAND_LOWER + (MIN_BAND_LOWER - BASE_BAND_LOWER) * (1 - compression_factor)
     compressed_upper = BASE_BAND_UPPER + (MAX_BAND_UPPER - BASE_BAND_UPPER) * (1 - compression_factor)
     
-    LBand = compressed_lower * V_target
-    HBand = compressed_upper * V_target
+    # V3.1.1: E 기반 앵커링 - V 대신 min(V, E) 사용하여 밴드 발산 방지
+    anchor_value = min(V_target, E_calc) if E_calc > 0 else V_target
+    LBand = compressed_lower * anchor_value
+    HBand = compressed_upper * anchor_value
     
     return {
         'LBand': LBand,
@@ -871,6 +877,12 @@ if st.session_state.simulation_started and st.session_state.history:
                     <div style="color: #8B949E; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {sell_gap:.1f}%</div>
                 </div>
                 """, unsafe_allow_html=True)
+                # V3.1.1: 매도 목표가 괴리 경고
+                if sell_gap > 20:
+                    st.warning(
+                        f"⚠️ 매도 목표가(${sell_target_simple:,.2f})가 현재가 대비 {sell_gap:.1f}% 높습니다. "
+                        f"V(${active_state.get('V_target', 0):,.0f})가 E(${active_state.get('E_calc', 0):,.0f})를 크게 초과하고 있습니다."
+                    )
             else:
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, #30363D20 0%, #21262D 100%); border: 1px solid #30363D; border-radius: 12px; padding: 1.2rem;">
