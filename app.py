@@ -272,7 +272,12 @@ def calculate_bands(V_target, E_calc=None, use_adaptive=None):
     compressed_lower = BASE_BAND_LOWER + (MIN_BAND_LOWER - BASE_BAND_LOWER) * (1 - compression_factor)
     compressed_upper = BASE_BAND_UPPER + (MAX_BAND_UPPER - BASE_BAND_UPPER) * (1 - compression_factor)
     
-    return compressed_lower * V_target, compressed_upper * V_target
+    anchor_sell = min(V_target, E_calc) if E_calc is not None and E_calc > 0 else V_target
+    LBand = compressed_lower * V_target
+    HBand = compressed_upper * anchor_sell
+    if HBand <= LBand:
+        HBand = compressed_upper * V_target
+    return LBand, HBand
 
 
 def calculate_adaptive_bands(V_target, E_calc):
@@ -282,10 +287,16 @@ def calculate_adaptive_bands(V_target, E_calc):
     compressed_lower = BASE_BAND_LOWER + (MIN_BAND_LOWER - BASE_BAND_LOWER) * (1 - compression_factor)
     compressed_upper = BASE_BAND_UPPER + (MAX_BAND_UPPER - BASE_BAND_UPPER) * (1 - compression_factor)
     
-    # V3.1.1: E 기반 앵커링 - V 대신 min(V, E) 사용하여 밴드 발산 방지
-    anchor_value = min(V_target, E_calc) if E_calc > 0 else V_target
-    LBand = compressed_lower * anchor_value
-    HBand = compressed_upper * anchor_value
+    # V3.1.1: 비대칭 앵커링
+    # 매수(LBand): V 기준 유지 (매수 목표가 보존)
+    # 매도(HBand): min(V, E) 기준 (매도 목표가 현실화)
+    anchor_sell = min(V_target, E_calc) if E_calc > 0 else V_target
+    LBand = compressed_lower * V_target
+    HBand = compressed_upper * anchor_sell
+    # 안전장치: 역전 방지 (V/E 극단적 괴리 시 대칭 폴백)
+    if HBand <= LBand:
+        LBand = compressed_lower * V_target
+        HBand = compressed_upper * V_target
     
     return {
         'LBand': LBand,

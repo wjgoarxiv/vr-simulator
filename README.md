@@ -58,6 +58,33 @@ LBand = V × 0.85 (기본)
 HBand = V × 1.15 (기본)
 ```
 
+## 🔧 V3.1.1 주요 보정
+
+### V 성장 상한 (V/E Ratio Cap)
+
+적립금(deposit)으로 인해 V가 E보다 과도하게 커지는 것을 방지합니다.
+
+```
+V ≤ E × 1.15 (V가 E의 115%를 초과하지 않도록 제한)
+```
+
+### 비대칭 밴드 앵커링 (Asymmetric Band Anchoring)
+
+매수/매도 밴드에 서로 다른 기준값(anchor)을 적용하여, 매수 목표가는 보존하면서 매도 목표가만 현실적으로 낮춥니다.
+
+```
+LBand = compressed_lower × V         (매수: V 기준 → 매수 목표가 보존)
+HBand = compressed_upper × min(V, E) (매도: min(V,E) 기준 → 매도 목표가 현실화)
+```
+
+| 상황 | 동작 |
+|------|------|
+| V ≈ E | 기존과 동일 (대칭) |
+| V > E | 매도 밴드만 E 방향으로 하향 조정 |
+| V < E | 기존과 동일 (양쪽 모두 V 기준) |
+
+> **이론적 근거**: CPPI/TIPP 전략에서 floor과 cap을 서로 다른 기준값에 앵커링하는 학술적 선례에 기반합니다. Value Averaging 이론에서도 적립금으로 인한 target path 괴리 문제를 인식하고 있으며, 비대칭 허용대역은 정당한 리밸런싱 도구로 인정됩니다.
+
 ## 📚 참고
 
 - [『미국주식 밸류 리밸런싱』](https://product.kyobobook.co.kr/detail/S000061695672)
