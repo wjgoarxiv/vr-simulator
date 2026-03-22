@@ -55,7 +55,7 @@ function buildTraces(history) {
       mode: 'lines+markers',
       name: 'V (목표)',
       line: { color: COLORS.v_target, width: 3 },
-      marker: { size: 6 },
+      marker: { size: 10 },
     },
   ];
 
@@ -66,7 +66,7 @@ function buildTraces(history) {
       mode: 'lines+markers',
       name: 'V (목표)',
       line: { color: COLORS.v_target, width: 2, dash: 'dot' },
-      marker: { size: 5 },
+      marker: { size: 10 },
     },
     {
       x,
@@ -74,7 +74,7 @@ function buildTraces(history) {
       mode: 'lines+markers',
       name: 'E (평가금)',
       line: { color: COLORS.e_calc, width: 3 },
-      marker: { size: 6 },
+      marker: { size: 10 },
       fill: 'tonexty',
       fillcolor: 'rgba(0,212,255,0.1)',
     },
@@ -97,7 +97,7 @@ function buildTraces(history) {
       mode: 'lines+markers',
       name: '주식 수',
       line: { color: COLORS.shares, width: 3 },
-      marker: { size: 6 },
+      marker: { size: 10 },
       fill: 'tozeroy',
       fillcolor: 'rgba(255,176,32,0.15)',
     },
