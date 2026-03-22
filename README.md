@@ -24,8 +24,8 @@
 
 | 플랫폼 | URL |
 |--------|-----|
-| **Streamlit (V3.1.1)** | [vr-simulator.streamlit.app](https://vr-simulator.streamlit.app/) |
-| **React (V3.2)** | [wjgoarxiv.github.io/vr-simulator](https://wjgoarxiv.github.io/vr-simulator/) |
+| **Streamlit (V3.1.2)** | [vr-simulator.streamlit.app](https://vr-simulator.streamlit.app/) |
+| **React (V3.1.2)** | [wjgoarxiv.github.io/vr-simulator](https://wjgoarxiv.github.io/vr-simulator/) |
 
 ## ✨ Features
 
