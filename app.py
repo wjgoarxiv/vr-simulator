@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.1.1"
+VR_VERSION = "3.1.2"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -263,8 +263,8 @@ def calculate_band_compression_factor(V_target, E_calc):
 def calculate_bands(V_target, E_calc=None, use_adaptive=None):
     """LBand, HBand 계산 (적응형 밴드 지원)"""
     if use_adaptive is None:
-        use_adaptive = st.session_state.get('adaptive_band_enabled', True)
-    
+        use_adaptive = st.session_state.get('adaptive_band_enabled', False)
+
     if not use_adaptive or E_calc is None or E_calc <= 0:
         return BASE_BAND_LOWER * V_target, BASE_BAND_UPPER * V_target
     
@@ -311,7 +311,7 @@ def calculate_adaptive_bands(V_target, E_calc):
 
 def calculate_simple_targets(shares_start, LBand, HBand):
     """단순 매수/매도 임계가 계산 (+/- 1주 기준)"""
-    s = max(0, int(round(shares_start)))
+    s = max(0, int(math.floor(shares_start)))
     buy_target_price = LBand / (s + 1) if (s + 1) > 0 else 0
     
     sell_target_price = 0
@@ -381,7 +381,7 @@ def normalize_history_entry(entry):
     E_val = float(entry.get('E_calc', 0.0))
     V_target = float(entry.get('V_target', entry.get('V_i', 0.0)))
     
-    entry.setdefault('adaptive_band_enabled', True)
+    entry.setdefault('adaptive_band_enabled', False)
     
     if 've_divergence_ratio' not in entry:
         if E_val > 0 and V_target > 0:
@@ -675,6 +675,7 @@ with st.sidebar:
     st.write(f"**현재 한국 시간:** {current_time_str}")
     st.write(f"**미국 마켓 상태:** {market_status_str}")
     st.write(f"**써머타임:** {dst_status_str}")
+    st.caption("* 미국 공휴일은 반영되지 않습니다. 실제 거래 가능 여부는 증권사에서 확인하세요.")
 
     if is_trading_now:
         st.markdown("**<span style='color:blue;'>✔️ 정규장 거래 가능</span>**", unsafe_allow_html=True)
@@ -732,6 +733,24 @@ if not st.session_state.simulation_started:
                 df_history = pd.read_csv(uploaded_file)
                 required_cols = ['cycle_num', 'V_target', 'LBand', 'HBand', 'shares_end', 'pool_end_before_deposit', 'deposit_next', 'price_end', 'G', 'E_calc', 'V_i']
                 if all(col in df_history.columns for col in required_cols):
+                    numeric_cols = ['V_target', 'LBand', 'HBand', 'shares_end', 'pool_end_before_deposit',
+                                    'deposit_next', 'price_end', 'G', 'E_calc', 'V_i']
+                    for col in numeric_cols:
+                        df_history[col] = pd.to_numeric(df_history[col], errors='coerce')
+                    if df_history[numeric_cols].isna().any().any():
+                        bad_col = df_history[numeric_cols].isna().any()
+                        bad_col_name = bad_col[bad_col].index[0]
+                        st.error(f"CSV 오류: '{bad_col_name}' 컬럼에 유효하지 않은 값이 있습니다.")
+                        st.session_state.history = []
+                        st.stop()
+                    if (df_history['price_end'] <= 0).any():
+                        st.error("CSV 오류: 'price_end'에 0 이하의 값이 있습니다.")
+                        st.session_state.history = []
+                        st.stop()
+                    if (df_history['G'] < 1).any():
+                        st.error("CSV 오류: 'G' 값은 1 이상이어야 합니다.")
+                        st.session_state.history = []
+                        st.stop()
                     records = df_history.to_dict('records')
                     normalized_records = [normalize_history_entry(rec) for rec in records]
                     st.session_state.history = normalized_records
@@ -766,6 +785,9 @@ if not st.session_state.simulation_started:
         elif not use_csv:
             if init_shares == 0 and init_pool > 0:
                 V0 = init_pool
+            elif init_shares == 0 and init_pool == 0:
+                st.warning("보유 주식 0주 + 예수금 $0은 시뮬레이션을 시작할 수 없습니다. 예수금을 입력해 주세요.")
+                V0 = -1
             elif init_price > 0:
                 V0 = init_shares * init_price
             else:
@@ -774,7 +796,7 @@ if not st.session_state.simulation_started:
 
             if V0 >= 0:
                 E0 = init_shares * init_price
-                use_adaptive = st.session_state.get('adaptive_band_enabled', True)
+                use_adaptive = st.session_state.get('adaptive_band_enabled', False)
                 if use_adaptive and E0 > 0:
                     adaptive_result = calculate_adaptive_bands(V0, E0)
                     L0, H0 = adaptive_result['LBand'], adaptive_result['HBand']
@@ -832,6 +854,13 @@ if st.session_state.simulation_started and st.session_state.history:
         col2.metric("시작 예수금 ($)", f"${pool_start_display:,.2f}")
         col3.metric("목표 V ($)", f"${V_i_display:,.2f}")
         col4.metric("적용 G 값", f"{G_display:.1f}")
+
+        # MOD-05: V/E cap 작동 알림
+        if active_state.get('ve_cap_active', False):
+            uncapped_v = active_state.get('ve_cap_uncapped_v')
+            if uncapped_v is not None:
+                absorbed_pct = (1 - V_i_display / uncapped_v) * 100
+                st.info(f"ℹ️ **V/E 상한 적용됨**: 원래 V = ${uncapped_v:,.0f} → 제한 V = ${V_i_display:,.0f} (E의 {MAX_V_E_RATIO*100:.0f}% 상한). 적립금 기여분의 약 {absorbed_pct:.0f}%가 흡수되었습니다.")
 
         st.markdown("**매수/매도 임계 참고:**")
         buy_target_simple, sell_target_simple = calculate_simple_targets(shares_start_display, LBand_display, HBand_display)
@@ -906,7 +935,7 @@ if st.session_state.simulation_started and st.session_state.history:
                 """, unsafe_allow_html=True)
 
         # 적응형 밴드 정보 표시
-        if active_state.get('adaptive_band_enabled', True):
+        if active_state.get('adaptive_band_enabled', False):
             st.markdown("---")
             st.markdown("**📐 적응형 밴드 상태:**")
             compression_factor = active_state.get('band_compression_factor', 1.0)
@@ -995,7 +1024,14 @@ if st.session_state.simulation_started and st.session_state.history:
 
                 V_next = calculate_v_next(V_i_calc, pool_end_input, E_calc, g_input, deposit_next_input)
 
-                use_adaptive = st.session_state.get('adaptive_band_enabled', True)
+                # MOD-05: V/E cap 작동 여부 post-hoc 감지
+                ve_cap_active = (E_calc > 0 and abs(V_next - E_calc * MAX_V_E_RATIO) < 0.01)
+                ve_cap_uncapped = None
+                if ve_cap_active:
+                    # 원래 V_f 역산 (cap 적용 전 값)
+                    ve_cap_uncapped = V_i_calc + pool_end_input / g_input + (E_calc - V_i_calc) / (2 * math.sqrt(g_input)) + deposit_next_input
+
+                use_adaptive = st.session_state.get('adaptive_band_enabled', False)
                 if use_adaptive:
                     adaptive_result = calculate_adaptive_bands(V_next, E_calc)
                     L_next = adaptive_result['LBand']
@@ -1014,7 +1050,9 @@ if st.session_state.simulation_started and st.session_state.history:
                     've_divergence_direction': adaptive_result.get('divergence_direction', 'neutral'),
                     'band_compression_factor': adaptive_result.get('compression_factor', 1.0),
                     'band_lower_ratio': adaptive_result.get('band_lower_ratio', BASE_BAND_LOWER),
-                    'band_upper_ratio': adaptive_result.get('band_upper_ratio', BASE_BAND_UPPER)
+                    'band_upper_ratio': adaptive_result.get('band_upper_ratio', BASE_BAND_UPPER),
+                    've_cap_active': ve_cap_active,
+                    've_cap_uncapped_v': ve_cap_uncapped
                 }
 
                 new_state = normalize_history_entry(new_state)
@@ -1063,7 +1101,8 @@ if st.session_state.simulation_started and st.session_state.history:
                 st.metric("⚖️ 평균 V/E 괴리율", f"{summary['avg_divergence']:.1f}%", delta=divergence_status, delta_color="off")
             with sub_col4:
                 profit_loss = summary['current_e'] - (summary['initial_e'] + summary['total_deposits'])
-                st.metric("💹 순이익", f"${profit_loss:,.0f}", delta_color="normal" if profit_loss >= 0 else "inverse")
+                pl_delta = f"{'+'if profit_loss>=0 else ''}{profit_loss:,.0f}$"
+                st.metric("💹 순이익", f"${profit_loss:,.0f}", delta=pl_delta, delta_color="normal" if profit_loss >= 0 else "inverse")
 
             st.markdown("---")
 
