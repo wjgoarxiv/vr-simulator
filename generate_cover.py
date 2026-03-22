@@ -6,7 +6,7 @@ Dark Bloomberg blue gradient, bold monospace title, muted subtitle, rounded corn
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-W, H = 2560, 1280
+W, H = 2560, 960
 CORNER_RADIUS = 80
 
 # ── 1. Base canvas (dark Bloomberg blue) ─────────────────────────────────────
@@ -22,10 +22,10 @@ def make_blob(size, color_rgba, cx, cy, rx, ry):
 
 blobs = [
     # (r, g, b, alpha,  cx,    cy,   rx,   ry,  blur)
-    (  0,  40, 180, 200,   700,  600, 600, 400, 120),   # deep blue, centered-left
-    ( 88, 166, 255, 160,  1900,  200, 500, 300, 100),   # bright blue, top-right
-    (100,  30, 180, 180,  1280, 1150, 700, 250,  90),   # purple, bottom
-    (  0, 100, 130, 120,  1400,  640, 400, 350,  80),   # teal, center
+    ( 20,  80,  60, 180,   650,  450, 550, 350, 120),   # deep emerald, left
+    ( 50, 200, 120, 140,  1950,  150, 450, 280, 100),   # bright green, top-right
+    (150,  80,  30, 160,  1280,  850, 650, 220,  90),   # warm amber, bottom
+    ( 80, 160, 100, 110,  1350,  480, 380, 300,  80),   # sage green, center
 ]
 
 canvas = base.copy()
@@ -72,7 +72,7 @@ s_bbox = d.textbbox((0, 0), SUBTITLE_TEXT, font=font_subtitle)
 s_w = s_bbox[2] - s_bbox[0]
 s_h = s_bbox[3] - s_bbox[1]
 
-GAP = 48  # between title and subtitle
+GAP = 24  # between title and subtitle
 total_h = t_h + GAP + s_h
 block_top = (H - total_h) // 2 - 30   # slightly above true center
 
@@ -121,7 +121,7 @@ canvas = canvas.filter(ImageFilter.GaussianBlur(radius=1))
 
 # ── 10. Save ─────────────────────────────────────────────────────────────────
 out_path = "/Users/woojin/Desktop/02_Areas/01_Codes_automation/03_vr-simulator-dev/cover.png"
-canvas.save(out_path, "PNG", dpi=(500, 500))
+canvas.save(out_path, "PNG", dpi=(350, 350))
 print(f"Saved: {out_path}")
 print(f"Size: {canvas.size}")
 print(f"Mode: {canvas.mode}")
