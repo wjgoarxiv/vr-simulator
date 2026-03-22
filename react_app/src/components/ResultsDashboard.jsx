@@ -217,18 +217,16 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
               </div>
             )}
 
-            {/* Tab 1: 차트 */}
-            {activeTab === 1 && (
-              <div>
-                {ChartsComponent ? (
-                  <ChartsComponent history={history} onExportReady={(fn) => setChartExporter(() => fn)} />
-                ) : (
-                  <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
-                    차트 컴포넌트가 아직 구현되지 않았습니다.
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Tab 1: 차트 (always mounted, hidden when inactive to preserve refs for PNG export) */}
+            <div style={{ display: activeTab === 1 ? 'block' : 'none' }}>
+              {ChartsComponent ? (
+                <ChartsComponent history={history} onExportReady={(fn) => setChartExporter(() => fn)} />
+              ) : (
+                <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
+                  차트 로딩 중...
+                </div>
+              )}
+            </div>
 
             {/* Tab 2: 다운로드 */}
             {activeTab === 2 && (
