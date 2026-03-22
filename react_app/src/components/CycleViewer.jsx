@@ -6,6 +6,18 @@ import {
   calculateSellTable,
 } from '../utils/vrCalculations';
 
+function downloadTableCSV(rows, columns, filename) {
+  const header = columns.map((c) => c.label).join(',');
+  const body = rows.map((row) => columns.map((c) => c.value(row)).join(',')).join('\n');
+  const blob = new Blob([header + '\n' + body], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function fmt(n, decimals = 2) {
   return Number(n).toLocaleString('en-US', {
     minimumFractionDigits: decimals,
@@ -223,26 +235,42 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
                 <span className="terminal-divider-label">매수표 (하향 지정가)</span>
               </div>
               {buyTable.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full font-mono text-xs">
-                    <thead>
-                      <tr>
-                        <th className="table-header-cell">목표 주식수</th>
-                        <th className="table-header-cell text-right">지정가 ($)</th>
-                        <th className="table-header-cell text-right">잔여 예수금 ($)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {buyTable.map((row) => (
-                        <tr key={row.targetShares} className="table-row-zebra">
-                          <td className="table-cell">{row.targetShares}</td>
-                          <td className="table-cell text-right text-accent-green">${fmt(row.limitPrice)}</td>
-                          <td className="table-cell text-right text-tx-secondary">${fmt(row.remainingCash)}</td>
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full font-mono text-xs">
+                      <thead>
+                        <tr>
+                          <th className="table-header-cell">목표 주식수</th>
+                          <th className="table-header-cell text-right">지정가 ($)</th>
+                          <th className="table-header-cell text-right">잔여 예수금 ($)</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {buyTable.map((row) => (
+                          <tr key={row.targetShares} className="table-row-zebra">
+                            <td className="table-cell">{row.targetShares}</td>
+                            <td className="table-cell text-right text-accent-green">${fmt(row.limitPrice)}</td>
+                            <td className="table-cell text-right text-tx-secondary">${fmt(row.remainingCash)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-secondary text-xs mt-2 w-full"
+                    onClick={() => {
+                      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                      downloadTableCSV(buyTable, [
+                        { label: '목표 주식수', value: (r) => r.targetShares },
+                        { label: '지정가 ($)', value: (r) => r.limitPrice.toFixed(2) },
+                        { label: '잔여 예수금 ($)', value: (r) => r.remainingCash.toFixed(2) },
+                      ], `${today}_buy_table.csv`);
+                    }}
+                  >
+                    매수표 CSV 다운로드
+                  </button>
+                </>
               ) : (
                 <div className="alert-info text-xs font-mono">매수 가능한 래더 없음</div>
               )}
@@ -254,26 +282,42 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
                 <span className="terminal-divider-label">매도표 (상향 지정가)</span>
               </div>
               {sellTable.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full font-mono text-xs">
-                    <thead>
-                      <tr>
-                        <th className="table-header-cell">목표 주식수</th>
-                        <th className="table-header-cell text-right">지정가 ($)</th>
-                        <th className="table-header-cell text-right">예상 예수금 ($)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sellTable.map((row) => (
-                        <tr key={row.targetShares} className="table-row-zebra">
-                          <td className="table-cell">{row.targetShares}</td>
-                          <td className="table-cell text-right text-accent-red">${fmt(row.threshold)}</td>
-                          <td className="table-cell text-right text-tx-secondary">${fmt(row.cumulativeProceeds)}</td>
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full font-mono text-xs">
+                      <thead>
+                        <tr>
+                          <th className="table-header-cell">목표 주식수</th>
+                          <th className="table-header-cell text-right">지정가 ($)</th>
+                          <th className="table-header-cell text-right">예상 예수금 ($)</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {sellTable.map((row) => (
+                          <tr key={row.targetShares} className="table-row-zebra">
+                            <td className="table-cell">{row.targetShares}</td>
+                            <td className="table-cell text-right text-accent-red">${fmt(row.threshold)}</td>
+                            <td className="table-cell text-right text-tx-secondary">${fmt(row.cumulativeProceeds)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-secondary text-xs mt-2 w-full"
+                    onClick={() => {
+                      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                      downloadTableCSV(sellTable, [
+                        { label: '목표 주식수', value: (r) => r.targetShares },
+                        { label: '지정가 ($)', value: (r) => r.threshold.toFixed(2) },
+                        { label: '예상 예수금 ($)', value: (r) => r.cumulativeProceeds.toFixed(2) },
+                      ], `${today}_sell_table.csv`);
+                    }}
+                  >
+                    매도표 CSV 다운로드
+                  </button>
+                </>
               ) : (
                 <div className="alert-info text-xs font-mono">매도 가능한 래더 없음</div>
               )}

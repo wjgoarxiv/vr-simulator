@@ -220,7 +220,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
             {/* Tab 1: 차트 (always mounted, hidden when inactive to preserve refs for PNG export) */}
             <div style={{ display: activeTab === 1 ? 'block' : 'none' }}>
               {ChartsComponent ? (
-                <ChartsComponent history={history} onExportReady={(fn) => setChartExporter(() => fn)} />
+                <ChartsComponent history={history} visible={activeTab === 1} onExportReady={(fn) => setChartExporter(() => fn)} />
               ) : (
                 <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
                   차트 로딩 중...

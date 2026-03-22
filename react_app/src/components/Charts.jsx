@@ -115,7 +115,7 @@ function buildLayouts() {
   ];
 }
 
-export default function Charts({ history, onExportReady }) {
+export default function Charts({ history, onExportReady, visible }) {
   const ref1 = useRef(null);
   const ref2 = useRef(null);
   const ref3 = useRef(null);
@@ -222,6 +222,18 @@ export default function Charts({ history, onExportReady }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history]);
+
+  // Resize charts when tab becomes visible (fixes truncation from display:none rendering)
+  useEffect(() => {
+    if (!visible || !history || history.length < 2) return;
+    const timer = setTimeout(() => {
+      refs.forEach((ref) => {
+        if (ref.current) Plotly.Plots.resize(ref.current);
+      });
+    }, 50);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   if (!history || history.length < 2) {
     return (
