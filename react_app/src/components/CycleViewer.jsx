@@ -236,9 +236,23 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
               </div>
               {buyTable.length > 0 ? (
                 <>
-                  <div className="overflow-x-auto">
+                  <button
+                    type="button"
+                    className="btn-secondary text-xs mb-2 w-full"
+                    onClick={() => {
+                      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                      downloadTableCSV(buyTable, [
+                        { label: '목표 주식수', value: (r) => r.targetShares },
+                        { label: '지정가 ($)', value: (r) => r.limitPrice.toFixed(2) },
+                        { label: '잔여 예수금 ($)', value: (r) => r.remainingCash.toFixed(2) },
+                      ], `${today}_buy_table.csv`);
+                    }}
+                  >
+                    매수표 CSV 다운로드 ({buyTable.length}행)
+                  </button>
+                  <div className="overflow-y-auto max-h-[400px] overflow-x-auto">
                     <table className="w-full font-mono text-xs">
-                      <thead>
+                      <thead className="sticky top-0 z-10">
                         <tr>
                           <th className="table-header-cell">목표 주식수</th>
                           <th className="table-header-cell text-right">지정가 ($)</th>
@@ -256,20 +270,6 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
                       </tbody>
                     </table>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-secondary text-xs mt-2 w-full"
-                    onClick={() => {
-                      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                      downloadTableCSV(buyTable, [
-                        { label: '목표 주식수', value: (r) => r.targetShares },
-                        { label: '지정가 ($)', value: (r) => r.limitPrice.toFixed(2) },
-                        { label: '잔여 예수금 ($)', value: (r) => r.remainingCash.toFixed(2) },
-                      ], `${today}_buy_table.csv`);
-                    }}
-                  >
-                    매수표 CSV 다운로드
-                  </button>
                 </>
               ) : (
                 <div className="alert-info text-xs font-mono">매수 가능한 래더 없음</div>
@@ -283,9 +283,23 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
               </div>
               {sellTable.length > 0 ? (
                 <>
-                  <div className="overflow-x-auto">
+                  <button
+                    type="button"
+                    className="btn-secondary text-xs mb-2 w-full"
+                    onClick={() => {
+                      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                      downloadTableCSV(sellTable, [
+                        { label: '목표 주식수', value: (r) => r.targetShares },
+                        { label: '지정가 ($)', value: (r) => r.threshold.toFixed(2) },
+                        { label: '예상 예수금 ($)', value: (r) => r.cumulativeProceeds.toFixed(2) },
+                      ], `${today}_sell_table.csv`);
+                    }}
+                  >
+                    매도표 CSV 다운로드 ({sellTable.length}행)
+                  </button>
+                  <div className="overflow-y-auto max-h-[400px] overflow-x-auto">
                     <table className="w-full font-mono text-xs">
-                      <thead>
+                      <thead className="sticky top-0 z-10">
                         <tr>
                           <th className="table-header-cell">목표 주식수</th>
                           <th className="table-header-cell text-right">지정가 ($)</th>
@@ -303,20 +317,6 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
                       </tbody>
                     </table>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-secondary text-xs mt-2 w-full"
-                    onClick={() => {
-                      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                      downloadTableCSV(sellTable, [
-                        { label: '목표 주식수', value: (r) => r.targetShares },
-                        { label: '지정가 ($)', value: (r) => r.threshold.toFixed(2) },
-                        { label: '예상 예수금 ($)', value: (r) => r.cumulativeProceeds.toFixed(2) },
-                      ], `${today}_sell_table.csv`);
-                    }}
-                  >
-                    매도표 CSV 다운로드
-                  </button>
                 </>
               ) : (
                 <div className="alert-info text-xs font-mono">매도 가능한 래더 없음</div>
