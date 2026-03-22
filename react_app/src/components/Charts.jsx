@@ -15,15 +15,16 @@ const COLORS = {
 };
 
 const layoutCommon = {
+  autosize: true,
   paper_bgcolor: COLORS.paper,
   plot_bgcolor: COLORS.bg,
-  font: { color: COLORS.text, family: 'Noto Sans KR, Inter, sans-serif', size: 12 },
-  margin: { l: 60, r: 30, t: 40, b: 40 },
+  font: { color: COLORS.text, family: 'JetBrains Mono, Noto Sans KR, sans-serif', size: 11 },
+  margin: { l: 50, r: 20, t: 36, b: 36 },
   xaxis: { gridcolor: COLORS.grid, zeroline: false },
   yaxis: { gridcolor: COLORS.grid, zeroline: false },
   hovermode: 'x unified',
   showlegend: true,
-  legend: { bgcolor: 'rgba(0,0,0,0)', font: { size: 10 } },
+  legend: { bgcolor: 'rgba(0,0,0,0)', font: { size: 9 }, x: 1, xanchor: 'right', y: 1 },
 };
 
 const plotConfig = { responsive: true, displayModeBar: false };
@@ -206,11 +207,11 @@ export default function Charts({ history, onExportReady }) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div ref={ref1} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
-      <div ref={ref2} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
-      <div ref={ref3} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
-      <div ref={ref4} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div ref={ref1} className="surface-panel rounded-sm w-full overflow-hidden" style={{ height: '320px' }} />
+      <div ref={ref2} className="surface-panel rounded-sm w-full overflow-hidden" style={{ height: '320px' }} />
+      <div ref={ref3} className="surface-panel rounded-sm w-full overflow-hidden" style={{ height: '320px' }} />
+      <div ref={ref4} className="surface-panel rounded-sm w-full overflow-hidden" style={{ height: '320px' }} />
     </div>
   );
 }
