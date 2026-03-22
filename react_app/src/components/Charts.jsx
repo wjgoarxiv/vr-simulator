@@ -114,35 +114,28 @@ function buildLayouts() {
   ];
 }
 
-/**
- * Export all 4 charts as a combined PNG by downloading them individually.
- * Each chart is exported via Plotly.toImage and triggered as a download.
- *
- * @param {React.RefObject[]} chartRefs - Array of 4 div refs containing Plotly charts
- */
-export async function exportChartAsPNG(chartRefs) {
-  const titles = ['vr-band-tracking', 'vr-portfolio-vs-target', 'vr-pool-balance', 'vr-shares-held'];
-  for (let i = 0; i < chartRefs.length; i++) {
-    const el = chartRefs[i]?.current;
-    if (!el) continue;
-    try {
-      const url = await Plotly.toImage(el, { format: 'png', width: 800, height: 400 });
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${titles[i]}.png`;
-      a.click();
-    } catch {
-      // skip charts that fail
-    }
-  }
-}
-
-export default function Charts({ history }) {
+export default function Charts({ history, onExportReady }) {
   const ref1 = useRef(null);
   const ref2 = useRef(null);
   const ref3 = useRef(null);
   const ref4 = useRef(null);
   const refs = [ref1, ref2, ref3, ref4];
+
+  // Export function using internal refs
+  const handleExport = async () => {
+    const titles = ['vr-band-tracking', 'vr-portfolio-vs-target', 'vr-pool-balance', 'vr-shares-held'];
+    for (let i = 0; i < refs.length; i++) {
+      const el = refs[i]?.current;
+      if (!el) continue;
+      try {
+        const url = await Plotly.toImage(el, { format: 'png', width: 800, height: 400 });
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${titles[i]}.png`;
+        a.click();
+      } catch { /* skip failed charts */ }
+    }
+  };
 
   useEffect(() => {
     if (!history || history.length < 2) return;
@@ -155,6 +148,9 @@ export default function Charts({ history }) {
       if (!ref.current) return;
       Plotly.newPlot(ref.current, traceGroups[i], layouts[i], plotConfig);
     });
+
+    // Notify parent that export is ready
+    if (onExportReady) onExportReady(handleExport);
 
     return () => {
       refs.forEach((ref) => {

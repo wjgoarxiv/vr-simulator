@@ -21,12 +21,9 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
     import('./Charts')
       .then((mod) => {
         setChartsComponent(() => mod.default);
-        if (mod.exportChartAsPNG) {
-          setChartExporter(() => mod.exportChartAsPNG);
-        }
       })
       .catch(() => {
-        // Charts component not yet available — chart tab shows placeholder
+        // Charts component not yet available
       });
   }, []);
 
@@ -224,7 +221,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
             {activeTab === 1 && (
               <div>
                 {ChartsComponent ? (
-                  <ChartsComponent history={history} />
+                  <ChartsComponent history={history} onExportReady={(fn) => setChartExporter(() => fn)} />
                 ) : (
                   <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
                     차트 컴포넌트가 아직 구현되지 않았습니다.
