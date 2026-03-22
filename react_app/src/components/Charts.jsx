@@ -143,20 +143,20 @@ export default function Charts({ history, onExportReady }) {
     const exportLayout = {
       paper_bgcolor: COLORS.paper,
       plot_bgcolor: COLORS.bg,
-      font: { color: COLORS.text, family: 'JetBrains Mono, Noto Sans KR, sans-serif', size: 22 },
-      margin: { l: 80, r: 40, t: 60, b: 60 },
-      xaxis: { gridcolor: COLORS.grid, zeroline: false, tickfont: { size: 18 } },
-      yaxis: { gridcolor: COLORS.grid, zeroline: false, tickfont: { size: 18 } },
+      font: { color: COLORS.text, family: 'JetBrains Mono, Noto Sans KR, sans-serif', size: 36 },
+      margin: { l: 110, r: 50, t: 80, b: 80 },
+      xaxis: { gridcolor: COLORS.grid, zeroline: false, tickfont: { size: 30 } },
+      yaxis: { gridcolor: COLORS.grid, zeroline: false, tickfont: { size: 30 } },
       hovermode: false,
       showlegend: true,
-      legend: { bgcolor: 'rgba(0,0,0,0)', font: { size: 18 }, x: 1, xanchor: 'right', y: 1 },
+      legend: { bgcolor: 'rgba(0,0,0,0)', font: { size: 28 }, x: 1, xanchor: 'right', y: 1 },
     };
 
     const exportLayouts = [
-      { ...exportLayout, title: { text: 'V & Band 추이', font: { color: COLORS.text, size: 26 } } },
-      { ...exportLayout, title: { text: '포트폴리오(E) vs 목표(V)', font: { color: COLORS.text, size: 26 } } },
-      { ...exportLayout, title: { text: '예수금 추이', font: { color: COLORS.text, size: 26 } }, showlegend: false },
-      { ...exportLayout, title: { text: '보유 주식 수', font: { color: COLORS.text, size: 26 } }, showlegend: false },
+      { ...exportLayout, title: { text: 'V & Band 추이', font: { color: COLORS.text, size: 42 } } },
+      { ...exportLayout, title: { text: '포트폴리오(E) vs 목표(V)', font: { color: COLORS.text, size: 42 } } },
+      { ...exportLayout, title: { text: '예수금 추이', font: { color: COLORS.text, size: 42 } }, showlegend: false },
+      { ...exportLayout, title: { text: '보유 주식 수', font: { color: COLORS.text, size: 42 } }, showlegend: false },
     ];
 
     const { chart1, chart2, chart3, chart4 } = buildTraces(history);
