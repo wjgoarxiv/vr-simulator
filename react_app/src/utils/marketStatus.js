@@ -188,42 +188,22 @@ export function getMarketStatus() {
 
     const pastOrAtOpen = etTotalMinutes >= openMinutes;
 
+    // Helper: add N days to ET calendar date using pure date arithmetic (no TZ round-trip)
+    function addDaysToETDate(n) {
+      const norm = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day + n));
+      nextOpenYear = norm.getUTCFullYear();
+      nextOpenMonth = norm.getUTCMonth() + 1;
+      nextOpenDay = norm.getUTCDate();
+    }
+
     if (pastOrAtOpen) {
-      // app.py: if current ET time >= 9:30, advance to next trading day
-      if (usWeekdayPy === 4) {
-        // Friday -> Monday (+3)
-        const d = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day) + 3 * 86400000);
-        const f = getFieldsInTimezone(d, "America/New_York");
-        nextOpenYear = f.year; nextOpenMonth = f.month; nextOpenDay = f.day;
-      } else if (usWeekdayPy < 4) {
-        // Mon-Thu -> next day (+1)
-        const d = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day) + 1 * 86400000);
-        const f = getFieldsInTimezone(d, "America/New_York");
-        nextOpenYear = f.year; nextOpenMonth = f.month; nextOpenDay = f.day;
-      } else if (usWeekdayPy === 5) {
-        // Saturday -> Monday (+2)
-        const d = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day) + 2 * 86400000);
-        const f = getFieldsInTimezone(d, "America/New_York");
-        nextOpenYear = f.year; nextOpenMonth = f.month; nextOpenDay = f.day;
-      } else if (usWeekdayPy === 6) {
-        // Sunday -> Monday (+1)
-        const d = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day) + 1 * 86400000);
-        const f = getFieldsInTimezone(d, "America/New_York");
-        nextOpenYear = f.year; nextOpenMonth = f.month; nextOpenDay = f.day;
-      }
+      if (usWeekdayPy === 4) addDaysToETDate(3);       // Friday -> Monday
+      else if (usWeekdayPy < 4) addDaysToETDate(1);     // Mon-Thu -> next day
+      else if (usWeekdayPy === 5) addDaysToETDate(2);    // Saturday -> Monday
+      else if (usWeekdayPy === 6) addDaysToETDate(1);    // Sunday -> Monday
     } else {
-      // Before 9:30 ET today
-      if (usWeekdayPy === 5) {
-        // Saturday -> Monday (+2)
-        const d = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day) + 2 * 86400000);
-        const f = getFieldsInTimezone(d, "America/New_York");
-        nextOpenYear = f.year; nextOpenMonth = f.month; nextOpenDay = f.day;
-      } else if (usWeekdayPy === 6) {
-        // Sunday -> Monday (+1)
-        const d = new Date(Date.UTC(etFields.year, etFields.month - 1, etFields.day) + 1 * 86400000);
-        const f = getFieldsInTimezone(d, "America/New_York");
-        nextOpenYear = f.year; nextOpenMonth = f.month; nextOpenDay = f.day;
-      }
+      if (usWeekdayPy === 5) addDaysToETDate(2);         // Saturday -> Monday
+      else if (usWeekdayPy === 6) addDaysToETDate(1);    // Sunday -> Monday
       // else: weekday before 9:30 -> today is next open (no change)
     }
 
