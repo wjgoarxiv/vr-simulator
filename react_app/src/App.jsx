@@ -124,30 +124,28 @@ export default function App() {
   const isLatestCycle = viewCycleIndex === history.length - 1;
 
   return (
-    <div className="min-h-screen bg-vr-bg">
+    <div className="min-h-screen bg-surface-0">
       {/* Header */}
-      <header className="border-b border-vr-border bg-vr-bg2 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-vr-blue to-vr-purple bg-clip-text text-transparent">
-              📊 VR 시뮬레이터
+      <header className="bg-surface-1 border-b border-border-default px-6 py-3">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+          <div className="flex items-baseline gap-3">
+            <h1 className="font-mono text-h3 uppercase tracking-wider text-accent-cyan">
+              VR SIMULATOR
             </h1>
-            <p className="text-sm text-vr-text2 mt-1">
-              Value Rebalancing 투자 전략 시뮬레이터 V{VR_VERSION}
-            </p>
+            <span className="font-mono text-xs text-tx-muted">v{VR_VERSION}</span>
           </div>
           {simulationStarted && (
-            <button onClick={handleReset} className="btn-danger text-sm">
+            <button onClick={handleReset} className="btn-danger">
               시뮬레이션 초기화
             </button>
           )}
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="max-w-[1400px] mx-auto px-4 py-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* Sidebar */}
-          <aside className="lg:w-80 flex-shrink-0">
+          <aside className="lg:w-[260px] flex-shrink-0">
             <Sidebar
               simulationStarted={simulationStarted}
               tickerName={tickerName}
@@ -162,7 +160,7 @@ export default function App() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0 space-y-6">
+          <main className="flex-1 min-w-0 space-y-4">
             {!simulationStarted ? (
               /* Section 1: Initial Setup */
               <InitialSetup onStart={handleStart} tickerName={tickerName} />
@@ -178,17 +176,17 @@ export default function App() {
                         disabled={viewCycleIndex === 0}
                         className="btn-secondary text-sm"
                       >
-                        ← 이전 사이클
+                        &larr; 이전 사이클
                       </button>
-                      <span className="text-vr-text2 text-sm">
-                        Cycle {displayCycleNum} / {history.length}
+                      <span className="font-mono text-xs uppercase tracking-wider text-tx-muted">
+                        CYCLE {displayCycleNum} / {history.length}
                       </span>
                       <button
                         onClick={goNext}
                         disabled={isLatestCycle}
                         className="btn-secondary text-sm"
                       >
-                        다음 사이클 →
+                        다음 사이클 &rarr;
                       </button>
                     </div>
 

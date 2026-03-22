@@ -2,16 +2,16 @@ import { useRef, useEffect } from 'react';
 import Plotly from 'plotly.js-dist-min';
 
 const COLORS = {
-  v_target: '#58A6FF',
-  e_calc: '#A371F7',
-  lband: '#3FB950',
-  hband: '#F85149',
-  pool: '#39D353',
-  shares: '#D29922',
-  bg: '#0D1117',
-  paper: '#161B22',
-  grid: '#30363D',
-  text: '#E6EDF3',
+  v_target: '#00D4FF',   // accent-cyan
+  e_calc: '#8B5CF6',     // accent-violet
+  lband: '#00FF88',      // accent-green
+  hband: '#FF3860',      // accent-red
+  pool: '#00FF88',       // accent-green
+  shares: '#FFB020',     // accent-amber
+  bg: '#07080C',         // surface-0
+  paper: '#0E1018',      // surface-1
+  grid: '#1E2235',       // border-default
+  text: '#E8ECF4',       // tx-primary
 };
 
 const layoutCommon = {
@@ -46,7 +46,7 @@ function buildTraces(history) {
       name: 'LBand',
       line: { color: COLORS.lband, width: 2, dash: 'dash' },
       fill: 'tonexty',
-      fillcolor: 'rgba(63,185,80,0.1)',
+      fillcolor: 'rgba(0,255,136,0.1)',
     },
     {
       x,
@@ -75,7 +75,7 @@ function buildTraces(history) {
       line: { color: COLORS.e_calc, width: 3 },
       marker: { size: 6 },
       fill: 'tonexty',
-      fillcolor: 'rgba(88,166,255,0.1)',
+      fillcolor: 'rgba(0,212,255,0.1)',
     },
   ];
 
@@ -98,7 +98,7 @@ function buildTraces(history) {
       line: { color: COLORS.shares, width: 3 },
       marker: { size: 6 },
       fill: 'tozeroy',
-      fillcolor: 'rgba(210,153,34,0.15)',
+      fillcolor: 'rgba(255,176,32,0.15)',
     },
   ];
 
@@ -168,7 +168,7 @@ export default function Charts({ history }) {
 
   if (!history || history.length < 2) {
     return (
-      <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
+      <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
         차트를 표시하려면 2개 이상의 사이클이 필요합니다
       </div>
     );
@@ -176,10 +176,10 @@ export default function Charts({ history }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div ref={ref1} className="w-full" style={{ height: '360px' }} />
-      <div ref={ref2} className="w-full" style={{ height: '360px' }} />
-      <div ref={ref3} className="w-full" style={{ height: '360px' }} />
-      <div ref={ref4} className="w-full" style={{ height: '360px' }} />
+      <div ref={ref1} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
+      <div ref={ref2} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
+      <div ref={ref3} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
+      <div ref={ref4} className="surface-panel rounded-sm w-full" style={{ height: '360px' }} />
     </div>
   );
 }

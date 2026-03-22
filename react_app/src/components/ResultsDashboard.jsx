@@ -32,7 +32,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
 
   if (!history || history.length === 0) {
     return (
-      <div className="card text-center text-vr-text2 text-sm py-8">
+      <div className="surface-panel text-center text-tx-muted font-mono text-sm py-8">
         시뮬레이션을 시작하면 결과 요약이 여기에 표시됩니다.
       </div>
     );
@@ -82,95 +82,101 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Portfolio Summary Dashboard */}
+    <div className="flex flex-col gap-4">
+      {/* Performance KPI Section */}
       <div>
-        <h3 className="section-title text-lg mb-4">포트폴리오 성과 대시보드</h3>
+        <div className="terminal-divider">
+          <span className="terminal-divider-label">PERFORMANCE</span>
+        </div>
 
-        {/* Row 1: 총 수익률, V 성장률, 완료 사이클, 보유 주식 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <div className="metric-card">
-            <div className="metric-label">총 수익률 (ROI)</div>
-            <div className="metric-value">{fmt.currency(summary.currentE)}</div>
-            <div className={summary.roi >= 0 ? 'metric-delta-up' : 'metric-delta-down'}>
+        {/* Row 1: ROI, V Growth, Cycles, Shares */}
+        <div className="metric-strip mb-px">
+          <div className="metric-cell">
+            <div className={`data-value-md ${summary.roi >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
               {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
             </div>
+            <div className="data-label mt-1">ROI</div>
           </div>
 
-          <div className="metric-card">
-            <div className="metric-label">V 성장률</div>
-            <div className="metric-value">{summary.vGrowth.toFixed(1)}%</div>
-            <div className={summary.vGrowth >= 0 ? 'metric-delta-up' : 'metric-delta-down'}>
+          <div className="metric-cell">
+            <div className={`data-value-md ${summary.vGrowth >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
               {summary.vGrowth >= 0 ? '+' : ''}{summary.vGrowth.toFixed(1)}%
             </div>
+            <div className="data-label mt-1">V GROWTH</div>
           </div>
 
-          <div className="metric-card">
-            <div className="metric-label">완료 사이클</div>
-            <div className="metric-value">{summary.totalCycles}</div>
+          <div className="metric-cell">
+            <div className="data-value-md">{summary.totalCycles}</div>
+            <div className="data-label mt-1">CYCLES</div>
           </div>
 
-          <div className="metric-card">
-            <div className="metric-label">보유 주식</div>
-            <div className="metric-value">{summary.currentShares}주</div>
-            <div className={summary.sharesChange >= 0 ? 'metric-delta-up' : 'metric-delta-down'}>
+          <div className="metric-cell">
+            <div className="data-value-md">{summary.currentShares}주</div>
+            <div className={`text-xs mt-0.5 ${summary.sharesChange >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
               {summary.sharesChange >= 0 ? '+' : ''}{summary.sharesChange}주
             </div>
+            <div className="data-label mt-1">SHARES</div>
           </div>
         </div>
 
-        {/* Row 2: 총 투자금, 총 적립금, 평균 V/E 괴리율, 순이익 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="metric-card">
-            <div className="metric-label">총 투자금</div>
-            <div className="metric-value text-lg">
+        {/* Row 2: Total Invested, Deposits, Avg Divergence, Net P&L */}
+        <div className="metric-strip">
+          <div className="metric-cell">
+            <div className="data-value-md">
               ${(summary.initialE + summary.totalDeposits).toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
+            <div className="data-label mt-1">TOTAL INVESTED</div>
           </div>
 
-          <div className="metric-card">
-            <div className="metric-label">총 적립금</div>
-            <div className="metric-value text-lg">
+          <div className="metric-cell">
+            <div className="data-value-md">
               ${summary.totalDeposits.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
+            <div className="data-label mt-1">DEPOSITS</div>
           </div>
 
-          <div className="metric-card">
-            <div className="metric-label">평균 V/E 괴리율</div>
-            <div className="metric-value text-lg">{summary.avgDivergence.toFixed(1)}%</div>
-            <div
-              className={
-                summary.avgDivergence < 5
-                  ? 'metric-delta-up'
-                  : summary.avgDivergence < 10
-                  ? 'metric-delta-neutral'
-                  : 'metric-delta-down'
-              }
-            >
+          <div className="metric-cell">
+            <div className={`data-value-md ${
+              summary.avgDivergence < 5
+                ? 'text-accent-green'
+                : summary.avgDivergence < 10
+                ? 'text-accent-amber'
+                : 'text-accent-red'
+            }`}>
+              {summary.avgDivergence.toFixed(1)}%
+            </div>
+            <div className={`text-xs mt-0.5 ${
+              summary.avgDivergence < 5
+                ? 'text-accent-green'
+                : summary.avgDivergence < 10
+                ? 'text-accent-amber'
+                : 'text-accent-red'
+            }`}>
               {divergenceStatus}
             </div>
+            <div className="data-label mt-1">AVG DIVERGENCE</div>
           </div>
 
-          <div className="metric-card">
-            <div className="metric-label">순이익</div>
-            <div className={`metric-value text-lg ${profitLoss >= 0 ? 'text-vr-green' : 'text-vr-red'}`}>
-              ${profitLoss.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          <div className="metric-cell">
+            <div className={`data-value-md ${profitLoss >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+              {profitLoss >= 0 ? '+' : ''}${profitLoss.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
-            <div className={profitLoss >= 0 ? 'metric-delta-up' : 'metric-delta-down'}>
+            <div className={`text-xs mt-0.5 ${profitLoss >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
               {profitLoss >= 0 ? '+' : ''}{profitLoss.toLocaleString('en-US', { maximumFractionDigits: 0 })}$
             </div>
+            <div className="data-label mt-1">NET P&amp;L</div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tab System */}
       <div>
-        <div className="flex border-b border-vr-border">
+        <div className="tab-strip">
           {TABS.map((tab, i) => (
             <button
               key={tab}
               type="button"
-              className={i === activeTab ? 'tab-btn-active' : 'tab-btn-inactive'}
+              className={i === activeTab ? 'tab-active' : 'tab-inactive'}
               onClick={() => setActiveTab(i)}
             >
               {tab}
@@ -178,88 +184,72 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
           ))}
         </div>
 
-        <div className="card rounded-tl-none rounded-t-none border-t-0">
-          {/* Tab 0: 상세 기록 */}
-          {activeTab === 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="table-header">
-                    {columns.map((col) => (
-                      <th key={col.key} className="px-3 py-2 text-left whitespace-nowrap">
-                        {col.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((row, idx) => (
-                    <tr key={idx} className="table-row">
-                      {columns.map((col) => (
-                        <td
+        <div className="surface-panel mt-0 rounded-t-none border-t-0">
+          <div className="transition-opacity duration-150">
+            {/* Tab 0: 상세 기록 */}
+            {activeTab === 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      {columns.map((col, i) => (
+                        <th
                           key={col.key}
-                          className="px-3 py-2 text-vr-text whitespace-nowrap font-mono text-xs"
+                          className={`table-header-cell whitespace-nowrap${i === 0 ? ' sticky left-0 bg-surface-3' : ''}`}
                         >
-                          {col.format(row[col.key])}
-                        </td>
+                          {col.label}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Tab 1: 차트 */}
-          {activeTab === 1 && (
-            <div>
-              {ChartsComponent ? (
-                <ChartsComponent history={history} />
-              ) : (
-                <div className="text-center text-vr-text2 text-sm py-12">
-                  차트 컴포넌트가 아직 구현되지 않았습니다.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Tab 2: 다운로드 */}
-          {activeTab === 2 && (
-            <div className="flex flex-col gap-4">
-              <h4 className="section-title text-base">데이터 다운로드</h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="card bg-vr-bg flex flex-col gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-vr-text">CSV 데이터</p>
-                    <p className="text-xs text-vr-text2 mt-1">
-                      전체 사이클 기록을 CSV 파일로 다운로드합니다.
-                    </p>
-                  </div>
-                  <button type="button" className="btn-primary w-full" onClick={handleCSVDownload}>
-                    전체 기록 CSV 다운로드
-                  </button>
-                </div>
-
-                <div className="card bg-vr-bg flex flex-col gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-vr-text">차트 이미지 (PNG)</p>
-                    <p className="text-xs text-vr-text2 mt-1">
-                      시뮬레이션 차트를 고해상도 PNG 이미지로 다운로드합니다.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-secondary w-full"
-                    onClick={handlePNGDownload}
-                    disabled={!chartExporter}
-                  >
-                    {chartExporter ? '전체 차트 PNG 다운로드' : '차트 컴포넌트 미구현'}
-                  </button>
-                </div>
+                  </thead>
+                  <tbody>
+                    {history.map((row, idx) => (
+                      <tr key={idx} className="table-row-zebra">
+                        {columns.map((col, i) => (
+                          <td
+                            key={col.key}
+                            className={`table-cell whitespace-nowrap font-mono${i === 0 ? ' sticky left-0 bg-surface-3' : ''}`}
+                          >
+                            {col.format(row[col.key])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Tab 1: 차트 */}
+            {activeTab === 1 && (
+              <div>
+                {ChartsComponent ? (
+                  <ChartsComponent history={history} />
+                ) : (
+                  <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
+                    차트 컴포넌트가 아직 구현되지 않았습니다.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab 2: 다운로드 */}
+            {activeTab === 2 && (
+              <div className="flex gap-3">
+                <button type="button" className="btn-primary flex-1" onClick={handleCSVDownload}>
+                  전체 기록 CSV 다운로드
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary flex-1"
+                  onClick={handlePNGDownload}
+                  disabled={!chartExporter}
+                >
+                  {chartExporter ? '전체 차트 PNG 다운로드' : '차트 컴포넌트 미구현'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

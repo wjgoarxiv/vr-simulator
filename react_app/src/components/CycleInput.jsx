@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Send } from 'lucide-react';
 import {
   calculateNextV,
   detectVECapActivation,
@@ -111,78 +110,68 @@ export default function CycleInput({
     onSubmit(normalizeHistoryEntry(new_state));
   }
 
+  const paddedNum = String(inputCycleNum).padStart(2, '0');
+
   return (
-    <form onSubmit={handleSubmit} className="card space-y-5">
-      <h3 className="section-title text-xl">Cycle {inputCycleNum} 결과 입력</h3>
-      <p className="text-vr-text2 text-sm">이번 사이클 종료 시점의 투자 결과를 입력하세요.</p>
+    <form onSubmit={handleSubmit} className="surface-panel space-y-3">
 
-      {/* Market data */}
-      <div>
-        <p className="text-sm font-semibold text-vr-text mb-2">시장 데이터</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="block text-xs text-vr-text2 mb-1">종료 시점 가격 ($)</label>
-            <input
-              type="number"
-              className="input-field"
-              value={price}
-              min="0.01"
-              step="0.01"
-              onChange={(e) => setPrice(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-vr-text2 mb-1">종료 시점 보유 주식 수</label>
-            <input
-              type="number"
-              className="input-field"
-              value={shares}
-              min="0"
-              step="1"
-              onChange={(e) => setShares(e.target.value)}
-              required
-            />
-          </div>
-        </div>
+      {/* Title */}
+      <div className="terminal-divider">
+        <span className="terminal-divider-label">CYCLE {paddedNum} INPUT</span>
       </div>
 
-      {/* Fund status */}
-      <div>
-        <p className="text-sm font-semibold text-vr-text mb-2">자금 현황</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="block text-xs text-vr-text2 mb-1">종료 시점 예수금 ($)</label>
-            <input
-              type="number"
-              className="input-field"
-              value={pool}
-              min="0"
-              step="0.01"
-              onChange={(e) => setPool(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-vr-text2 mb-1">다음 사이클 적립금 ($)</label>
-            <input
-              type="number"
-              className="input-field"
-              value={deposit}
-              min="0"
-              step="1"
-              onChange={(e) => setDeposit(e.target.value)}
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Strategy settings */}
-      <div>
-        <p className="text-sm font-semibold text-vr-text mb-2">전략 설정</p>
+      {/* All 5 inputs in one dense grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
-          <label className="block text-xs text-vr-text2 mb-1">적용 G 값</label>
+          <div className="data-label mb-1">종료 가격 ($)</div>
+          <input
+            type="number"
+            className="input-field"
+            value={price}
+            min="0.01"
+            step="0.01"
+            onChange={(e) => setPrice(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <div className="data-label mb-1">보유 주식 수</div>
+          <input
+            type="number"
+            className="input-field"
+            value={shares}
+            min="0"
+            step="1"
+            onChange={(e) => setShares(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <div className="data-label mb-1">예수금 ($)</div>
+          <input
+            type="number"
+            className="input-field"
+            value={pool}
+            min="0"
+            step="0.01"
+            onChange={(e) => setPool(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <div className="data-label mb-1">다음 적립금 ($)</div>
+          <input
+            type="number"
+            className="input-field"
+            value={deposit}
+            min="0"
+            step="1"
+            onChange={(e) => setDeposit(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <div className="data-label mb-1">G 값</div>
           <input
             type="number"
             className="input-field"
@@ -195,17 +184,18 @@ export default function CycleInput({
         </div>
       </div>
 
-      {/* Preview */}
-      <div className="alert-info text-sm">
-        예상 평가금(E): <strong>${fmt(previewE)}</strong>
-        &nbsp;|&nbsp;
-        예상 총 자산: <strong>${fmt(previewTotal)}</strong>
+      {/* Preview bar */}
+      <div className="bg-surface-0 border border-border-default rounded-sm px-3 py-2 font-mono text-xs">
+        <span className="text-tx-muted">E =</span>{' '}
+        <span className="text-accent-cyan">${fmt(previewE)}</span>
+        <span className="text-tx-muted mx-2">|</span>
+        <span className="text-tx-muted">총자산 =</span>{' '}
+        <span className="text-accent-cyan">${fmt(previewTotal)}</span>
       </div>
 
       {/* Submit */}
-      <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
-        <Send className="w-4 h-4" />
-        Cycle {inputCycleNum + 1} 계산하기
+      <button type="submit" className="btn-primary w-full font-mono uppercase tracking-wider">
+        → 계산
       </button>
     </form>
   );
