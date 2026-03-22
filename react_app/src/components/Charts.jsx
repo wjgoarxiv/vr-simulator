@@ -124,7 +124,9 @@ export default function Charts({ history, onExportReady }) {
 
   // Export all 4 charts as a single bundled 2x2 high-res PNG (matching app.py matplotlib output)
   const handleExport = async () => {
-    const W = 1400, H = 1000; // per chart
+    if (!history || history.length < 2) return;
+
+    const W = 1400, H = 1000;
     const PADDING = 40;
     const canvasW = W * 2 + PADDING * 3;
     const canvasH = H * 2 + PADDING * 3;
@@ -134,30 +136,53 @@ export default function Charts({ history, onExportReady }) {
     canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
 
-    // Dark background matching the theme
     ctx.fillStyle = '#07080C';
     ctx.fillRect(0, 0, canvasW, canvasH);
 
-    const positions = [
-      [PADDING, PADDING],                  // top-left
-      [PADDING * 2 + W, PADDING],          // top-right
-      [PADDING, PADDING * 2 + H],          // bottom-left
-      [PADDING * 2 + W, PADDING * 2 + H],  // bottom-right
+    // Export-specific layout with larger fonts for high-res output
+    const exportLayout = {
+      paper_bgcolor: COLORS.paper,
+      plot_bgcolor: COLORS.bg,
+      font: { color: COLORS.text, family: 'JetBrains Mono, Noto Sans KR, sans-serif', size: 22 },
+      margin: { l: 80, r: 40, t: 60, b: 60 },
+      xaxis: { gridcolor: COLORS.grid, zeroline: false, tickfont: { size: 18 } },
+      yaxis: { gridcolor: COLORS.grid, zeroline: false, tickfont: { size: 18 } },
+      hovermode: false,
+      showlegend: true,
+      legend: { bgcolor: 'rgba(0,0,0,0)', font: { size: 18 }, x: 1, xanchor: 'right', y: 1 },
+    };
+
+    const exportLayouts = [
+      { ...exportLayout, title: { text: 'V & Band 추이', font: { color: COLORS.text, size: 26 } } },
+      { ...exportLayout, title: { text: '포트폴리오(E) vs 목표(V)', font: { color: COLORS.text, size: 26 } } },
+      { ...exportLayout, title: { text: '예수금 추이', font: { color: COLORS.text, size: 26 } }, showlegend: false },
+      { ...exportLayout, title: { text: '보유 주식 수', font: { color: COLORS.text, size: 26 } }, showlegend: false },
     ];
 
-    for (let i = 0; i < refs.length; i++) {
-      const el = refs[i]?.current;
-      if (!el) continue;
+    const { chart1, chart2, chart3, chart4 } = buildTraces(history);
+    const traceGroups = [chart1, chart2, chart3, chart4];
+
+    const positions = [
+      [PADDING, PADDING],
+      [PADDING * 2 + W, PADDING],
+      [PADDING, PADDING * 2 + H],
+      [PADDING * 2 + W, PADDING * 2 + H],
+    ];
+
+    // Render each chart in a temporary off-screen div with export fonts
+    for (let i = 0; i < 4; i++) {
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1400px;height:1000px;';
+      document.body.appendChild(tempDiv);
       try {
-        const dataUrl = await Plotly.toImage(el, { format: 'png', width: W, height: H, scale: 2 });
+        await Plotly.newPlot(tempDiv, traceGroups[i], exportLayouts[i], { staticPlot: true });
+        const dataUrl = await Plotly.toImage(tempDiv, { format: 'png', width: W, height: H });
         const img = new Image();
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = dataUrl;
-        });
+        await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = dataUrl; });
         ctx.drawImage(img, positions[i][0], positions[i][1], W, H);
-      } catch { /* skip failed charts */ }
+        Plotly.purge(tempDiv);
+      } catch { /* skip */ }
+      document.body.removeChild(tempDiv);
     }
 
     // Download the combined image
