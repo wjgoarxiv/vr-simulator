@@ -121,20 +121,55 @@ export default function Charts({ history, onExportReady }) {
   const ref4 = useRef(null);
   const refs = [ref1, ref2, ref3, ref4];
 
-  // Export function using internal refs
+  // Export all 4 charts as a single bundled 2x2 high-res PNG (matching app.py matplotlib output)
   const handleExport = async () => {
-    const titles = ['vr-band-tracking', 'vr-portfolio-vs-target', 'vr-pool-balance', 'vr-shares-held'];
+    const W = 1400, H = 1000; // per chart
+    const PADDING = 40;
+    const canvasW = W * 2 + PADDING * 3;
+    const canvasH = H * 2 + PADDING * 3;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d');
+
+    // Dark background matching the theme
+    ctx.fillStyle = '#07080C';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    const positions = [
+      [PADDING, PADDING],                  // top-left
+      [PADDING * 2 + W, PADDING],          // top-right
+      [PADDING, PADDING * 2 + H],          // bottom-left
+      [PADDING * 2 + W, PADDING * 2 + H],  // bottom-right
+    ];
+
     for (let i = 0; i < refs.length; i++) {
       const el = refs[i]?.current;
       if (!el) continue;
       try {
-        const url = await Plotly.toImage(el, { format: 'png', width: 800, height: 400 });
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${titles[i]}.png`;
-        a.click();
+        const dataUrl = await Plotly.toImage(el, { format: 'png', width: W, height: H, scale: 2 });
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = dataUrl;
+        });
+        ctx.drawImage(img, positions[i][0], positions[i][1], W, H);
       } catch { /* skip failed charts */ }
     }
+
+    // Download the combined image
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${today}_vr_simulation_charts.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
   };
 
   useEffect(() => {
