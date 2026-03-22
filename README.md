@@ -2,7 +2,7 @@
 
 <h1 align="center">VR 시뮬레이터</h1>
 <p align="center">
-  <em>라오어 실력공식 기반 레버리지 ETF 밸류 리밸런싱 투자 시뮬레이터</em>
+  <em>레버리지 ETF 밸류 리밸런싱 투자 시뮬레이터</em>
 </p>
 <p align="center">
   <a href="#-quick-start">Quick Start</a> · <a href="#-features">Features</a> · <a href="#-usage">Usage</a> · <a href="#-vr-formula">VR Formula</a>
