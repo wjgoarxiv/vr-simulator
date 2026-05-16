@@ -5,9 +5,9 @@ Scope: Streamlit `app.py`, React `react_app/src/components/CycleViewer.jsx`, and
 ## Required user-facing copy
 
 ## Required final copy contract
-- Title: `목표를 현실에 맞췄어요`
+- Title: `목표를 안전하게 낮췄어요`
 - Why: `처음 계산한 목표가 지금 평가금보다 높아서, 이번 사이클에 적용할 목표를 낮췄어요.`
-- Labels: `처음 목표`, `적용 목표`
+- Labels: `처음 계산된 목표`, `이번에 적용할 목표`
 - User impact: `그래서 지금 당장 무리해서 사라는 신호가 줄어들어요.`
 
 ## Forbidden user-facing patterns

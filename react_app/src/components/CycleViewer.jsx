@@ -132,22 +132,22 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
       {/* Target V safety adjustment notice */}
       {veCapActive && veCapUncappedV !== null && (
         <div className="alert-warning flex-col items-start gap-2">
-          <div className="font-sans text-sm font-semibold text-tx-primary">목표를 현실에 맞췄어요</div>
+          <div className="font-sans text-sm font-semibold text-tx-primary">목표를 안전하게 낮췄어요</div>
           <div className="font-sans text-xs leading-relaxed text-tx-secondary">
-            처음 계산한 목표가 지금 평가금보다 높아서, 이번 사이클에 적용할 목표를 낮췄어요.
+            현재 평가금보다 목표가 너무 높아지지 않도록 조정했어요.
           </div>
           <div className="grid w-full grid-cols-2 gap-2 font-sans text-xs">
             <div className="rounded border border-border-subtle/70 bg-surface-inset px-2 py-1">
-              <div className="data-label">처음 목표</div>
+              <div className="data-label">처음 계산된 목표</div>
               <div className="font-mono text-accent-amber">${fmt(veCapUncappedV, 0)}</div>
             </div>
             <div className="rounded border border-border-subtle/70 bg-surface-inset px-2 py-1">
-              <div className="data-label">적용 목표</div>
+              <div className="data-label">이번에 적용할 목표</div>
               <div className="font-mono text-accent-amber">${fmt(V_i_display, 0)}</div>
             </div>
           </div>
           <div className="font-sans text-xs leading-relaxed text-tx-muted">
-            그래서 지금 당장 무리해서 사라는 신호가 줄어들어요.
+            다음 사이클에 무리한 매수 주문이 나오지 않아요. 따로 조치할 필요는 없어요.
           </div>
         </div>
       )}
