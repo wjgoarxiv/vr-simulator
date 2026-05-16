@@ -49,13 +49,13 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
   let buySignalClass, buyStatusText;
   if (canBuyNow) {
     buySignalClass = 'signal-buy-active';
-    buyStatusText = '즉시 매수 가능';
+    buyStatusText = '지금 매수 가능';
   } else if (buyGap <= 5) {
     buySignalClass = 'signal-buy-near';
-    buyStatusText = '매수 근접';
+    buyStatusText = '매수에 가까워졌어요';
   } else {
     buySignalClass = 'signal-buy-wait';
-    buyStatusText = '대기중';
+    buyStatusText = '기다리는 중';
   }
 
   let sellSignalClass, sellStatusText, sellGap;
@@ -68,13 +68,13 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
     const canSellNow = lastPrice >= sellTargetPrice;
     if (canSellNow) {
       sellSignalClass = 'signal-sell-active';
-      sellStatusText = '즉시 매도 가능';
+      sellStatusText = '지금 매도 가능';
     } else if (sellGap <= 5) {
       sellSignalClass = 'signal-sell-near';
-      sellStatusText = '매도 근접';
+      sellStatusText = '매도에 가까워졌어요';
     } else {
       sellSignalClass = 'signal-sell-wait';
-      sellStatusText = '대기중';
+      sellStatusText = '기다리는 중';
     }
   }
 
@@ -84,7 +84,7 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
   const divergenceDirection = activeState.ve_divergence_direction ?? 'neutral';
   const lowerRatio = activeState.band_lower_ratio ?? 0.85;
   const upperRatio = activeState.band_upper_ratio ?? 1.15;
-  const directionText = { over: '목표>실제', under: '실제>목표', neutral: '균형' }[divergenceDirection] ?? '균형';
+  const directionText = { over: '목표>평가금', under: '평가금>목표', neutral: '균형' }[divergenceDirection] ?? '균형';
 
   // Buy/sell tables
   const buyPool = poolStart;
@@ -132,22 +132,22 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
       {/* Target V safety adjustment notice */}
       {veCapActive && veCapUncappedV !== null && (
         <div className="alert-warning flex-col items-start gap-2">
-          <div className="font-sans text-sm font-semibold text-tx-primary">목표 V 자동 조정</div>
+          <div className="font-sans text-sm font-semibold text-tx-primary">목표를 현실에 맞췄어요</div>
           <div className="font-sans text-xs leading-relaxed text-tx-secondary">
-            계산된 목표가 현재 평가금보다 높아 안전 기준에 맞춰 낮췄습니다.
+            처음 계산한 목표가 지금 평가금보다 높아서, 이번 사이클에 적용할 목표를 낮췄어요.
           </div>
           <div className="grid w-full grid-cols-2 gap-2 font-sans text-xs">
             <div className="rounded border border-border-subtle/70 bg-surface-inset px-2 py-1">
-              <div className="data-label">조정 전 목표</div>
+              <div className="data-label">처음 목표</div>
               <div className="font-mono text-accent-amber">${fmt(veCapUncappedV, 0)}</div>
             </div>
             <div className="rounded border border-border-subtle/70 bg-surface-inset px-2 py-1">
-              <div className="data-label">실제 적용 목표</div>
+              <div className="data-label">적용 목표</div>
               <div className="font-mono text-accent-amber">${fmt(V_i_display, 0)}</div>
             </div>
           </div>
           <div className="font-sans text-xs leading-relaxed text-tx-muted">
-            의미: 다음 사이클에서 과도한 매수 신호가 나오지 않게 막는 안전장치입니다.
+            그래서 지금 당장 무리해서 사라는 신호가 줄어들어요.
           </div>
         </div>
       )}
@@ -183,15 +183,13 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
         </div>
       </div>
 
-      {/* V/E divergence sell warning */}
+      {/* Sell gap warning */}
       {sellTargetPrice > 0 && sellGap > 20 && (
         <div className="alert-warning">
-          <span className="font-mono text-xs">SELL GAP WARNING</span>
+          <span className="font-sans text-xs font-semibold">매도까지 아직 거리가 있어요.</span>
           <span className="font-sans text-xs ml-2">
-            매도 목표가(<span className="font-mono text-accent-amber">${fmt(sellTargetPrice)}</span>)가 현재가 대비{' '}
-            <span className="font-mono text-accent-amber">{sellGap.toFixed(1)}%</span> 높음.
-            V(<span className="font-mono">${fmt(activeState.V_target ?? 0, 0)}</span>)가
-            E(<span className="font-mono">${fmt(activeState.E_calc ?? 0, 0)}</span>)를 크게 초과.
+            매도 목표가는 현재가보다 <span className="font-mono text-accent-amber">{sellGap.toFixed(1)}%</span> 높고,
+            목표와 평가금 차이가 커진 상태예요.
           </span>
         </div>
       )}
@@ -203,12 +201,12 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
           <div className="metric-strip">
             <div className="metric-cell">
               <div className="data-value-sm font-mono">{(divergenceRatio * 100).toFixed(1)}%</div>
-              <div className="data-label">V/E 괴리율</div>
+              <div className="data-label">목표-평가금 차이</div>
               <div className="text-xs text-tx-muted font-mono mt-0.5">{directionText}</div>
             </div>
             <div className="metric-cell">
               <div className="data-value-sm font-mono">{((1 - compressionFactor) * 100).toFixed(1)}%</div>
-              <div className="data-label">압축률</div>
+              <div className="data-label">조건 조정</div>
             </div>
             <div className="metric-cell">
               <div className="data-value-sm font-mono text-accent-green">-{((1.0 - lowerRatio) * 100).toFixed(1)}%</div>
