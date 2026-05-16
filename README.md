@@ -83,7 +83,7 @@ V_f = V_i + (Pool / G) + ((E - V_i) / (2 * sqrt(G))) + Deposit
 
 ### V3.1.4 — Toss-like safety copy
 - Rewrote the target adjustment notice again so it reads in one pass: what changed, why it changed, and what action it prevents.
-- Aligned the React and Streamlit Korean copy around the same plain-language labels: 처음 목표 / 적용 목표.
+- Aligned the React and Streamlit Korean copy around the same plain-language labels: 처음 계산된 목표 / 이번에 적용할 목표.
 
 ## 🔄 V3.1.3 Changes
 
