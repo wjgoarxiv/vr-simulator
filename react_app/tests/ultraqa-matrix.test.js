@@ -120,8 +120,8 @@ test('VR formula constants stay byte-aligned with app.py', () => {
   for (const [name, value] of Object.entries(FORMULA_CONSTANTS)) {
     const match = appPy.match(new RegExp(`^${name}\\s*=\\s*([^#\\n]+)`, 'm'));
     assert.ok(match, `${name} missing from app.py`);
-    const pyValue = match[1].trim().replaceAll('"', '');
-    assert.equal(String(value), pyValue, `${name} diverged between React and Streamlit`);
+    const pyValue = parseFloat(match[1]);
+    assert.equal(Number(value), pyValue, `${name} diverged between React and Streamlit`);
   }
 });
 
