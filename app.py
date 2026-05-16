@@ -206,7 +206,7 @@ if 'view_cycle_index' not in st.session_state:
 if 'ticker_name' not in st.session_state:
     st.session_state.ticker_name = "TQQQ"
 if 'adaptive_band_enabled' not in st.session_state:
-    st.session_state.adaptive_band_enabled = False
+    st.session_state.adaptive_band_enabled = True
 
 # =============================================================================
 # 핵심 계산 함수
@@ -263,7 +263,7 @@ def calculate_band_compression_factor(V_target, E_calc):
 def calculate_bands(V_target, E_calc=None, use_adaptive=None):
     """LBand, HBand 계산 (적응형 밴드 지원)"""
     if use_adaptive is None:
-        use_adaptive = st.session_state.get('adaptive_band_enabled', False)
+        use_adaptive = st.session_state.get('adaptive_band_enabled', True)
 
     if not use_adaptive or E_calc is None or E_calc <= 0:
         return BASE_BAND_LOWER * V_target, BASE_BAND_UPPER * V_target

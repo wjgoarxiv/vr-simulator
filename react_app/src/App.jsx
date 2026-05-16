@@ -17,7 +17,7 @@ const DEFAULT_STATE = {
   simulationStarted: false,
   viewCycleIndex: 0,
   tickerName: 'TQQQ',
-  adaptiveBandEnabled: false,
+  adaptiveBandEnabled: true,
 };
 
 function toFiniteNumber(value, fallback) {
@@ -43,7 +43,7 @@ function sanitizeSavedState(candidate) {
     tickerName: typeof candidate.tickerName === 'string' && candidate.tickerName.trim()
       ? candidate.tickerName.trim()
       : DEFAULT_STATE.tickerName,
-    adaptiveBandEnabled: Boolean(candidate.adaptiveBandEnabled),
+    adaptiveBandEnabled: Boolean(candidate.adaptiveBandEnabled ?? DEFAULT_STATE.adaptiveBandEnabled),
   };
 }
 
