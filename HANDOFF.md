@@ -4,9 +4,9 @@
 Continue development of the VR Simulator with both surfaces in mind: the React/Vite web app in `react_app/` and the Streamlit app in `app.py`. Recent work focused on reliability/UltraQA coverage, CSV hardening, React robustness, and making adaptive bands ON by default.
 
 ## Current State
-- Last completed functional change before this handoff update: confusing target-V safety copy was redesigned in both `react_app/src/components/CycleViewer.jsx` and `app.py`; version surfaces were bumped to `3.1.3`.
+- Last completed functional change before this handoff update: confusing target-V safety copy was redesigned in both `react_app/src/components/CycleViewer.jsx` and `app.py`; version surfaces were bumped to `3.1.4`.
 - Current branch state at handoff creation: `git status --short --branch` showed `## main...origin/main` before this handoff/AGENTS update was written.
-- Current version is `3.1.3` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
+- Current version is `3.1.4` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
 - OMX team run `enhance-vr-simulator-db33a401` was completed and shut down. Evidence from `omx team status enhance-vr-simulator-db33a401 --json --tail-lines 240`: `phase=complete`, `tasks.completed=5`, `pending=0`, `in_progress=0`, `failed=0`; after shutdown, status returned `missing`, which is expected.
 - No deployment was performed after the code changes. The latest push was to `https://github.com/wjgoarxiv/vr-simulator.git`, branch `main`.
 
@@ -36,14 +36,14 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
   - Improved adaptive metadata flow and display resilience as part of the team run.
   - Evidence: team worker completion messages and passing React test/build commands.
 - `react_app/src/components/CycleViewer.jsx` and `app.py`
-  - Replaced formula-heavy user-facing copy such as “V/E 상한 적용됨 / 원래 V / 제한 V / 적립금 기여분 흡수” with plain-language “목표 V 자동 조정” messaging.
-  - Evidence: `react_app/tests/ui-copy.test.mjs` forbids the confusing phrases and requires the replacement copy on both app surfaces.
+  - Replaced formula-heavy user-facing copy such as “V/E 상한 적용됨 / 원래 V / 제한 V / 적립금 기여분 흡수” with Toss-like plain Korean copy: “목표를 현실에 맞췄어요”, “처음 목표”, and “적용 목표”.
+  - Evidence: implementation lane preserved calculation code and aligned the React/Streamlit message contract; verification lane should update `react_app/tests/ui-copy.test.mjs` accordingly.
 - `react_app/tests/ui-copy.test.mjs`
   - Added regression coverage to prevent confusing cap/absorption wording from reappearing in user-facing copy.
 - Version surfaces
-  - Bumped `3.1.2` to `3.1.3` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`; updated `README.md` visible version references.
+  - Bumped `3.1.3` to `3.1.4` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`; updated `README.md` visible version references.
 - `HANDOFF.md`
-  - Updated to include the V3.1.3 UI-copy cleanup and version bump.
+  - Updated to include the V3.1.4 Toss-like UI-copy cleanup and version bump.
 - `AGENTS.md`
   - Added local instructions requiring future agents to read `HANDOFF.md` first and keep version fields synchronized when functional improvements are made.
 
