@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { calculatePortfolioSummary } from '../utils/vrCalculations';
 import { exportCSV, downloadBlob } from '../utils/csvHandling';
 
@@ -17,15 +17,30 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
   const [ChartsComponent, setChartsComponent] = useState(null);
   const [chartExporter, setChartExporter] = useState(null);
 
+  const [shouldLoadCharts, setShouldLoadCharts] = useState(false);
+
   useEffect(() => {
+    if (activeTab === 1 || activeTab === 2) {
+      setShouldLoadCharts(true);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!shouldLoadCharts || ChartsComponent) return;
+
+    let cancelled = false;
     import('./Charts')
       .then((mod) => {
-        setChartsComponent(() => mod.default);
+        if (!cancelled) setChartsComponent(() => mod.default);
       })
       .catch(() => {
-        // Charts component not yet available
+        if (!cancelled) setChartsComponent(null);
       });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldLoadCharts, ChartsComponent]);
 
   if (!history || history.length === 0) {
     return (
@@ -219,11 +234,11 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
 
             {/* Tab 1: 차트 (always mounted, hidden when inactive to preserve refs for PNG export) */}
             <div style={{ display: activeTab === 1 ? 'block' : 'none' }}>
-              {ChartsComponent ? (
+              {shouldLoadCharts && ChartsComponent ? (
                 <ChartsComponent history={history} visible={activeTab === 1} onExportReady={(fn) => setChartExporter(() => fn)} />
               ) : (
                 <div className="flex items-center justify-center h-40 text-tx-muted font-mono text-sm">
-                  차트 로딩 중...
+                  {shouldLoadCharts ? '차트 로딩 중...' : '차트 탭을 열면 차트를 불러옵니다'}
                 </div>
               )}
             </div>
@@ -240,7 +255,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
                   onClick={handlePNGDownload}
                   disabled={!chartExporter}
                 >
-                  {chartExporter ? '전체 차트 PNG 다운로드' : '차트 컴포넌트 미구현'}
+                  {chartExporter ? '전체 차트 PNG 다운로드' : shouldLoadCharts ? '차트 준비 중...' : '차트 준비 후 PNG 다운로드'}
                 </button>
               </div>
             )}
