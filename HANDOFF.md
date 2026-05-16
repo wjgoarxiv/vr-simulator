@@ -1,130 +1,118 @@
-# HANDOFF — VR Simulator V3.1.2
+# HANDOFF.md — VR Simulator continuation packet
 
-## Project Overview
-
-VR (Value Rebalancing) Simulator for leveraged ETF investing using the 라오어 실력공식. Two deployments:
-- **Streamlit**: https://vr-simulator.streamlit.app/ (`app.py`)
-- **GitHub Pages**: https://wjgoarxiv.github.io/vr-simulator/ (React app in `react_app/`)
-
-## What Was Done This Session
-
-### 1. Autoconference Validation (app.py)
-- Ran 4-researcher autoconference (5 rounds, very-tight convergence) to validate `app.py` against the published 라오어 실력공식
-- **Formula verdict**: CORRECT (4/4 consensus) — core formula exactly matches published 실력공식
-- **Strategy verdict**: COMPUTATIONALLY SOUND (4/4 consensus)
-- Implemented 7 approved modifications (MOD-01, 02, 05, 06, 07, 08, 10)
-- Version bumped from V3.1.1 → V3.1.2
-
-### 2. React App Rebuild (from scratch)
-- Old React source was deleted (commit `b35a02b`), only `dist/` remained
-- Built fresh React 18 + Vite 5 + Tailwind 3.3 app matching app.py V3.1.2 exactly
-- Used team orchestration (Layer 0-5) with parallel workers
-- Stack: React 18, Vite 5, Tailwind CSS, Plotly.js, PapaParse, Lucide Icons
-
-### 3. Retrofuture Terminal UI Redesign
-- Redesigned from generic GitHub Dark clone to Retrofuture Terminal aesthetic
-- JetBrains Mono + Noto Sans KR typography pairing
-- 5-tier surface depth color system with cyan/green/red/amber accents
-- Breathing glow animations on signal cards
-- Terminal-style section dividers, LED status indicators
-
-### 4. Bug Fixes (multiple rounds)
-- **Market status off-by-one**: UTC/ET timezone mismatch in `marketStatus.js` — all 6 date-addition branches were 1 day behind. Fixed with pure calendar-date arithmetic.
-- **Charts crash**: `CycleInput.jsx` used snake_case keys (`divergence_ratio`) but `calculateAdaptiveBands()` returns camelCase (`divergenceRatio`). Fixed key names.
-- **PNG export broken**: Charts unmounted on tab switch, killing Plotly refs. Fixed by keeping Charts mounted with `display:none` + `Plotly.Plots.resize()` on visibility change.
-- **PNG export low-res fonts**: On-screen 11px fonts were tiny in 2880x2120 export. Fixed with off-screen Plotly instances using 42px titles, 36px body, 30px ticks.
-- **PNG export as 4 separate files**: Changed to single bundled 2x2 canvas composite (1400x1000 per chart).
-- **Buy/sell table download missing**: Added `downloadTableCSV()` helper + buttons above each table.
-- **Table download button hidden**: Moved buttons above scrollable `max-h-[400px]` table area with sticky headers.
-
-### 5. README + Cover Image
-- Stargazing-style README matching youtube-digest-skill format
-- Cover image: `generate_cover.py` — 2560x960, emerald/amber palette, JetBrains Mono, gaussian blur blobs, film grain, 350 DPI
+## Task
+Continue development of the VR Simulator with both surfaces in mind: the React/Vite web app in `react_app/` and the Streamlit app in `app.py`. Recent work focused on reliability/UltraQA coverage, CSV hardening, React robustness, and making adaptive bands ON by default.
 
 ## Current State
+- Last completed functional change: adaptive band default was changed to ON for new sessions in both `react_app/src/App.jsx` and `app.py`, committed as `1aeba7c Prefer adaptive bands for new simulator sessions` and pushed to `origin/main`.
+- Current branch state at handoff creation: `git status --short --branch` showed `## main...origin/main` before this handoff/AGENTS update was written.
+- Current version remains `3.1.2` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`. The user requested that future functional improvements should include a version bump when appropriate.
+- OMX team run `enhance-vr-simulator-db33a401` was completed and shut down. Evidence from `omx team status enhance-vr-simulator-db33a401 --json --tail-lines 240`: `phase=complete`, `tasks.completed=5`, `pending=0`, `in_progress=0`, `failed=0`; after shutdown, status returned `missing`, which is expected.
+- No deployment was performed after the code changes. The latest push was to `https://github.com/wjgoarxiv/vr-simulator.git`, branch `main`.
 
-### Git History (latest first)
+## What Was Done
+- `react_app/src/App.jsx`
+  - Added safer saved-state loading/sanitization and localStorage write guarding during the OMX team run.
+  - Changed `DEFAULT_STATE.adaptiveBandEnabled` from `false` to `true`.
+  - Changed saved-state fallback so missing old saved values default to `true`, while explicit user-saved `false` remains respected.
+  - Evidence: commit `1aeba7c`; verification commands below passed.
+- `app.py`
+  - Changed initial `st.session_state.adaptive_band_enabled` default from `False` to `True`.
+  - Changed `calculate_bands(..., use_adaptive=None)` fallback from `False` to `True`.
+  - Evidence: commit `1aeba7c`; `python3 -m py_compile app.py` passed.
+- `react_app/src/utils/csvHandling.js` and `react_app/src/utils/csvHandling.test.js`
+  - Hardened CSV parsing/export around required columns, malformed row shape, strict numeric/boolean typing, domain constraints, and escaping commas/quotes/newlines.
+  - Evidence: commit `95956e1 Harden CSV import/export against malformed user files`; `cd react_app && npm test` passed with 15 tests.
+- `react_app/src/utils/vrCalculations.js`, `react_app/tests/vrCalculations.test.mjs`, and `react_app/tests/ultraqa-matrix.test.js`
+  - Added regression coverage for formula constants, next-V behavior, adaptive band bounds/inversion guard, table finite/monotonic edge cases, V/E cap detection, and history metadata normalization.
+  - Evidence: `npm test` passed with 15 tests; `npm run qa:matrix` passed with 6 tests in the completed team run.
+- `react_app/scripts/e2e-cycle-harness.mjs` and `react_app/scripts/smoke-dist.mjs`
+  - Added no-browser Node E2E cycle simulation and built-dist smoke validation.
+  - Evidence: `npm run e2e` reported `E2E PASS: simulated 3 adaptive cycles...`; `npm run smoke` reported `SMOKE PASS: 4 built assets referenced...`.
+- `react_app/package.json`
+  - Added scripts: `test`, `qa:matrix`, `e2e`, and `smoke`.
+  - Evidence: `node -e "const p=require('./react_app/package.json'); console.log(JSON.stringify(p.scripts,null,2))"` showed the scripts.
+- `react_app/src/components/CycleInput.jsx`, `CycleViewer.jsx`, `InitialSetup.jsx`, and `ResultsDashboard.jsx`
+  - Improved adaptive metadata flow and display resilience as part of the team run.
+  - Evidence: team worker completion messages and passing React test/build commands.
+- `HANDOFF.md`
+  - Existing file was classified as stale/obsolete for current continuation because it described the earlier V3.1.2 rebuild session and did not include the UltraQA/team/default-adaptive changes. It was replaced with this reboot packet per the handoff skill contract.
+- `AGENTS.md`
+  - Added local instructions requiring future agents to read `HANDOFF.md` first and keep version fields synchronized when functional improvements are made.
+
+## Key Decisions
+- Preserve explicit user preference for adaptive bands in React localStorage. New/missing values default to ON, but if a user previously saved OFF, the app keeps OFF to avoid surprising existing browser sessions.
+- Keep Streamlit and React defaults aligned. `app.py` session default and React `DEFAULT_STATE` now both default adaptive bands to ON.
+- Future functional improvements should normally bump version consistently across all version surfaces: `app.py` `VR_VERSION`, `react_app/src/constants.js` `VR_VERSION`, `react_app/package.json`, and `react_app/package-lock.json`. Also update visible docs such as `README.md` if they mention the version.
+- Do not deploy automatically. GitHub Pages deploy remains manual via `cd react_app && npm run build && npx gh-pages -d dist`; Streamlit Cloud auto-deploys from `main` if configured externally.
+- Keep React and Streamlit formula constants aligned. Existing tests include a React-side constant parity check against `app.py`.
+
+## Open Issues
+- Vite still emits a large chunk warning for the Plotly chunk during `npm run build` / `npm run smoke`:
+  - Evidence: build output includes `Charts-*.js` around `4,815.84 kB` and Vite warning `Some chunks are larger than 500 kB after minification`.
+  - Status: not failing; consider deeper Plotly code-splitting only if load performance becomes a user-visible problem.
+- No ESLint configuration/script exists.
+  - Evidence: worker-2 reported lint no-op / absent script; `react_app/package.json` has no `lint` script.
+- Streamlit app does not yet have the same automated regression test harness as React.
+  - Evidence: verification used `python3 -m py_compile app.py`, not behavioral Streamlit tests.
+- Version is still `3.1.2` even though reliability improvements were made. The user explicitly asked that future improvements should include version bump consideration; decide whether the next change should become `3.1.3` before making more functional edits.
+
+## Next Steps
+1. Start every new session by reading this file first: `sed -n '1,240p' HANDOFF.md`.
+2. Check state before editing:
+   ```bash
+   git status --short --branch
+   git log -3 --oneline
+   ```
+3. If making any functional improvement, decide version first. For a patch-level improvement, update all of:
+   - `app.py` `VR_VERSION`
+   - `react_app/src/constants.js` `VR_VERSION`
+   - `react_app/package.json` `version`
+   - `react_app/package-lock.json` root/package version entries
+   - any README/HANDOFF visible version mentions if applicable
+4. For React changes, run at minimum:
+   ```bash
+   cd react_app && npm test
+   cd react_app && npm run build
+   ```
+5. For QA-sensitive React changes, also run:
+   ```bash
+   cd react_app && npm run qa:matrix
+   cd react_app && npm run e2e
+   cd react_app && npm run smoke
+   ```
+6. For Streamlit/app.py changes, run:
+   ```bash
+   python3 -m py_compile app.py generate_cover.py
+   ```
+7. Do not deploy or push unless the user asks. If committing, use the Lore commit protocol from the higher-level AGENTS instructions.
+
+## Context for Continuation
+- Project root: `/Users/woojin/Desktop/02_Areas/01_Codes_automation/03_vr-simulator-dev`.
+- React app root: `react_app/`.
+- Streamlit app: `app.py`.
+- Current remote: `origin https://github.com/wjgoarxiv/vr-simulator.git`.
+- Recent pushed code commit: `1aeba7c Prefer adaptive bands for new simulator sessions`.
+- Last known push output: `To https://github.com/wjgoarxiv/vr-simulator.git`, `f5bf106..1aeba7c main -> main`.
+- Team state root from the completed run: `/Users/woojin/.omx-runs/run-20260516074304-5b4b/.omx/state/team/enhance-vr-simulator-db33a401`.
+- Existing conference artifacts from the older V3.1.2 validation remain under `.omc/conference/`.
+
+## Verification Commands
+Use these commands to confirm the handoff still matches the repo:
+```bash
+git status --short --branch
+git log -5 --oneline
+node -e "const p=require('./react_app/package.json'); console.log(p.version, p.scripts)"
+grep -RIn "VR_VERSION\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/package.json | head -n 40
+cd react_app && npm test
+cd react_app && npm run build
+python3 -m py_compile app.py generate_cover.py
 ```
-f5bf106  fix(react): Move table download buttons above scrollable area
-5611843  style(react): Increase chart scatter marker size from 6 to 10
-34fbe3d  fix(react): Increase PNG export font sizes
-2375189  fix(react): Use large fonts in PNG export via off-screen Plotly render
-c8b9cad  fix(react): Constrain chart sizing to prevent overflow
-e809901  fix(react): Bundled 2x2 high-res PNG export
-6d15cbc  fix(react): Keep Charts mounted for PNG export across tabs
-8639268  fix(react): Fix Charts crash and PNG export
-6df482f  feat(react): Retrofuture Terminal UI redesign
-7cdd243  docs(README): Update cover image and fix version labels
-625af6c  fix(react): Fix market status off-by-one day + redesign README
-aa233d0  feat(react): Rebuild React app V3.1.2 for GitHub Pages deployment
-8a83af5  feat(v3.1.2): Autoconference-validated fixes and V/E cap indicator
-```
 
-### File Structure
-```
-app.py                          # Streamlit app (V3.1.2, ~1220 lines)
-README.md                       # Stargazing-style README
-cover.png                       # Generated cover image (2560x960)
-generate_cover.py               # Cover image generator
-react_app/
-├── package.json                # React 18 + Vite 5
-├── vite.config.js              # base: /vr-simulator/
-├── tailwind.config.js          # Retrofuture Terminal design system
-├── src/
-│   ├── App.jsx                 # State management + layout
-│   ├── index.css               # Design system classes
-│   ├── constants.js            # VR parameters (identical to app.py)
-│   ├── utils/
-│   │   ├── vrCalculations.js   # All VR math (10 functions)
-│   │   ├── csvHandling.js      # CSV import/export + validation
-│   │   └── marketStatus.js     # KST market status
-│   └── components/
-│       ├── Sidebar.jsx         # Settings, adaptive toggle, market info
-│       ├── InitialSetup.jsx    # CSV upload or manual input
-│       ├── CycleViewer.jsx     # Metrics, signals, tables
-│       ├── CycleInput.jsx      # Next cycle form
-│       ├── ResultsDashboard.jsx # KPIs, tabs, downloads
-│       └── Charts.jsx          # 4 Plotly charts + PNG export
-```
-
-## What Worked Well
-- Team orchestration with parallel workers for React rebuild (3 layers)
-- Autoconference with devil's advocate for formula validation
-- Post-hoc V/E cap detection (no function signature change needed)
-- Off-screen Plotly rendering for high-res PNG export
-
-## What Didn't Work / Required Iteration
-- **camelCase/snake_case mismatch**: vrCalculations.js returns camelCase but CycleInput initially used snake_case keys — caused Plotly crash with undefined data
-- **Charts unmounting on tab switch**: Conditional rendering (`{activeTab === 1 && <Charts/>}`) killed refs. Had to keep Charts mounted with `display:none`
-- **PNG export**: Went through 4 iterations — separate files → bundled canvas → small fonts → larger fonts
-- **Table download buttons**: Initially placed below tables, invisible with many rows. Moved above with scrollable container.
-
-## Deferred Work (Not Implemented)
-These were identified in the autoconference but deferred by 3/4+ vote:
-
-1. **MOD-03 (ROI includes pool)**: ROI calculation excludes pool balance. Needs product decision: show 1 or 2 ROI metrics.
-2. **MOD-04 (Band code dedup)**: `calculate_bands()` and `calculate_adaptive_bands()` have duplicated logic. Needs test suite before safe refactoring.
-3. **MOD-05 partial**: V/E cap indicator implemented in React, but app.py's `calculate_v_next()` still returns a simple float (no metadata). Post-hoc detection works but is a workaround.
-
-## Deployment
-- **Streamlit**: Auto-deploys from main branch via Streamlit Cloud
-- **GitHub Pages**: Manual via `cd react_app && npm run build && npx gh-pages -d dist`
-- **Pages config**: `build_type: legacy`, `source: gh-pages branch`
-
-## Key Constants (must stay identical between app.py and React)
-```
-VR_VERSION = "3.1.2"
-BASE_BAND_LOWER = 0.85
-BASE_BAND_UPPER = 1.15
-MIN_BAND_LOWER = 0.92
-MAX_BAND_UPPER = 1.08
-VE_DIVERGENCE_THRESHOLD = 0.05
-VE_MAX_DIVERGENCE = 0.50
-MAX_V_E_RATIO = 1.15
-```
-
-## Conference Artifacts
-Located in `.omc/conference/`:
-- `synthesis.md` — Final autoconference synthesis report
-- `conference.md` — Conference configuration
-- `researcher_{A,B,C,D}_log.md` — Per-researcher findings
+## Resumability Audit
+- Where am I? Current state names the last completed functional commit `1aeba7c` and current branch state before this document update.
+- What was done? Changed files and evidence are listed in `What Was Done`.
+- What failed or blocked? Large Plotly chunk warning, absent lint script, and Streamlit behavioral test gap are listed in `Open Issues`.
+- What remains? Ordered `Next Steps` give the first commands and versioning policy.
+- How do I verify? `Verification Commands` are included.
+- What don't I know? No unresolved unknowns are currently known; future drift should be re-verified with the commands above.
