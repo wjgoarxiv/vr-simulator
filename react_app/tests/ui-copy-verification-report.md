@@ -28,4 +28,4 @@
 - Forbidden-copy scan over `app.py`, `react_app/src`, `react_app/dist` → exit 1. Hits include `app.py:863`, `react_app/src/components/CycleViewer.jsx:135`, and built `react_app/dist/assets/index-*.js` for `목표 V 자동 조정`.
 
 ## Integration blocker
--The verification contract is ready, but this worker worktree does not yet include implementation-lane replacement copy in `app.py` or `react_app/src/components/CycleViewer.jsx`. After task 2 applies the final copy, rerun this exact matrix; `npm test` and the forbidden-copy scan should become green.
+- The verification contract is ready, but this worker worktree does not yet include implementation-lane replacement copy in `app.py` or `react_app/src/components/CycleViewer.jsx`. After task 2 applies the final copy, rerun this exact matrix; `npm test` and the forbidden-copy scan should become green.
