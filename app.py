@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.1.2"
+VR_VERSION = "3.1.3"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -855,12 +855,18 @@ if st.session_state.simulation_started and st.session_state.history:
         col3.metric("목표 V ($)", f"${V_i_display:,.2f}")
         col4.metric("적용 G 값", f"{G_display:.1f}")
 
-        # MOD-05: V/E cap 작동 알림
+        # MOD-05: 목표 V 안전 조정 안내
         if active_state.get('ve_cap_active', False):
             uncapped_v = active_state.get('ve_cap_uncapped_v')
             if uncapped_v is not None:
-                absorbed_pct = (1 - V_i_display / uncapped_v) * 100
-                st.info(f"ℹ️ **V/E 상한 적용됨**: 원래 V = ${uncapped_v:,.0f} → 제한 V = ${V_i_display:,.0f} (E의 {MAX_V_E_RATIO*100:.0f}% 상한). 적립금 기여분의 약 {absorbed_pct:.0f}%가 흡수되었습니다.")
+                st.info(
+                    f"ℹ️ **목표 V 자동 조정**\n\n"
+                    f"계산된 목표가 현재 평가금보다 높아 안전 기준에 맞춰 낮췄습니다.\n\n"
+                    f"- 조정 전 목표: ${uncapped_v:,.0f}\n"
+                    f"- 실제 적용 목표: ${V_i_display:,.0f}\n"
+                    f"- 기준: 현재 평가금의 {MAX_V_E_RATIO*100:.0f}%까지만 목표로 사용\n\n"
+                    f"의미: 다음 사이클에서 과도한 매수 신호가 나오지 않게 막는 안전장치입니다."
+                )
 
         st.markdown("**매수/매도 임계 참고:**")
         buy_target_simple, sell_target_simple = calculate_simple_targets(shares_start_display, LBand_display, HBand_display)

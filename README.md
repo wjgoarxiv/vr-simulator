@@ -12,7 +12,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.8+-green" /></a>
   <a href="./react_app"><img src="https://img.shields.io/badge/React-18-61dafb" /></a>
-  <a href="#-v312-changes"><img src="https://img.shields.io/badge/version-3.1.2-blueviolet" /></a>
+  <a href="#-v313-changes"><img src="https://img.shields.io/badge/version-3.1.3-blueviolet" /></a>
 </p>
 
 ---
@@ -24,15 +24,15 @@
 
 | 플랫폼 | URL |
 |--------|-----|
-| **Streamlit (V3.1.2)** | [vr-simulator.streamlit.app](https://vr-simulator.streamlit.app/) |
-| **React (V3.1.2)** | [wjgoarxiv.github.io/vr-simulator](https://wjgoarxiv.github.io/vr-simulator/) |
+| **Streamlit (V3.1.3)** | [vr-simulator.streamlit.app](https://vr-simulator.streamlit.app/) |
+| **React (V3.1.3)** | [wjgoarxiv.github.io/vr-simulator](https://wjgoarxiv.github.io/vr-simulator/) |
 
 ## ✨ Features
 
 - **실력공식 VR 계산** -- G 파라미터 기반 사이클별 목표 가치(V) 자동 계산
 - **적응형 밴드** -- V/E 괴리율에 따른 밴드 자동 압축 (±15% ~ ±8%)
 - **비대칭 앵커링** -- LBand는 V 기준, HBand는 min(V, E) 기준으로 매도 목표가 현실화
-- **V/E Ratio Cap** -- V가 E의 115%를 초과하지 않도록 제한, 활성화 인디케이터 표시
+- **목표 V 안전 조정** -- 목표값이 과도하게 높아질 때 쉬운 안내와 함께 현실적인 범위로 자동 조정
 - **인터랙티브 차트** -- Plotly 기반 4종 차트 (V/E 추이, 밴드, Pool, 매수/매도 테이블)
 - **CSV 가져오기/내보내기** -- 사이클 기록 저장 및 불러오기, 유효성 검증 포함
 - **KST 마켓 상태** -- 한국 시간 기준 미국 주식 시장 상태 + 예약 매매 시간대 표시
@@ -79,13 +79,20 @@ V_f = V_i + (Pool / G) + ((E - V_i) / (2 * sqrt(G))) + Deposit
 | `E` | 이전 사이클 종료 시 평가금 (주식 수 x 가격) |
 | `Deposit` | 다음 사이클 적립금 |
 
-## 🔄 V3.1.2 Changes
+## 🔄 V3.1.3 Changes
 
-1. **V/E Ratio Cap** -- V가 E의 115%를 초과하지 않도록 상한 제한
+### V3.1.3 — Clearer safety copy
+- Rewrote the target-V safety adjustment notice so users see plain-language guidance instead of formula-heavy jargon.
+- Added regression coverage to prevent confusing cap/absorption wording from reappearing in user-facing copy.
+
+
+### V3.1.2 — Formula and React rebuild
+
+1. **목표 V 안전 조정** -- 목표값이 평가금 대비 과도하게 높아질 때 현실적인 범위로 조정
 2. **비대칭 밴드 앵커링** -- LBand는 V 기준, HBand는 min(V, E) 기준
 3. **밴드 반전 가드** -- HBand <= LBand 시 대칭 V 기반으로 폴백
 4. **적응형 밴드 압축** -- V/E 괴리율 5%~50% 구간에서 밴드 폭 자동 조절
-5. **V/E Cap 활성화 인디케이터** -- Cap 적용 여부를 UI에 표시
+5. **안전 조정 표시** -- 목표 V가 자동 조정되었는지 UI에 표시
 6. **CSV 스키마 확장** -- 적응형 밴드 상태 메타데이터 포함
 7. **차트 개선** -- V/E 괴리 구간 시각화 및 밴드 비대칭 표시
 

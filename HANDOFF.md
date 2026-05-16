@@ -4,9 +4,9 @@
 Continue development of the VR Simulator with both surfaces in mind: the React/Vite web app in `react_app/` and the Streamlit app in `app.py`. Recent work focused on reliability/UltraQA coverage, CSV hardening, React robustness, and making adaptive bands ON by default.
 
 ## Current State
-- Last completed functional change: adaptive band default was changed to ON for new sessions in both `react_app/src/App.jsx` and `app.py`, committed as `1aeba7c Prefer adaptive bands for new simulator sessions` and pushed to `origin/main`.
+- Last completed functional change before this handoff update: confusing target-V safety copy was redesigned in both `react_app/src/components/CycleViewer.jsx` and `app.py`; version surfaces were bumped to `3.1.3`.
 - Current branch state at handoff creation: `git status --short --branch` showed `## main...origin/main` before this handoff/AGENTS update was written.
-- Current version remains `3.1.2` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`. The user requested that future functional improvements should include a version bump when appropriate.
+- Current version is `3.1.3` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
 - OMX team run `enhance-vr-simulator-db33a401` was completed and shut down. Evidence from `omx team status enhance-vr-simulator-db33a401 --json --tail-lines 240`: `phase=complete`, `tasks.completed=5`, `pending=0`, `in_progress=0`, `failed=0`; after shutdown, status returned `missing`, which is expected.
 - No deployment was performed after the code changes. The latest push was to `https://github.com/wjgoarxiv/vr-simulator.git`, branch `main`.
 
@@ -35,8 +35,15 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
 - `react_app/src/components/CycleInput.jsx`, `CycleViewer.jsx`, `InitialSetup.jsx`, and `ResultsDashboard.jsx`
   - Improved adaptive metadata flow and display resilience as part of the team run.
   - Evidence: team worker completion messages and passing React test/build commands.
+- `react_app/src/components/CycleViewer.jsx` and `app.py`
+  - Replaced formula-heavy user-facing copy such as “V/E 상한 적용됨 / 원래 V / 제한 V / 적립금 기여분 흡수” with plain-language “목표 V 자동 조정” messaging.
+  - Evidence: `react_app/tests/ui-copy.test.mjs` forbids the confusing phrases and requires the replacement copy on both app surfaces.
+- `react_app/tests/ui-copy.test.mjs`
+  - Added regression coverage to prevent confusing cap/absorption wording from reappearing in user-facing copy.
+- Version surfaces
+  - Bumped `3.1.2` to `3.1.3` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`; updated `README.md` visible version references.
 - `HANDOFF.md`
-  - Existing file was classified as stale/obsolete for current continuation because it described the earlier V3.1.2 rebuild session and did not include the UltraQA/team/default-adaptive changes. It was replaced with this reboot packet per the handoff skill contract.
+  - Updated to include the V3.1.3 UI-copy cleanup and version bump.
 - `AGENTS.md`
   - Added local instructions requiring future agents to read `HANDOFF.md` first and keep version fields synchronized when functional improvements are made.
 
@@ -55,7 +62,6 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
   - Evidence: worker-2 reported lint no-op / absent script; `react_app/package.json` has no `lint` script.
 - Streamlit app does not yet have the same automated regression test harness as React.
   - Evidence: verification used `python3 -m py_compile app.py`, not behavioral Streamlit tests.
-- Version is still `3.1.2` even though reliability improvements were made. The user explicitly asked that future improvements should include version bump consideration; decide whether the next change should become `3.1.3` before making more functional edits.
 
 ## Next Steps
 1. Start every new session by reading this file first: `sed -n '1,240p' HANDOFF.md`.
@@ -92,7 +98,7 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
 - React app root: `react_app/`.
 - Streamlit app: `app.py`.
 - Current remote: `origin https://github.com/wjgoarxiv/vr-simulator.git`.
-- Recent pushed code commit: `1aeba7c Prefer adaptive bands for new simulator sessions`.
+- Recent pushed code commit before this local work: `1aeba7c Prefer adaptive bands for new simulator sessions`.
 - Last known push output: `To https://github.com/wjgoarxiv/vr-simulator.git`, `f5bf106..1aeba7c main -> main`.
 - Team state root from the completed run: `/Users/woojin/.omx-runs/run-20260516074304-5b4b/.omx/state/team/enhance-vr-simulator-db33a401`.
 - Existing conference artifacts from the older V3.1.2 validation remain under `.omc/conference/`.
@@ -103,7 +109,7 @@ Use these commands to confirm the handoff still matches the repo:
 git status --short --branch
 git log -5 --oneline
 node -e "const p=require('./react_app/package.json'); console.log(p.version, p.scripts)"
-grep -RIn "VR_VERSION\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/package.json | head -n 40
+grep -RIn "VR_VERSION\|목표 V 자동 조정\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/src/components/CycleViewer.jsx react_app/package.json | head -n 80
 cd react_app && npm test
 cd react_app && npm run build
 python3 -m py_compile app.py generate_cover.py

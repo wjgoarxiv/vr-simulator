@@ -41,10 +41,6 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
   // V/E cap info
   const veCapActive = activeState.ve_cap_active ?? false;
   const veCapUncappedV = activeState.ve_cap_uncapped_v ?? null;
-  const absorbedPct = veCapActive && veCapUncappedV
-    ? (1 - V_i_display / veCapUncappedV) * 100
-    : 0;
-
   // Trade signals
   const { buyTargetPrice, sellTargetPrice } = calculateSimpleTargets(sharesStart, LBand, HBand);
   const buyGap = lastPrice > 0 ? ((lastPrice - buyTargetPrice) / lastPrice) * 100 : 0;
@@ -133,15 +129,26 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
         </div>
       </div>
 
-      {/* V/E Cap Indicator */}
+      {/* Target V safety adjustment notice */}
       {veCapActive && veCapUncappedV !== null && (
-        <div className="alert-warning">
-          <span className="font-mono text-xs">V/E CAP ACTIVE</span>
-          <span className="font-sans text-xs ml-2">
-            원래 V = <span className="font-mono text-accent-amber">${fmt(veCapUncappedV, 0)}</span>
-            {' → '}제한 V = <span className="font-mono text-accent-amber">${fmt(V_i_display, 0)}</span>
-            {' '}(E의 115% 상한, 적립금 기여분 <span className="font-mono text-accent-amber">{absorbedPct.toFixed(0)}%</span> 흡수)
-          </span>
+        <div className="alert-warning flex-col items-start gap-2">
+          <div className="font-sans text-sm font-semibold text-tx-primary">목표 V 자동 조정</div>
+          <div className="font-sans text-xs leading-relaxed text-tx-secondary">
+            계산된 목표가 현재 평가금보다 높아 안전 기준에 맞춰 낮췄습니다.
+          </div>
+          <div className="grid w-full grid-cols-2 gap-2 font-sans text-xs">
+            <div className="rounded border border-border-subtle/70 bg-surface-inset px-2 py-1">
+              <div className="data-label">조정 전 목표</div>
+              <div className="font-mono text-accent-amber">${fmt(veCapUncappedV, 0)}</div>
+            </div>
+            <div className="rounded border border-border-subtle/70 bg-surface-inset px-2 py-1">
+              <div className="data-label">실제 적용 목표</div>
+              <div className="font-mono text-accent-amber">${fmt(V_i_display, 0)}</div>
+            </div>
+          </div>
+          <div className="font-sans text-xs leading-relaxed text-tx-muted">
+            의미: 다음 사이클에서 과도한 매수 신호가 나오지 않게 막는 안전장치입니다.
+          </div>
         </div>
       )}
 
