@@ -284,11 +284,11 @@ export function normalizeHistoryEntry(entry) {
     if (E_val > 0 && V_target > 0) {
       const factorResult = calculateBandCompressionFactor(V_target, E_val);
       const adaptiveResult = calculateAdaptiveBands(V_target, E_val);
-      divergenceRatio = divergenceRatio ?? factorResult.divergenceRatio;
-      divergenceDirection = divergenceDirection ?? factorResult.divergenceDirection;
-      compressionFactor = compressionFactor ?? factorResult.compressionFactor;
-      bandLowerRatio = bandLowerRatio ?? adaptiveResult.bandLowerRatio;
-      bandUpperRatio = bandUpperRatio ?? adaptiveResult.bandUpperRatio;
+      normalized.ve_divergence_ratio = factorResult.divergenceRatio;
+      normalized.ve_divergence_direction = factorResult.divergenceDirection;
+      normalized.band_compression_factor = factorResult.compressionFactor;
+      normalized.band_lower_ratio = adaptiveResult.bandLowerRatio;
+      normalized.band_upper_ratio = adaptiveResult.bandUpperRatio;
     } else {
       divergenceRatio = divergenceRatio ?? 0.0;
       divergenceDirection = divergenceDirection ?? 'neutral';

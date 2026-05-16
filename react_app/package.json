@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "test": "node tests/vrCalculations.test.mjs && node tests/ultraqa-matrix.test.js",
+    "test": "node --test src/utils/csvHandling.test.js test/csvHandling.test.mjs tests/*.test.js tests/*.test.mjs",
     "qa:matrix": "node --test tests/ultraqa-matrix.test.js",
     "e2e": "node scripts/e2e-cycle-harness.mjs",
     "smoke": "npm run build && node scripts/smoke-dist.mjs"
