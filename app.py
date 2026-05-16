@@ -1033,7 +1033,7 @@ if st.session_state.simulation_started and st.session_state.history:
                 ve_cap_active = (E_calc > 0 and abs(V_next - E_calc * MAX_V_E_RATIO) < 0.01)
                 ve_cap_uncapped = None
                 if ve_cap_active:
-                    # 원래 V_f 역산 (cap 적용 전 값)
+                    # 보정 전 V_f 역산
                     ve_cap_uncapped = V_i_calc + pool_end_input / g_input + (E_calc - V_i_calc) / (2 * math.sqrt(g_input)) + deposit_next_input
 
                 use_adaptive = st.session_state.get('adaptive_band_enabled', False)

@@ -109,7 +109,7 @@ Use these commands to confirm the handoff still matches the repo:
 git status --short --branch
 git log -5 --oneline
 node -e "const p=require('./react_app/package.json'); console.log(p.version, p.scripts)"
-grep -RIn "VR_VERSION\|목표 V 자동 조정\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/src/components/CycleViewer.jsx react_app/package.json | head -n 80
+grep -RIn "VR_VERSION\|목표를 현실에 맞췄어요\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/src/components/CycleViewer.jsx react_app/package.json | head -n 80
 cd react_app && npm test
 cd react_app && npm run build
 python3 -m py_compile app.py generate_cover.py
