@@ -252,74 +252,67 @@ export function calculateSellTable(HBand, currentShares, currentPrice, pool, max
  * @returns {Object} Normalized entry with all metadata fields
  */
 export function normalizeHistoryEntry(entry) {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+
   // Deep clone
   const normalized = JSON.parse(JSON.stringify(entry));
 
   const E_val = parseFloat(normalized.E_calc ?? 0.0);
   const V_target = parseFloat(normalized.V_target ?? normalized.V_i ?? 0.0);
 
-  // Keep both persisted snake_case fields and React-internal camelCase aliases populated.
-  const aliasPairs = [
-    ['adaptive_band_enabled', 'adaptiveBandEnabled'],
-    ['ve_divergence_ratio', 'veDivergenceRatio'],
-    ['ve_divergence_direction', 'veDivergenceDirection'],
-    ['band_compression_factor', 'bandCompressionFactor'],
-    ['band_lower_ratio', 'bandLowerRatio'],
-    ['band_upper_ratio', 'bandUpperRatio'],
-  ];
+  const existingDivergenceRatio = normalized.ve_divergence_ratio ?? normalized.veDivergenceRatio;
+  const existingDivergenceDirection = normalized.ve_divergence_direction ?? normalized.veDivergenceDirection;
+  const existingCompressionFactor = normalized.band_compression_factor ?? normalized.bandCompressionFactor;
+  const existingLowerRatio = normalized.band_lower_ratio ?? normalized.bandLowerRatio;
+  const existingUpperRatio = normalized.band_upper_ratio ?? normalized.bandUpperRatio;
 
-  for (const [snakeKey, camelKey] of aliasPairs) {
-    if (normalized[snakeKey] === undefined && normalized[camelKey] !== undefined) {
-      normalized[snakeKey] = normalized[camelKey];
-    }
-    if (normalized[camelKey] === undefined && normalized[snakeKey] !== undefined) {
-      normalized[camelKey] = normalized[snakeKey];
-    }
-  }
+  let divergenceRatio = existingDivergenceRatio;
+  let divergenceDirection = existingDivergenceDirection;
+  let compressionFactor = existingCompressionFactor;
+  let bandLowerRatio = existingLowerRatio;
+  let bandUpperRatio = existingUpperRatio;
 
-  if (normalized.adaptive_band_enabled === undefined) {
-    normalized.adaptive_band_enabled = false;
-    normalized.adaptiveBandEnabled = false;
-  }
-
-  if (normalized.ve_divergence_ratio === undefined) {
+  if (
+    divergenceRatio === undefined ||
+    divergenceDirection === undefined ||
+    compressionFactor === undefined ||
+    bandLowerRatio === undefined ||
+    bandUpperRatio === undefined
+  ) {
     if (E_val > 0 && V_target > 0) {
-      const { compressionFactor, divergenceRatio, divergenceDirection } =
-        calculateBandCompressionFactor(V_target, E_val);
+      const factorResult = calculateBandCompressionFactor(V_target, E_val);
       const adaptiveResult = calculateAdaptiveBands(V_target, E_val);
-      normalized.ve_divergence_ratio = divergenceRatio;
-      normalized.ve_divergence_direction = divergenceDirection;
-      normalized.band_compression_factor = compressionFactor;
-      normalized.band_lower_ratio = adaptiveResult.bandLowerRatio;
-      normalized.band_upper_ratio = adaptiveResult.bandUpperRatio;
+      divergenceRatio = divergenceRatio ?? factorResult.divergenceRatio;
+      divergenceDirection = divergenceDirection ?? factorResult.divergenceDirection;
+      compressionFactor = compressionFactor ?? factorResult.compressionFactor;
+      bandLowerRatio = bandLowerRatio ?? adaptiveResult.bandLowerRatio;
+      bandUpperRatio = bandUpperRatio ?? adaptiveResult.bandUpperRatio;
     } else {
-      normalized.ve_divergence_ratio = 0.0;
-      normalized.ve_divergence_direction = 'neutral';
-      normalized.band_compression_factor = 1.0;
-      normalized.band_lower_ratio = BASE_BAND_LOWER;
-      normalized.band_upper_ratio = BASE_BAND_UPPER;
+      divergenceRatio = divergenceRatio ?? 0.0;
+      divergenceDirection = divergenceDirection ?? 'neutral';
+      compressionFactor = compressionFactor ?? 1.0;
+      bandLowerRatio = bandLowerRatio ?? BASE_BAND_LOWER;
+      bandUpperRatio = bandUpperRatio ?? BASE_BAND_UPPER;
     }
   }
 
-  // Ensure all persisted metadata fields have defaults.
-  if (normalized.ve_divergence_direction === undefined) {
-    normalized.ve_divergence_direction = 'neutral';
-  }
-  if (normalized.band_compression_factor === undefined) {
-    normalized.band_compression_factor = 1.0;
-  }
-  if (normalized.band_lower_ratio === undefined) {
-    normalized.band_lower_ratio = BASE_BAND_LOWER;
-  }
-  if (normalized.band_upper_ratio === undefined) {
-    normalized.band_upper_ratio = BASE_BAND_UPPER;
-  }
+  const adaptiveBandEnabled = Boolean(normalized.adaptive_band_enabled ?? normalized.adaptiveBandEnabled ?? false);
 
-  for (const [snakeKey, camelKey] of aliasPairs) {
-    if (normalized[camelKey] === undefined && normalized[snakeKey] !== undefined) {
-      normalized[camelKey] = normalized[snakeKey];
-    }
-  }
+  // Keep both current snake_case history fields and older camelCase fields populated.
+  normalized.adaptive_band_enabled = adaptiveBandEnabled;
+  normalized.adaptiveBandEnabled = adaptiveBandEnabled;
+  normalized.ve_divergence_ratio = Number.isFinite(Number(divergenceRatio)) ? Number(divergenceRatio) : 0.0;
+  normalized.veDivergenceRatio = normalized.ve_divergence_ratio;
+  normalized.ve_divergence_direction = divergenceDirection ?? 'neutral';
+  normalized.veDivergenceDirection = normalized.ve_divergence_direction;
+  normalized.band_compression_factor = Number.isFinite(Number(compressionFactor)) ? Number(compressionFactor) : 1.0;
+  normalized.bandCompressionFactor = normalized.band_compression_factor;
+  normalized.band_lower_ratio = Number.isFinite(Number(bandLowerRatio)) ? Number(bandLowerRatio) : BASE_BAND_LOWER;
+  normalized.bandLowerRatio = normalized.band_lower_ratio;
+  normalized.band_upper_ratio = Number.isFinite(Number(bandUpperRatio)) ? Number(bandUpperRatio) : BASE_BAND_UPPER;
+  normalized.bandUpperRatio = normalized.band_upper_ratio;
 
   return normalized;
 }

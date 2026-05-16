@@ -1,47 +1,101 @@
-import { useState, useEffect, useCallback } from 'react';
-import { VR_VERSION } from './constants';
-import { calculateNextV, calculateBands, calculateAdaptiveBands, normalizeHistoryEntry } from './utils/vrCalculations';
-import { BASE_BAND_LOWER, BASE_BAND_UPPER } from './constants';
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
+import { BASE_BAND_LOWER, BASE_BAND_UPPER, VR_VERSION } from './constants';
+import { calculateAdaptiveBands, normalizeHistoryEntry } from './utils/vrCalculations';
 import Sidebar from './components/Sidebar';
 import InitialSetup from './components/InitialSetup';
 import CycleViewer from './components/CycleViewer';
 import CycleInput from './components/CycleInput';
-import ResultsDashboard from './components/ResultsDashboard';
+
+const ResultsDashboard = lazy(() => import('./components/ResultsDashboard'));
 
 const STORAGE_KEY = 'vr-simulator-state-v3.1.2';
+
+const DEFAULT_STATE = {
+  history: [],
+  currentG: 10.0,
+  defaultDeposit: 250.0,
+  simulationStarted: false,
+  viewCycleIndex: 0,
+  tickerName: 'TQQQ',
+  adaptiveBandEnabled: false,
+};
+
+function toFiniteNumber(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function sanitizeSavedState(candidate) {
+  if (!candidate || typeof candidate !== 'object') return DEFAULT_STATE;
+
+  const history = Array.isArray(candidate.history)
+    ? candidate.history.map((entry) => normalizeHistoryEntry(entry)).filter(Boolean)
+    : [];
+  const maxIndex = Math.max(history.length - 1, 0);
+  const requestedIndex = Number.isInteger(candidate.viewCycleIndex) ? candidate.viewCycleIndex : 0;
+
+  return {
+    history,
+    currentG: Math.max(1, toFiniteNumber(candidate.currentG, DEFAULT_STATE.currentG)),
+    defaultDeposit: Math.max(0, toFiniteNumber(candidate.defaultDeposit, DEFAULT_STATE.defaultDeposit)),
+    simulationStarted: Boolean(candidate.simulationStarted && history.length > 0),
+    viewCycleIndex: Math.min(Math.max(requestedIndex, 0), maxIndex),
+    tickerName: typeof candidate.tickerName === 'string' && candidate.tickerName.trim()
+      ? candidate.tickerName.trim()
+      : DEFAULT_STATE.tickerName,
+    adaptiveBandEnabled: Boolean(candidate.adaptiveBandEnabled),
+  };
+}
 
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {}
-  return null;
+    return saved ? sanitizeSavedState(JSON.parse(saved)) : DEFAULT_STATE;
+  } catch {
+    return DEFAULT_STATE;
+  }
 }
 
 export default function App() {
-  const saved = loadState();
+  const [saved] = useState(loadState);
 
-  const [history, setHistory] = useState(saved?.history || []);
-  const [currentG, setCurrentG] = useState(saved?.currentG ?? 10.0);
-  const [defaultDeposit, setDefaultDeposit] = useState(saved?.defaultDeposit ?? 250.0);
-  const [simulationStarted, setSimulationStarted] = useState(saved?.simulationStarted ?? false);
-  const [viewCycleIndex, setViewCycleIndex] = useState(saved?.viewCycleIndex ?? 0);
-  const [tickerName, setTickerName] = useState(saved?.tickerName ?? 'TQQQ');
-  const [adaptiveBandEnabled, setAdaptiveBandEnabled] = useState(saved?.adaptiveBandEnabled ?? false);
+  const [history, setHistory] = useState(saved.history);
+  const [currentG, setCurrentG] = useState(saved.currentG);
+  const [defaultDeposit, setDefaultDeposit] = useState(saved.defaultDeposit);
+  const [simulationStarted, setSimulationStarted] = useState(saved.simulationStarted);
+  const [viewCycleIndex, setViewCycleIndex] = useState(saved.viewCycleIndex);
+  const [tickerName, setTickerName] = useState(saved.tickerName);
+  const [adaptiveBandEnabled, setAdaptiveBandEnabled] = useState(saved.adaptiveBandEnabled);
 
   // Persist to localStorage
   useEffect(() => {
     const state = { history, currentG, defaultDeposit, simulationStarted, viewCycleIndex, tickerName, adaptiveBandEnabled };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // Keep the simulator usable if browser storage is unavailable or full.
+    }
   }, [history, currentG, defaultDeposit, simulationStarted, viewCycleIndex, tickerName, adaptiveBandEnabled]);
+
+  useEffect(() => {
+    if (!history.length) {
+      setViewCycleIndex(0);
+      return;
+    }
+    setViewCycleIndex((index) => Math.min(Math.max(index, 0), history.length - 1));
+  }, [history.length]);
 
   // Start simulation (from InitialSetup)
   const handleStart = useCallback((config) => {
     if (config.fromCSV) {
       // CSV upload: history already loaded
-      const lastEntry = config.history[config.history.length - 1];
-      setHistory(config.history);
-      setViewCycleIndex(config.history.length - 1);
+      const normalizedHistory = Array.isArray(config.history)
+        ? config.history.map((entry) => normalizeHistoryEntry(entry)).filter(Boolean)
+        : [];
+      if (!normalizedHistory.length) return;
+      const lastEntry = normalizedHistory[normalizedHistory.length - 1];
+      setHistory(normalizedHistory);
+      setViewCycleIndex(normalizedHistory.length - 1);
       setCurrentG(lastEntry?.G ?? 10.0);
       setDefaultDeposit(lastEntry?.deposit_next ?? 250.0);
       setSimulationStarted(true);
@@ -213,10 +267,18 @@ export default function App() {
 
                 {/* Section 3: Results Dashboard */}
                 {history.length > 0 && (
-                  <ResultsDashboard
-                    history={history}
-                    adaptiveBandEnabled={adaptiveBandEnabled}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="surface-panel text-center text-tx-muted font-mono text-sm py-8">
+                        결과 대시보드 로딩 중...
+                      </div>
+                    }
+                  >
+                    <ResultsDashboard
+                      history={history}
+                      adaptiveBandEnabled={adaptiveBandEnabled}
+                    />
+                  </Suspense>
                 )}
               </>
             )}
