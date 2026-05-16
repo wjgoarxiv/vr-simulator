@@ -5,11 +5,11 @@ import {
   calculateBuyTable,
   calculateSellTable,
 } from '../utils/vrCalculations';
+import { serializeTableCSV } from '../utils/csvHandling';
 
 function downloadTableCSV(rows, columns, filename) {
-  const header = columns.map((c) => c.label).join(',');
-  const body = rows.map((row) => columns.map((c) => c.value(row)).join(',')).join('\n');
-  const blob = new Blob([header + '\n' + body], { type: 'text/csv;charset=utf-8;' });
+  const csv = serializeTableCSV(rows, columns);
+  const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

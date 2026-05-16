@@ -24,6 +24,9 @@ const EXPORT_COLUMNS = [
   've_divergence_direction',
 ];
 
+const CSV_MIME_TYPE = 'text/csv;charset=utf-8;';
+const UTF8_BOM = '\ufeff';
+
 function normalizeHeader(header) {
   return String(header ?? '').replace(/^\ufeff/, '').trim();
 }
@@ -234,7 +237,7 @@ export function exportCSV(history) {
   const fields = buildExportFields(safeHistory);
   const data = safeHistory.map((row) => sanitizeExportRow(row, fields));
   const csvString = Papa.unparse({ fields, data });
-  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([UTF8_BOM, csvString], { type: CSV_MIME_TYPE });
 
   const now = new Date();
   const yyyy = now.getFullYear();
@@ -243,6 +246,26 @@ export function exportCSV(history) {
   const filename = `${yyyy}${mm}${dd}_vr_simulation_history.csv`;
 
   return { blob, filename };
+}
+
+/**
+ * Serialize simple table rows to CSV with proper quoting/escaping.
+ * @param {Object[]} rows
+ * @param {{label: string, value: Function}[]} columns
+ * @returns {string}
+ */
+export function serializeTableCSV(rows, columns) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const safeColumns = Array.isArray(columns) ? columns : [];
+
+  return Papa.unparse({
+    fields: safeColumns.map((column) => column.label),
+    data: safeRows.map((row) => (
+      Object.fromEntries(
+        safeColumns.map((column) => [column.label, column.value(row)])
+      )
+    )),
+  });
 }
 
 /**
