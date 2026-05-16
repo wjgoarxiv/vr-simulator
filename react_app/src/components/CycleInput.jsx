@@ -65,11 +65,11 @@ export default function CycleInput({
       LBand = result.LBand;
       HBand = result.HBand;
       adaptiveResult = {
-        compression_factor: result.compressionFactor,
-        divergence_ratio: result.divergenceRatio,
-        divergence_direction: result.divergenceDirection,
-        band_lower_ratio: result.bandLowerRatio,
-        band_upper_ratio: result.bandUpperRatio,
+        compressionFactor: result.compressionFactor,
+        divergenceRatio: result.divergenceRatio,
+        divergenceDirection: result.divergenceDirection,
+        bandLowerRatio: result.bandLowerRatio,
+        bandUpperRatio: result.bandUpperRatio,
       };
     } else {
       const result = calculateBands(V_next, E_calc, false);
@@ -77,11 +77,11 @@ export default function CycleInput({
       HBand = result.HBand;
       const divRatio = E_calc > 0 ? Math.abs(V_next / E_calc - 1.0) : 0.0;
       adaptiveResult = {
-        compression_factor: 1.0,
-        divergence_ratio: divRatio,
-        divergence_direction: 'neutral',
-        band_lower_ratio: BASE_BAND_LOWER,
-        band_upper_ratio: BASE_BAND_UPPER,
+        compressionFactor: 1.0,
+        divergenceRatio: divRatio,
+        divergenceDirection: 'neutral',
+        bandLowerRatio: BASE_BAND_LOWER,
+        bandUpperRatio: BASE_BAND_UPPER,
       };
     }
 

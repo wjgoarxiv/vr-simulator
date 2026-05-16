@@ -258,42 +258,67 @@ export function normalizeHistoryEntry(entry) {
   const E_val = parseFloat(normalized.E_calc ?? 0.0);
   const V_target = parseFloat(normalized.V_target ?? normalized.V_i ?? 0.0);
 
-  // V3.1.2 fix: default adaptiveBandEnabled to false
-  if (normalized.adaptiveBandEnabled === undefined) {
+  // Keep both persisted snake_case fields and React-internal camelCase aliases populated.
+  const aliasPairs = [
+    ['adaptive_band_enabled', 'adaptiveBandEnabled'],
+    ['ve_divergence_ratio', 'veDivergenceRatio'],
+    ['ve_divergence_direction', 'veDivergenceDirection'],
+    ['band_compression_factor', 'bandCompressionFactor'],
+    ['band_lower_ratio', 'bandLowerRatio'],
+    ['band_upper_ratio', 'bandUpperRatio'],
+  ];
+
+  for (const [snakeKey, camelKey] of aliasPairs) {
+    if (normalized[snakeKey] === undefined && normalized[camelKey] !== undefined) {
+      normalized[snakeKey] = normalized[camelKey];
+    }
+    if (normalized[camelKey] === undefined && normalized[snakeKey] !== undefined) {
+      normalized[camelKey] = normalized[snakeKey];
+    }
+  }
+
+  if (normalized.adaptive_band_enabled === undefined) {
+    normalized.adaptive_band_enabled = false;
     normalized.adaptiveBandEnabled = false;
   }
 
-  if (normalized.veDivergenceRatio === undefined) {
+  if (normalized.ve_divergence_ratio === undefined) {
     if (E_val > 0 && V_target > 0) {
       const { compressionFactor, divergenceRatio, divergenceDirection } =
         calculateBandCompressionFactor(V_target, E_val);
       const adaptiveResult = calculateAdaptiveBands(V_target, E_val);
-      normalized.veDivergenceRatio = divergenceRatio;
-      normalized.veDivergenceDirection = divergenceDirection;
-      normalized.bandCompressionFactor = compressionFactor;
-      normalized.bandLowerRatio = adaptiveResult.bandLowerRatio;
-      normalized.bandUpperRatio = adaptiveResult.bandUpperRatio;
+      normalized.ve_divergence_ratio = divergenceRatio;
+      normalized.ve_divergence_direction = divergenceDirection;
+      normalized.band_compression_factor = compressionFactor;
+      normalized.band_lower_ratio = adaptiveResult.bandLowerRatio;
+      normalized.band_upper_ratio = adaptiveResult.bandUpperRatio;
     } else {
-      normalized.veDivergenceRatio = 0.0;
-      normalized.veDivergenceDirection = 'neutral';
-      normalized.bandCompressionFactor = 1.0;
-      normalized.bandLowerRatio = BASE_BAND_LOWER;
-      normalized.bandUpperRatio = BASE_BAND_UPPER;
+      normalized.ve_divergence_ratio = 0.0;
+      normalized.ve_divergence_direction = 'neutral';
+      normalized.band_compression_factor = 1.0;
+      normalized.band_lower_ratio = BASE_BAND_LOWER;
+      normalized.band_upper_ratio = BASE_BAND_UPPER;
     }
   }
 
-  // Ensure all fields have defaults
-  if (normalized.veDivergenceDirection === undefined) {
-    normalized.veDivergenceDirection = 'neutral';
+  // Ensure all persisted metadata fields have defaults.
+  if (normalized.ve_divergence_direction === undefined) {
+    normalized.ve_divergence_direction = 'neutral';
   }
-  if (normalized.bandCompressionFactor === undefined) {
-    normalized.bandCompressionFactor = 1.0;
+  if (normalized.band_compression_factor === undefined) {
+    normalized.band_compression_factor = 1.0;
   }
-  if (normalized.bandLowerRatio === undefined) {
-    normalized.bandLowerRatio = BASE_BAND_LOWER;
+  if (normalized.band_lower_ratio === undefined) {
+    normalized.band_lower_ratio = BASE_BAND_LOWER;
   }
-  if (normalized.bandUpperRatio === undefined) {
-    normalized.bandUpperRatio = BASE_BAND_UPPER;
+  if (normalized.band_upper_ratio === undefined) {
+    normalized.band_upper_ratio = BASE_BAND_UPPER;
+  }
+
+  for (const [snakeKey, camelKey] of aliasPairs) {
+    if (normalized[camelKey] === undefined && normalized[snakeKey] !== undefined) {
+      normalized[camelKey] = normalized[snakeKey];
+    }
   }
 
   return normalized;
