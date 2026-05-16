@@ -88,9 +88,10 @@ test('parseCSV accepts optional adaptive metadata columns', () => {
 await testAsync('exportCSV emits a UTF-8 BOM and stable required headers', async () => {
   const { blob, filename } = exportCSV([{ cycle_num: 0, price_end: 60, extra_note: 'hello' }]);
   assert.match(filename, /^\d{8}_vr_simulation_history\.csv$/);
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  assert.deepEqual([...bytes.slice(0, 3)], [0xef, 0xbb, 0xbf]);
   const text = await blob.text();
-  assert.equal(text.charCodeAt(0), 0xfeff);
-  assert.match(text, /^\ufeffcycle_num,V_target,LBand,HBand/);
+  assert.match(text, /^cycle_num,V_target,LBand,HBand/);
   assert.match(text, /extra_note/);
 });
 
