@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test": "node --test src/utils/csvHandling.test.js"
   },
   "dependencies": {
     "lucide-react": "^0.294.0",
