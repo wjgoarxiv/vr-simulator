@@ -64,13 +64,7 @@ export default function CycleInput({
       const result = calculateAdaptiveBands(V_next, E_calc);
       LBand = result.LBand;
       HBand = result.HBand;
-      adaptiveResult = {
-        compressionFactor: result.compressionFactor,
-        divergenceRatio: result.divergenceRatio,
-        divergenceDirection: result.divergenceDirection,
-        bandLowerRatio: result.bandLowerRatio,
-        bandUpperRatio: result.bandUpperRatio,
-      };
+      adaptiveResult = result;
     } else {
       const result = calculateBands(V_next, E_calc, false);
       LBand = result.LBand;
