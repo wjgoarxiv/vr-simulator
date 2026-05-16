@@ -262,51 +262,56 @@ export function normalizeHistoryEntry(entry) {
   const E_val = parseFloat(normalized.E_calc ?? 0.0);
   const V_target = parseFloat(normalized.V_target ?? normalized.V_i ?? 0.0);
 
-  // Python/CSV/App records use snake_case as the canonical persisted schema.
-  // Keep the React normalizer on that schema so resumed/imported records display
-  // the same adaptive metadata that app.py would synthesize.
-  if (normalized.adaptive_band_enabled === undefined) {
-    normalized.adaptive_band_enabled = normalized.adaptiveBandEnabled ?? false;
-  }
+  const existingDivergenceRatio = normalized.ve_divergence_ratio ?? normalized.veDivergenceRatio;
+  const existingDivergenceDirection = normalized.ve_divergence_direction ?? normalized.veDivergenceDirection;
+  const existingCompressionFactor = normalized.band_compression_factor ?? normalized.bandCompressionFactor;
+  const existingLowerRatio = normalized.band_lower_ratio ?? normalized.bandLowerRatio;
+  const existingUpperRatio = normalized.band_upper_ratio ?? normalized.bandUpperRatio;
 
-  if (normalized.ve_divergence_ratio == null) {
+  let divergenceRatio = existingDivergenceRatio;
+  let divergenceDirection = existingDivergenceDirection;
+  let compressionFactor = existingCompressionFactor;
+  let bandLowerRatio = existingLowerRatio;
+  let bandUpperRatio = existingUpperRatio;
+
+  if (
+    divergenceRatio === undefined ||
+    divergenceDirection === undefined ||
+    compressionFactor === undefined ||
+    bandLowerRatio === undefined ||
+    bandUpperRatio === undefined
+  ) {
     if (E_val > 0 && V_target > 0) {
       const factorResult = calculateBandCompressionFactor(V_target, E_val);
       const adaptiveResult = calculateAdaptiveBands(V_target, E_val);
-      normalized.ve_divergence_ratio = divergenceRatio;
-      normalized.ve_divergence_direction = divergenceDirection;
-      normalized.band_compression_factor = compressionFactor;
-      normalized.band_lower_ratio = adaptiveResult.bandLowerRatio;
-      normalized.band_upper_ratio = adaptiveResult.bandUpperRatio;
+      divergenceRatio = divergenceRatio ?? factorResult.divergenceRatio;
+      divergenceDirection = divergenceDirection ?? factorResult.divergenceDirection;
+      compressionFactor = compressionFactor ?? factorResult.compressionFactor;
+      bandLowerRatio = bandLowerRatio ?? adaptiveResult.bandLowerRatio;
+      bandUpperRatio = bandUpperRatio ?? adaptiveResult.bandUpperRatio;
     } else {
-      normalized.ve_divergence_ratio = 0.0;
-      normalized.ve_divergence_direction = 'neutral';
-      normalized.band_compression_factor = 1.0;
-      normalized.band_lower_ratio = BASE_BAND_LOWER;
-      normalized.band_upper_ratio = BASE_BAND_UPPER;
+      divergenceRatio = divergenceRatio ?? 0.0;
+      divergenceDirection = divergenceDirection ?? 'neutral';
+      compressionFactor = compressionFactor ?? 1.0;
+      bandLowerRatio = bandLowerRatio ?? BASE_BAND_LOWER;
+      bandUpperRatio = bandUpperRatio ?? BASE_BAND_UPPER;
     }
   }
 
-  // Ensure all canonical fields have defaults.
-  if (normalized.ve_divergence_direction == null) {
-    normalized.ve_divergence_direction = 'neutral';
-  }
-  if (normalized.band_compression_factor == null) {
-    normalized.band_compression_factor = 1.0;
-  }
-  if (normalized.band_lower_ratio == null) {
-    normalized.band_lower_ratio = BASE_BAND_LOWER;
-  }
-  if (normalized.band_upper_ratio == null) {
-    normalized.band_upper_ratio = BASE_BAND_UPPER;
-  }
+  const adaptiveBandEnabled = Boolean(normalized.adaptive_band_enabled ?? normalized.adaptiveBandEnabled ?? false);
 
-  // Backward-compatible aliases for any older React-only consumers.
-  normalized.adaptiveBandEnabled = normalized.adaptive_band_enabled;
+  // Keep both current snake_case history fields and older camelCase fields populated.
+  normalized.adaptive_band_enabled = adaptiveBandEnabled;
+  normalized.adaptiveBandEnabled = adaptiveBandEnabled;
+  normalized.ve_divergence_ratio = Number.isFinite(Number(divergenceRatio)) ? Number(divergenceRatio) : 0.0;
   normalized.veDivergenceRatio = normalized.ve_divergence_ratio;
+  normalized.ve_divergence_direction = divergenceDirection ?? 'neutral';
   normalized.veDivergenceDirection = normalized.ve_divergence_direction;
+  normalized.band_compression_factor = Number.isFinite(Number(compressionFactor)) ? Number(compressionFactor) : 1.0;
   normalized.bandCompressionFactor = normalized.band_compression_factor;
+  normalized.band_lower_ratio = Number.isFinite(Number(bandLowerRatio)) ? Number(bandLowerRatio) : BASE_BAND_LOWER;
   normalized.bandLowerRatio = normalized.band_lower_ratio;
+  normalized.band_upper_ratio = Number.isFinite(Number(bandUpperRatio)) ? Number(bandUpperRatio) : BASE_BAND_UPPER;
   normalized.bandUpperRatio = normalized.band_upper_ratio;
 
   return normalized;
