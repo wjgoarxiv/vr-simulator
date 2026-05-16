@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.1.3"
+VR_VERSION = "3.1.4"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -860,12 +860,11 @@ if st.session_state.simulation_started and st.session_state.history:
             uncapped_v = active_state.get('ve_cap_uncapped_v')
             if uncapped_v is not None:
                 st.info(
-                    f"ℹ️ **목표 V 자동 조정**\n\n"
-                    f"계산된 목표가 현재 평가금보다 높아 안전 기준에 맞춰 낮췄습니다.\n\n"
-                    f"- 조정 전 목표: ${uncapped_v:,.0f}\n"
-                    f"- 실제 적용 목표: ${V_i_display:,.0f}\n"
-                    f"- 기준: 현재 평가금의 {MAX_V_E_RATIO*100:.0f}%까지만 목표로 사용\n\n"
-                    f"의미: 다음 사이클에서 과도한 매수 신호가 나오지 않게 막는 안전장치입니다."
+                    f"ℹ️ **목표를 현실에 맞췄어요**\n\n"
+                    f"처음 계산한 목표가 지금 평가금보다 높아서, 이번 사이클에 적용할 목표를 낮췄어요.\n\n"
+                    f"- 처음 목표: ${uncapped_v:,.0f}\n"
+                    f"- 적용 목표: ${V_i_display:,.0f}\n\n"
+                    f"그래서 지금 당장 무리해서 사라는 신호가 줄어들어요."
                 )
 
         st.markdown("**매수/매도 임계 참고:**")
@@ -884,11 +883,11 @@ if st.session_state.simulation_started and st.session_state.history:
 
         with signal_col1:
             if can_buy_now:
-                buy_status, buy_icon, buy_msg = "success", "✅", "즉시 매수 가능!"
+                buy_status, buy_icon, buy_msg = "success", "✅", "지금 매수 가능"
             elif buy_gap <= 5:
-                buy_status, buy_icon, buy_msg = "warning", "⏳", "매수 근접 (5% 이내)"
+                buy_status, buy_icon, buy_msg = "warning", "⏳", "매수에 가까워졌어요"
             else:
-                buy_status, buy_icon, buy_msg = "info", "📊", f"가격 하락 대기 ({buy_gap:.1f}%)"
+                buy_status, buy_icon, buy_msg = "info", "📊", f"가격이 더 내려오면 매수 ({buy_gap:.1f}%)"
 
             st.markdown(f"""
             <div style="background: linear-gradient(135deg, {'#3FB95020' if buy_status == 'success' else '#D2992220' if buy_status == 'warning' else '#58A6FF20'} 0%, #21262D 100%); border: 1px solid {'#3FB950' if buy_status == 'success' else '#D29922' if buy_status == 'warning' else '#58A6FF'}; border-radius: 12px; padding: 1.2rem;">
@@ -907,11 +906,11 @@ if st.session_state.simulation_started and st.session_state.history:
                 can_sell_now = last_price_display >= sell_target_simple
 
                 if can_sell_now:
-                    sell_status, sell_icon, sell_msg = "danger", "✅", "즉시 매도 가능!"
+                    sell_status, sell_icon, sell_msg = "danger", "✅", "지금 매도 가능"
                 elif sell_gap <= 5:
-                    sell_status, sell_icon, sell_msg = "warning", "⏳", "매도 근접 (5% 이내)"
+                    sell_status, sell_icon, sell_msg = "warning", "⏳", "매도에 가까워졌어요"
                 else:
-                    sell_status, sell_icon, sell_msg = "info", "📊", f"가격 상승 대기 ({sell_gap:.1f}%)"
+                    sell_status, sell_icon, sell_msg = "info", "📊", f"가격이 더 오르면 매도 ({sell_gap:.1f}%)"
 
                 st.markdown(f"""
                 <div style="background: linear-gradient(135deg, {'#F8514920' if sell_status == 'danger' else '#D2992220' if sell_status == 'warning' else '#58A6FF20'} 0%, #21262D 100%); border: 1px solid {'#F85149' if sell_status == 'danger' else '#D29922' if sell_status == 'warning' else '#58A6FF'}; border-radius: 12px; padding: 1.2rem;">
@@ -926,8 +925,8 @@ if st.session_state.simulation_started and st.session_state.history:
                 # V3.1.1: 매도 목표가 괴리 경고
                 if sell_gap > 20:
                     st.warning(
-                        f"⚠️ 매도 목표가(${sell_target_simple:,.2f})가 현재가 대비 {sell_gap:.1f}% 높습니다. "
-                        f"V(${active_state.get('V_target', 0):,.0f})가 E(${active_state.get('E_calc', 0):,.0f})를 크게 초과하고 있습니다."
+                        f"⚠️ 매도까지 아직 거리가 있어요. "
+                        f"매도 목표가는 현재가보다 {sell_gap:.1f}% 높고, 목표와 평가금 차이가 커진 상태예요."
                     )
             else:
                 st.markdown("""
@@ -950,11 +949,11 @@ if st.session_state.simulation_started and st.session_state.history:
             lower_ratio = active_state.get('band_lower_ratio', BASE_BAND_LOWER)
             upper_ratio = active_state.get('band_upper_ratio', BASE_BAND_UPPER)
 
-            direction_text = {'over': '목표 > 실제', 'under': '실제 > 목표', 'neutral': '균형'}.get(divergence_direction, '균형')
+            direction_text = {'over': '목표 > 평가금', 'under': '평가금 > 목표', 'neutral': '균형'}.get(divergence_direction, '균형')
 
             adaptive_cols = st.columns(4)
-            adaptive_cols[0].metric("목표 vs 실제 차이", f"{divergence_ratio * 100:.1f}%", delta=direction_text)
-            adaptive_cols[1].metric("거래 조건 완화", f"{(1 - compression_factor) * 100:.1f}%")
+            adaptive_cols[0].metric("목표-평가금 차이", f"{divergence_ratio * 100:.1f}%", delta=direction_text)
+            adaptive_cols[1].metric("조건 조정", f"{(1 - compression_factor) * 100:.1f}%")
             adaptive_cols[2].metric("매수 범위", f"-{(1.0 - lower_ratio) * 100:.1f}%")
             adaptive_cols[3].metric("매도 범위", f"+{(upper_ratio - 1.0) * 100:.1f}%")
 

@@ -1,5 +1,5 @@
 // --- VR Version ---
-export const VR_VERSION = "3.1.3";
+export const VR_VERSION = "3.1.4";
 
 // --- VR Parameter Constants ---
 export const BASE_BAND_LOWER = 0.85;  // Default LBand ratio

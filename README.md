@@ -12,7 +12,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.8+-green" /></a>
   <a href="./react_app"><img src="https://img.shields.io/badge/React-18-61dafb" /></a>
-  <a href="#-v313-changes"><img src="https://img.shields.io/badge/version-3.1.3-blueviolet" /></a>
+  <a href="#-v314-changes"><img src="https://img.shields.io/badge/version-3.1.4-blueviolet" /></a>
 </p>
 
 ---
@@ -24,8 +24,8 @@
 
 | 플랫폼 | URL |
 |--------|-----|
-| **Streamlit (V3.1.3)** | [vr-simulator.streamlit.app](https://vr-simulator.streamlit.app/) |
-| **React (V3.1.3)** | [wjgoarxiv.github.io/vr-simulator](https://wjgoarxiv.github.io/vr-simulator/) |
+| **Streamlit (V3.1.4)** | [vr-simulator.streamlit.app](https://vr-simulator.streamlit.app/) |
+| **React (V3.1.4)** | [wjgoarxiv.github.io/vr-simulator](https://wjgoarxiv.github.io/vr-simulator/) |
 
 ## ✨ Features
 
@@ -78,6 +78,12 @@ V_f = V_i + (Pool / G) + ((E - V_i) / (2 * sqrt(G))) + Deposit
 | `G` | 그라데이션 값 (권장: 10~20) |
 | `E` | 이전 사이클 종료 시 평가금 (주식 수 x 가격) |
 | `Deposit` | 다음 사이클 적립금 |
+
+## 🔄 V3.1.4 Changes
+
+### V3.1.4 — Toss-like safety copy
+- Rewrote the target adjustment notice again so it reads in one pass: what changed, why it changed, and what action it prevents.
+- Aligned the React and Streamlit Korean copy around the same plain-language labels: 처음 목표 / 적용 목표.
 
 ## 🔄 V3.1.3 Changes
 
