@@ -36,7 +36,7 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
   - Improved adaptive metadata flow and display resilience as part of the team run.
   - Evidence: team worker completion messages and passing React test/build commands.
 - `react_app/src/components/CycleViewer.jsx` and `app.py`
-  - Replaced formula-heavy user-facing copy such as “V/E 상한 적용됨 / 원래 V / 제한 V / 적립금 기여분 흡수” with Toss-like plain Korean copy: “목표를 안전하게 낮췄어요”, “처음 계산된 목표”, and “이번에 적용할 목표”.
+  - Replaced formula-heavy user-facing copy such as “V/E 상한 적용됨 / 원래 V / 제한 V / 적립금 기여분 흡수” with Toss-like plain Korean copy: “목표를 현실에 맞췄어요”, “처음 목표”, and “적용 목표”.
   - Evidence: implementation lane preserved calculation code and aligned the React/Streamlit message contract; verification lane should update `react_app/tests/ui-copy.test.mjs` accordingly.
 - `react_app/tests/ui-copy.test.mjs`
   - Added regression coverage to prevent confusing cap/absorption wording from reappearing in user-facing copy.
@@ -109,7 +109,7 @@ Use these commands to confirm the handoff still matches the repo:
 git status --short --branch
 git log -5 --oneline
 node -e "const p=require('./react_app/package.json'); console.log(p.version, p.scripts)"
-grep -RIn "VR_VERSION\|목표를 안전하게 낮췄어요\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/src/components/CycleViewer.jsx react_app/package.json | head -n 80
+grep -RIn "VR_VERSION\|목표를 현실에 맞췄어요\|adaptiveBandEnabled: true\|adaptive_band_enabled = True" app.py react_app/src/constants.js react_app/src/App.jsx react_app/src/components/CycleViewer.jsx react_app/package.json | head -n 80
 cd react_app && npm test
 cd react_app && npm run build
 python3 -m py_compile app.py generate_cover.py
