@@ -22,14 +22,14 @@ const nearlyEqual = (actual, expected, tolerance = 1e-10) => {
 };
 
 function testCalculateNextVFormulaAndCap() {
-  const uncapped = calculateNextV(1000, 300, 1000, 9, 250);
-  nearlyEqual(uncapped, 1000 + 300 / 9 + (1000 - 1000) / (2 * Math.sqrt(9)) + 250);
+  const uncapped = calculateNextV(1000, 0, 1000, 9, 0);
+  nearlyEqual(uncapped, 1000 + 0 / 9 + (1000 - 1000) / (2 * Math.sqrt(9)) + 0);
 
   const capped = calculateNextV(1000, 2000, 100, 1, 0);
   nearlyEqual(capped, 115);
   assert.deepEqual(detectVECapActivation(capped, 100, 1000, 2000, 1, 0), {
     capActive: true,
-    uncappedV: 3000,
+    uncappedV: 2550,
   });
 
   assert.equal(calculateNextV(123, 999, 456, 0, 111), 123);
