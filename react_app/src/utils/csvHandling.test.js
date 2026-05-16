@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { exportCSV, parseCSV } from './csvHandling.js';
+import { exportCSV, parseCSV, serializeTableCSV } from './csvHandling.js';
 
 const header = 'cycle_num,V_target,LBand,HBand,shares_end,pool_end_before_deposit,deposit_next,price_end,G,E_calc,V_i';
 const validRow = '0,100,85,115,2,50,25,40,10,80,100';
@@ -58,8 +58,24 @@ test('parseCSV preserves optional adaptive columns with strict typing', () => {
 
 test('exportCSV returns a header-only CSV for empty or invalid history arrays', async () => {
   const { blob, filename } = exportCSV(null);
+  const bytes = new Uint8Array(await blob.arrayBuffer());
   const text = await blob.text();
 
   assert.match(filename, /_vr_simulation_history\.csv$/);
+  assert.deepEqual([...bytes.slice(0, 3)], [0xef, 0xbb, 0xbf]);
   assert.match(text.split('\n')[0], /^cycle_num,V_target,LBand,HBand/);
+});
+
+test('serializeTableCSV escapes commas, quotes, and newlines in table exports', () => {
+  const csv = serializeTableCSV(
+    [{ label: 'A,B', note: 'line "one"\nline two' }],
+    [
+      { label: '목표 주식수', value: (row) => row.label },
+      { label: '메모', value: (row) => row.note },
+    ],
+  );
+
+  assert.match(csv, /^목표 주식수,메모\r?\n/);
+  assert.match(csv, /"A,B"/);
+  assert.match(csv, /"line ""one""\nline two"/);
 });

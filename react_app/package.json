@@ -6,7 +6,6 @@
   "homepage": "https://wjgoarxiv.github.io/vr-simulator",
   "scripts": {
     "dev": "vite",
-    "test:csv": "node test/csvHandling.test.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
