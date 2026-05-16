@@ -11,7 +11,10 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "test": "node tests/vrCalculations.test.mjs"
+    "test": "node tests/vrCalculations.test.mjs && node tests/ultraqa-matrix.test.js",
+    "qa:matrix": "node --test tests/ultraqa-matrix.test.js",
+    "e2e": "node scripts/e2e-cycle-harness.mjs",
+    "smoke": "npm run build && node scripts/smoke-dist.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.294.0",
