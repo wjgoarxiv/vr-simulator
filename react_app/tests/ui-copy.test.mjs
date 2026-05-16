@@ -42,12 +42,11 @@ test('target safety notice avoids formula-heavy user-facing jargon', () => {
 });
 
 const requiredPlainCopy = [
-  /목표를\s*안전하게\s*낮췄어요/,
-  /현재\s*평가금보다\s*목표가\s*너무\s*높아지지\s*않도록\s*조정했어요/,
-  /처음\s*계산된\s*목표/,
-  /이번에\s*적용할\s*목표/,
-  /다음\s*사이클에\s*무리한\s*매수\s*주문이\s*나오지\s*않아요/,
-  /따로\s*조치할\s*필요는\s*없어요/,
+  /목표를\s*현실에\s*맞췄어요/,
+  /처음\s*계산한\s*목표가\s*지금\s*평가금보다\s*높아서,\s*이번\s*사이클에\s*적용할\s*목표를\s*낮췄어요/,
+  /처음\s*목표/,
+  /적용\s*목표/,
+  /지금\s*당장\s*무리해서\s*사라는\s*신호가\s*줄어들어요/,
 ];
 
 test('target safety notice uses Toss-like plain Korean on both app surfaces', () => {
