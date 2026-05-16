@@ -14,6 +14,20 @@ export default function InitialSetup({ onStart, tickerName }) {
   function handleFileChange(e) {
     const file = e.target.files[0];
     if (!file) { setCsvStatus(null); return; }
+
+    const isLikelyCSV = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel';
+    if (!isLikelyCSV) {
+      setCsvStatus({ type: 'error', message: 'CSV 파일(.csv)만 불러올 수 있습니다.', records: [] });
+      return;
+    }
+
+    if (file.size === 0) {
+      setCsvStatus({ type: 'error', message: 'CSV 파일이 비어 있습니다.', records: [] });
+      return;
+    }
+
+    setCsvStatus({ type: 'loading', message: 'CSV 파일 검증 중...', records: [] });
+
     const reader = new FileReader();
     reader.onload = (evt) => {
       const result = parseCSV(evt.target.result);
@@ -23,6 +37,9 @@ export default function InitialSetup({ onStart, tickerName }) {
       } else {
         setCsvStatus({ type: 'error', message: result.error, records: [] });
       }
+    };
+    reader.onerror = () => {
+      setCsvStatus({ type: 'error', message: 'CSV 파일을 읽는 중 오류가 발생했습니다.', records: [] });
     };
     reader.readAsText(file);
   }
@@ -81,7 +98,16 @@ export default function InitialSetup({ onStart, tickerName }) {
           </div>
 
           {csvStatus && (
-            <div className={csvStatus.type === 'success' ? 'alert-success' : 'alert-danger'}>
+            <div
+              className={
+                csvStatus.type === 'success'
+                  ? 'alert-success'
+                  : csvStatus.type === 'loading'
+                  ? 'alert-info'
+                  : 'alert-danger'
+              }
+              aria-live="polite"
+            >
               <span className="font-mono text-xs">{csvStatus.message}</span>
               {csvStatus.type === 'success' && (
                 <p className="text-xs text-tx-secondary mt-1">
@@ -90,6 +116,10 @@ export default function InitialSetup({ onStart, tickerName }) {
               )}
             </div>
           )}
+
+          <div className="alert-info">
+            <span className="font-mono text-xs">필수 컬럼: cycle_num, V_target, LBand, HBand, shares_end, pool_end_before_deposit, deposit_next, price_end, G, E_calc, V_i</span>
+          </div>
 
           {!csvStatus && (
             <div className="alert-info">
