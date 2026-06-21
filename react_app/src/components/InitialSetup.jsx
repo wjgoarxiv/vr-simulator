@@ -62,14 +62,14 @@ export default function InitialSetup({ onStart, tickerName }) {
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <div className="space-y-4">
           <div className="inline-flex rounded-full border border-accent-cyan/20 bg-accent-cyan/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.28em] text-accent-cyan">
-            공식 밸류 리밸런싱 · ±15% 밴드
+            확장 밴드 기본 ON · OFF 시 공식 ±15%
           </div>
           <div>
             <h2 className="font-display text-4xl font-bold uppercase leading-none tracking-[-0.03em] text-tx-primary md:text-6xl">
               다음 사이클의 기준을 먼저 정합니다.
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-tx-secondary">
-              공식 VR ±15% 밴드를 기본으로, 대기 이유와 첫 주문 기준을 한 화면에 정리합니다.
+              확장 밴드를 기본 ON으로 두고, 대기 이유와 첫 주문 기준을 한 화면에 정리합니다. OFF로 전환하면 공식 ±15% 고정 밴드를 사용합니다.
             </p>
           </div>
         </div>

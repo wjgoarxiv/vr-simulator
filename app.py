@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.2.2"
+VR_VERSION = "3.2.3"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -308,7 +308,7 @@ if 'view_cycle_index' not in st.session_state:
 if 'ticker_name' not in st.session_state:
     st.session_state.ticker_name = "TQQQ"
 if 'adaptive_band_enabled' not in st.session_state:
-    st.session_state.adaptive_band_enabled = False
+    st.session_state.adaptive_band_enabled = True
 
 # =============================================================================
 # 핵심 계산 함수
@@ -362,7 +362,7 @@ def calculate_band_compression_factor(V_target, E_calc):
 def calculate_bands(V_target, E_calc=None, use_adaptive=None):
     """LBand, HBand 계산 (적응형 밴드 지원)"""
     if use_adaptive is None:
-        use_adaptive = st.session_state.get('adaptive_band_enabled', False)
+        use_adaptive = st.session_state.get('adaptive_band_enabled', True)
 
     if not use_adaptive or E_calc is None or E_calc <= 0:
         return BASE_BAND_LOWER * V_target, BASE_BAND_UPPER * V_target
@@ -784,12 +784,12 @@ with st.sidebar:
         "확장 밴드 활성화 (Advanced)",
         value=st.session_state.adaptive_band_enabled,
         key="adaptive_toggle",
-        help="공식 VR 기본값은 OFF입니다. 켜면 목표 가치(V)와 평가금(E)의 차이가 클 때 거래 가능 범위를 자동으로 좁히는 앱 확장 기능을 적용합니다."
+        help="기본값은 ON입니다. 목표 가치(V)와 평가금(E)의 차이가 클 때 거래 가능 범위를 자동으로 좁히는 앱 확장 기능을 적용합니다. 끄면 공식 ±15% 고정 밴드만 사용합니다."
     )
     st.session_state.adaptive_band_enabled = adaptive_enabled_ui
 
     if adaptive_enabled_ui:
-        st.caption(f"Advanced: 목표-실제 차이 {VE_DIVERGENCE_THRESHOLD*100:.0f}% 초과 시 거래 조건 완화 | 최대 완화: ±{(MAX_BAND_UPPER-1.0)*100:.0f}% 범위")
+        st.caption(f"Advanced 기본 ON: 목표-실제 차이 {VE_DIVERGENCE_THRESHOLD*100:.0f}% 초과 시 거래 조건 완화 | 최대 완화: ±{(MAX_BAND_UPPER-1.0)*100:.0f}% 범위")
     else:
         st.caption("Official: 기본 거래 범위 ±15% 적용, V/E 상한 없음")
 
@@ -922,7 +922,7 @@ if not st.session_state.simulation_started:
 
             if V0 >= 0:
                 E0 = init_shares * init_price
-                use_adaptive = st.session_state.get('adaptive_band_enabled', False)
+                use_adaptive = st.session_state.get('adaptive_band_enabled', True)
                 if use_adaptive and E0 > 0:
                     adaptive_result = calculate_adaptive_bands(V0, E0)
                     L0, H0 = adaptive_result['LBand'], adaptive_result['HBand']
@@ -1196,7 +1196,7 @@ if st.session_state.simulation_started and st.session_state.history:
                 ve_cap_active = False
                 ve_cap_uncapped = None
 
-                use_adaptive = st.session_state.get('adaptive_band_enabled', False)
+                use_adaptive = st.session_state.get('adaptive_band_enabled', True)
                 if use_adaptive:
                     adaptive_result = calculate_adaptive_bands(V_next, E_calc)
                     L_next = adaptive_result['LBand']

@@ -12,7 +12,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.8+-green" /></a>
   <a href="./react_app"><img src="https://img.shields.io/badge/React-18-61dafb" /></a>
-  <a href="#-v322-changes"><img src="https://img.shields.io/badge/version-3.2.2-blueviolet" /></a>
+  <a href="#-v323-changes"><img src="https://img.shields.io/badge/version-3.2.3-blueviolet" /></a>
 </p>
 
 ---
@@ -32,10 +32,10 @@
 ## ✨ Features
 
 - **공식 실력공식 VR 계산** -- G 파라미터 기반 사이클별 목표 가치(V) 자동 계산, V/E 상한 없이 자료 기반 공식값 유지
-- **공식 ±15% 밴드 기본값** -- LBand는 0.85V, HBand는 1.15V로 계산
+- **확장 밴드 기본값 ON** -- V/E 괴리율이 클 때 앱 확장 밴드 압축을 기본 적용하며, OFF 시 공식 ±15% 고정 밴드만 사용
 - **체결 전 보유수 기준 지정가 표** -- 첫 주문가를 Band ÷ 현재 보유주식으로 계산해 VR 자료 예시와 정렬
 - **거래 없음 가시화** -- 현재가가 첫 매수·첫 매도 사이에 있을 때 대기 이유와 거리(%)를 표시
-- **확장 밴드 옵션** -- 필요 시 V/E 괴리율에 따른 앱 확장 밴드 압축을 별도 Advanced 모드로 사용
+- **공식 ±15% 모드 선택 가능** -- 확장 밴드를 끄면 LBand 0.85V, HBand 1.15V의 공식 고정 밴드로 계산
 - **인터랙티브 차트** -- Plotly 기반 4종 차트 (V/E 추이, 밴드, Pool, 매수/매도 테이블)
 - **CSV 가져오기/내보내기** -- 사이클 기록 저장 및 불러오기, 유효성 검증 포함
 - **KST 마켓 상태** -- 한국 시간 기준 미국 주식 시장 상태 + 예약 매매 시간대 표시
@@ -91,6 +91,13 @@ $$
 ```
 
 보유주식이 0주인 시작 상태에서는 첫 매수를 1주 진입 기준으로 표시합니다.
+
+## 🔄 V3.2.3 Changes
+
+### V3.2.3 — Expanded band default restored
+- `확장 밴드 활성화 (Advanced)` 기본값을 React와 Streamlit 모두 ON으로 되돌렸습니다.
+- React 저장소 키를 `vr-simulator-state-v3.2.3`으로 올리고, 이전 키(`v3.2.0`, `v3.1.2`)에서 읽어올 때 global toggle은 현재 기본값 ON으로 마이그레이션합니다.
+- 확장 밴드를 끄면 기존 공식 ±15% 고정 밴드 모드가 그대로 적용됩니다.
 
 ## 🔄 V3.2.2 Changes
 

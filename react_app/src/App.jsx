@@ -8,8 +8,8 @@ import CycleInput from './components/CycleInput';
 
 const ResultsDashboard = lazy(() => import('./components/ResultsDashboard'));
 
-const STORAGE_KEY = 'vr-simulator-state-v3.2.0';
-const LEGACY_STORAGE_KEYS = ['vr-simulator-state-v3.1.2'];
+const STORAGE_KEY = 'vr-simulator-state-v3.2.3';
+const LEGACY_STORAGE_KEYS = ['vr-simulator-state-v3.2.0', 'vr-simulator-state-v3.1.2'];
 
 const DEFAULT_STATE = {
   history: [],
@@ -18,7 +18,7 @@ const DEFAULT_STATE = {
   simulationStarted: false,
   viewCycleIndex: 0,
   tickerName: 'TQQQ',
-  adaptiveBandEnabled: false,
+  adaptiveBandEnabled: true,
 };
 
 function toFiniteNumber(value, fallback) {
@@ -57,8 +57,9 @@ function loadState() {
     for (const key of storageKeys) {
       const saved = localStorage.getItem(key);
       if (saved) {
-        // v3.1.x auto-persisted adaptiveBandEnabled=true as its default. On legacy
-        // migration, reset the global toggle to the v3.2 official-VR default.
+        // Older keys auto-persisted whichever default was current at the time. On
+        // legacy migration, reset the global toggle to the current default while
+        // preserving history rows and their per-cycle metadata.
         return sanitizeSavedState(JSON.parse(saved), { resetAdaptiveDefault: key !== STORAGE_KEY });
       }
     }

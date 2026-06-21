@@ -1,26 +1,25 @@
 # HANDOFF.md — VR Simulator continuation packet
 
 ## Task
-Continue development of the VR Simulator with both surfaces in mind: the React/Vite web app in `react_app/` and the Streamlit app in `app.py`. The current V3.2.0 work supersedes the earlier adaptive-default change: official ±15% VR is now the default, and adaptive bands are an Advanced option.
+Continue development of the VR Simulator with both surfaces in mind: the React/Vite web app in `react_app/` and the Streamlit app in `app.py`. V3.2.3 restores the expanded/adaptive band toggle to ON by default while preserving the official ±15% fixed-band mode when the toggle is OFF.
 
 ## Current State
-- V3.2.0 official-VR fidelity pass is complete and committed. Default mode is official ±15% with no V/E cap; adaptive bands are an Advanced option. Order-table trigger prices target the pre-trade share-count convention from `_resources/` examples, and account performance includes Pool.
-- Current local V3.2.2 visual/copy cleanup is verified but not committed or pushed. `git status --short --branch` shows `## main...origin/main` with the expected dirty V3.2.2 files plus untracked `DESIGN.md`.
-- Last completed pushed change before this local V3.2.2 work: `ad51c83 Update React page metadata for v3.2.1`.
-- Current version is `3.2.2` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
+- V3.2.0 official-VR fidelity pass is complete and committed. Official ±15% mode remains available with no V/E cap when expanded bands are OFF. Order-table trigger prices target the pre-trade share-count convention from `_resources/` examples, and account performance includes Pool.
+- V3.2.2 visual/copy cleanup was committed, pushed, and deployed. V3.2.3 adaptive-default restoration is currently local work.
+- Last completed pushed/deployed change before this local V3.2.3 work: `2ecd6d1 Polish simulator design language v3.2.2`.
+- Current version is `3.2.3` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
 - Current visual update: React/GitHub Pages and Streamlit have been refreshed under the same **VR 리밸런싱 보드** direction: restrained dark surfaces, shared typography, LaTeX formula notation, stronger cycle status hierarchy, and aligned official VR copy.
-- Post-review V3.2.0 cleanup fixed the prior NO-GO items: legacy React localStorage now migrates V3.1.x sessions back to official-mode default, viewed-cycle mode labels no longer use the mutable global toggle, no-sell/no-share waiting copy is explicit, withdrawals cannot exceed available Pool, stale UI-copy verification evidence was updated, and local-only `.litopencode/` + `_resources/` are ignored.
+- Post-review V3.2.0 cleanup fixed the prior NO-GO items: legacy React localStorage migration is guarded, viewed-cycle mode labels no longer use the mutable global toggle, no-sell/no-share waiting copy is explicit, withdrawals cannot exceed available Pool, stale UI-copy verification evidence was updated, and local-only `.litopencode/` + `_resources/` are ignored.
 - OMX team run `enhance-vr-simulator-db33a401` was completed and shut down. Evidence from `omx team status enhance-vr-simulator-db33a401 --json --tail-lines 240`: `phase=complete`, `tasks.completed=5`, `pending=0`, `in_progress=0`, `failed=0`; after shutdown, status returned `missing`, which is expected.
-- No deployment was performed after the code changes. The latest push was to `https://github.com/wjgoarxiv/vr-simulator.git`, branch `main`.
+- No deployment has been performed for the local V3.2.3 adaptive-default restoration yet. The latest pushed code commit is `2ecd6d1` on `main`.
 
 ## What Was Done
 - `react_app/src/App.jsx`
   - Added safer saved-state loading/sanitization and localStorage write guarding during the OMX team run.
-  - Historical V3.1.x note: adaptive bands were temporarily defaulted ON; V3.2.0 changes the default back to official VR OFF.
-  - Post-review correction: because V3.1.x auto-persisted adaptive ON, legacy-key migration now resets the global adaptive toggle to the V3.2.0 official OFF default. Historical cycle metadata remains on each history row.
+  - V3.2.3 correction: adaptive bands default ON again. Because older keys auto-persisted the then-current default, legacy-key migration now resets the global adaptive toggle to the current ON default. Historical cycle metadata remains on each history row.
   - Evidence: commit `1aeba7c`; verification commands below passed.
 - `app.py`
-  - Historical V3.1.x note: adaptive bands were temporarily defaulted ON; V3.2.0 changes Streamlit back to official VR OFF by default.
+  - V3.2.3 correction: Streamlit defaults `adaptive_band_enabled` back to ON, matching the requested expanded-band default.
   - Evidence: commit `1aeba7c`; `python3 -m py_compile app.py` passed.
 - `react_app/src/utils/csvHandling.js` and `react_app/src/utils/csvHandling.test.js`
   - Hardened CSV parsing/export around required columns, malformed row shape, strict numeric/boolean typing, domain constraints, and escaping commas/quotes/newlines.
@@ -48,15 +47,15 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
   - Updated to include the V3.1.4 Toss-like UI-copy cleanup and version bump.
 - `AGENTS.md`
   - Added local instructions requiring future agents to read `HANDOFF.md` first and keep version fields synchronized when functional improvements are made.
-- V3.2.2 design-language cleanup (local, uncommitted)
+- V3.2.2 design-language cleanup
   - Added `DESIGN.md` and aligned React + Streamlit copy around **VR 리밸런싱 보드** instead of cockpit/HUD/retrofuture language.
   - Exposed the official VR formula as LaTeX on both surfaces: `V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}`.
   - Updated typography to `IBM Plex Sans KR` / `Noto Sans KR` / `JetBrains Mono`, bumped synchronized version surfaces to `3.2.2`, and added static anti-slop/formula tests.
   - Evidence: `npm test`, `npm run qa:matrix`, `npm run e2e`, `npm run build && npm run smoke`, `python3 -m py_compile app.py generate_cover.py && python3 tests/streamlit_formula_static_test.py`, and `git diff --check` passed. Independent verifier returned GO.
 
 ## Key Decisions
-- Preserve explicit user preference for adaptive bands in current V3.2.0 React localStorage. Legacy V3.1.x saved sessions reset the global toggle to official VR OFF because V3.1.x auto-persisted adaptive ON as its default and cannot distinguish that from an explicit user toggle.
-- Keep Streamlit and React defaults aligned. `app.py` session default and React `DEFAULT_STATE` now both default adaptive bands to OFF.
+- Preserve current-key user preference for adaptive bands in React localStorage. Older storage keys migrate history but reset the global toggle to the current ON default because old auto-persisted defaults cannot be distinguished from explicit choices.
+- Keep Streamlit and React defaults aligned. `app.py` session default and React `DEFAULT_STATE` now both default adaptive bands to ON.
 - Future functional improvements should normally bump version consistently across all version surfaces: `app.py` `VR_VERSION`, `react_app/src/constants.js` `VR_VERSION`, `react_app/package.json`, and `react_app/package-lock.json`. Also update visible docs such as `README.md` if they mention the version.
 - Do not deploy automatically. GitHub Pages deploy remains manual via `cd react_app && npm run build && npx gh-pages -d dist`; Streamlit Cloud auto-deploys from `main` if configured externally.
 - Keep React and Streamlit formula constants aligned. Existing tests include a React-side constant parity check against `app.py`.

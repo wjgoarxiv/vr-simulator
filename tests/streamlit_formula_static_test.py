@@ -58,6 +58,13 @@ def test_streamlit_user_copy_avoids_overstylized_terms() -> None:
         assert term not in VISIBLE_SOURCE
 
 
+def test_streamlit_adaptive_band_default_stays_on() -> None:
+    assert "st.session_state.adaptive_band_enabled = True" in SOURCE
+    assert "st.session_state.adaptive_band_enabled = False" not in SOURCE
+    assert "기본값은 ON" in SOURCE
+    assert "기본값은 OFF" not in VISIBLE_SOURCE
+
+
 def test_streamlit_typography_contract_is_ibm_first() -> None:
     assert "font=dict(family='IBM Plex Sans KR, Noto Sans KR, sans-serif'" in SOURCE
     assert "font-family: 'IBM Plex Sans KR', 'Noto Sans KR', sans-serif !important" in SOURCE
@@ -76,6 +83,7 @@ if __name__ == "__main__":
     test_streamlit_copy_exposes_official_mode_and_no_trade_visibility()
     test_streamlit_formula_is_shown_as_latex()
     test_streamlit_user_copy_avoids_overstylized_terms()
+    test_streamlit_adaptive_band_default_stays_on()
     test_streamlit_typography_contract_is_ibm_first()
     test_streamlit_withdrawals_cannot_overdraw_pool()
     print("PASS streamlit_formula_static_test")

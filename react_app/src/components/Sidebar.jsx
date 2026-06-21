@@ -116,7 +116,7 @@ export default function Sidebar({
         </div>
         <p className="text-xs text-tx-muted mt-2">
           {adaptiveBandEnabled
-            ? `Advanced: V/E 괴리율 ${VE_DIVERGENCE_THRESHOLD * 100}% 초과 시 밴드 자동 압축 (최대 \u00b1${((MAX_BAND_UPPER - 1.0) * 100).toFixed(0)}%)`
+            ? `Advanced 기본 ON: V/E 괴리율 ${VE_DIVERGENCE_THRESHOLD * 100}% 초과 시 밴드 자동 압축 (최대 \u00b1${((MAX_BAND_UPPER - 1.0) * 100).toFixed(0)}%)`
             : 'Official: 기본 거래 범위 \u00b115%, V/E 상한 없음'}
         </p>
       </div>

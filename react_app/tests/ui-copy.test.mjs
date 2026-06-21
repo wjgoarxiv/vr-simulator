@@ -9,6 +9,8 @@ const resultsSource = readFileSync(new URL('../src/components/ResultsDashboard.j
 const htmlShellSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const streamlitSource = readFileSync(new URL('../../app.py', import.meta.url), 'utf8');
+const readmeSource = readFileSync(new URL('../../README.md', import.meta.url), 'utf8');
+const handoffSource = readFileSync(new URL('../../HANDOFF.md', import.meta.url), 'utf8');
 const streamlitVisibleSource = streamlitSource.slice(streamlitSource.indexOf('# Streamlit UI 구성'));
 
 function extractBetween(source, start, end) {
@@ -109,8 +111,33 @@ test('official formula is exposed as LaTeX on both app surfaces', () => {
   assert.match(streamlitSource, latexPattern);
 });
 
-test('legacy React storage migration resets v3.1 adaptive default to official mode', () => {
-  assert.match(appSource, /LEGACY_STORAGE_KEYS\s*=\s*\['vr-simulator-state-v3\.1\.2'\]/);
+test('React new-session adaptive band default stays ON', () => {
+  assert.match(appSource, /adaptiveBandEnabled:\s*true/);
+  assert.doesNotMatch(appSource, /adaptiveBandEnabled:\s*false/);
+  assert.doesNotMatch(sidebarSource, /기본값은\s*OFF/);
+  assert.match(sidebarSource, /Advanced\s*기본\s*ON/);
+  assert.doesNotMatch(initialSetupSource, /±15%\s*밴드를\s*기본/);
+  assert.match(initialSetupSource, /확장\s*밴드.*기본\s*ON/);
+});
+
+test('repo docs do not call official fixed bands the default', () => {
+  const staleDefaultPatterns = [
+    /official\s*±15%\s*bands\s*by\s*default/i,
+    /official\s*\+\/-15%\s*bands\s*by\s*default/i,
+    /official\s*±15%\s*bands\s*by\s*default/i,
+    /not\s+the\s+official\s+default/i,
+    /공식\s*±15%\s*밴드\s*기본값/,
+  ];
+  for (const source of [readmeSource, handoffSource, streamlitSource, initialSetupSource, sidebarSource]) {
+    for (const pattern of staleDefaultPatterns) {
+      assert.doesNotMatch(source, pattern);
+    }
+  }
+});
+
+test('legacy React storage migration uses the current adaptive default', () => {
+  assert.match(appSource, /STORAGE_KEY\s*=\s*'vr-simulator-state-v3\.2\.3'/);
+  assert.match(appSource, /LEGACY_STORAGE_KEYS\s*=\s*\['vr-simulator-state-v3\.2\.0',\s*'vr-simulator-state-v3\.1\.2'\]/);
   assert.match(appSource, /resetAdaptiveDefault:\s*key\s*!==\s*STORAGE_KEY/);
-  assert.match(appSource, /v3\.1\.x auto-persisted adaptiveBandEnabled=true/);
+  assert.match(appSource, /reset the global toggle to the current default/);
 });
