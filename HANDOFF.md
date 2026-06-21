@@ -4,11 +4,11 @@
 Continue development of the VR Simulator with both surfaces in mind: the React/Vite web app in `react_app/` and the Streamlit app in `app.py`. The current V3.2.0 work supersedes the earlier adaptive-default change: official ±15% VR is now the default, and adaptive bands are an Advanced option.
 
 ## Current State
-- Current in-progress functional update: V3.2.0 official-VR fidelity pass. Default mode is official ±15% with no V/E cap; adaptive bands are an Advanced option. Order-table trigger prices now target the pre-trade share-count convention from `_resources/` examples, and account performance should include Pool.
-- Last completed functional change before this handoff update: confusing target-V safety copy was redesigned in both `react_app/src/components/CycleViewer.jsx` and `app.py`; version surfaces were bumped to `3.1.4`.
-- Current branch state at handoff creation: `git status --short --branch` showed `## main...origin/main` before this handoff/AGENTS update was written.
-- Current version is `3.2.1` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
-- Current in-progress visual update: React/GitHub Pages and Streamlit are being refreshed under the same **Retrofuture Trading Cockpit** direction: dark HUD, ambient grid/aurora motion, premium glass panels, stronger cycle status hierarchy, and aligned official VR copy.
+- V3.2.0 official-VR fidelity pass is complete and committed. Default mode is official ±15% with no V/E cap; adaptive bands are an Advanced option. Order-table trigger prices target the pre-trade share-count convention from `_resources/` examples, and account performance includes Pool.
+- Current local V3.2.2 visual/copy cleanup is verified but not committed or pushed. `git status --short --branch` shows `## main...origin/main` with the expected dirty V3.2.2 files plus untracked `DESIGN.md`.
+- Last completed pushed change before this local V3.2.2 work: `ad51c83 Update React page metadata for v3.2.1`.
+- Current version is `3.2.2` in `app.py`, `react_app/src/constants.js`, `react_app/package.json`, and `react_app/package-lock.json`.
+- Current visual update: React/GitHub Pages and Streamlit have been refreshed under the same **VR 리밸런싱 보드** direction: restrained dark surfaces, shared typography, LaTeX formula notation, stronger cycle status hierarchy, and aligned official VR copy.
 - Post-review V3.2.0 cleanup fixed the prior NO-GO items: legacy React localStorage now migrates V3.1.x sessions back to official-mode default, viewed-cycle mode labels no longer use the mutable global toggle, no-sell/no-share waiting copy is explicit, withdrawals cannot exceed available Pool, stale UI-copy verification evidence was updated, and local-only `.litopencode/` + `_resources/` are ignored.
 - OMX team run `enhance-vr-simulator-db33a401` was completed and shut down. Evidence from `omx team status enhance-vr-simulator-db33a401 --json --tail-lines 240`: `phase=complete`, `tasks.completed=5`, `pending=0`, `in_progress=0`, `failed=0`; after shutdown, status returned `missing`, which is expected.
 - No deployment was performed after the code changes. The latest push was to `https://github.com/wjgoarxiv/vr-simulator.git`, branch `main`.
@@ -48,6 +48,11 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
   - Updated to include the V3.1.4 Toss-like UI-copy cleanup and version bump.
 - `AGENTS.md`
   - Added local instructions requiring future agents to read `HANDOFF.md` first and keep version fields synchronized when functional improvements are made.
+- V3.2.2 design-language cleanup (local, uncommitted)
+  - Added `DESIGN.md` and aligned React + Streamlit copy around **VR 리밸런싱 보드** instead of cockpit/HUD/retrofuture language.
+  - Exposed the official VR formula as LaTeX on both surfaces: `V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}`.
+  - Updated typography to `IBM Plex Sans KR` / `Noto Sans KR` / `JetBrains Mono`, bumped synchronized version surfaces to `3.2.2`, and added static anti-slop/formula tests.
+  - Evidence: `npm test`, `npm run qa:matrix`, `npm run e2e`, `npm run build && npm run smoke`, `python3 -m py_compile app.py generate_cover.py && python3 tests/streamlit_formula_static_test.py`, and `git diff --check` passed. Independent verifier returned GO.
 
 ## Key Decisions
 - Preserve explicit user preference for adaptive bands in current V3.2.0 React localStorage. Legacy V3.1.x saved sessions reset the global toggle to official VR OFF because V3.1.x auto-persisted adaptive ON as its default and cannot distinguish that from an explicit user toggle.
@@ -62,8 +67,8 @@ Continue development of the VR Simulator with both surfaces in mind: the React/V
   - Status: not failing; consider deeper Plotly code-splitting only if load performance becomes a user-visible problem.
 - No ESLint configuration/script exists.
   - Evidence: worker-2 reported lint no-op / absent script; `react_app/package.json` has no `lint` script.
-- Streamlit app does not yet have the same automated regression test harness as React.
-  - Evidence: verification used `python3 -m py_compile app.py`, not behavioral Streamlit tests.
+- Streamlit app does not yet have the same runtime/browser regression test harness as React.
+  - Evidence: verification uses `python3 -m py_compile app.py generate_cover.py` and `tests/streamlit_formula_static_test.py`, not a live Streamlit browser flow.
 
 ## Next Steps
 1. Start every new session by reading this file first: `sed -n '1,240p' HANDOFF.md`.

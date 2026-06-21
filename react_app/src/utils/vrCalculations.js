@@ -8,9 +8,9 @@ import {
 } from '../constants.js';
 
 /**
- * Calculate next target value (V_f) using the VR formula.
+ * Calculate next target value (V2) using the VR formula.
  *
- * V_f = V_i + pool_prev/G + (E - V_i)/(2*sqrt(G)) + deposit_next
+ * V_{2}=V_{1}+Pool/G+(E-V_{1})/(2*sqrt(G))+D_{2}
  *
  * @param {number} V_i - Current target value
  * @param {number} poolBeforeDeposit - Pool cash before deposit

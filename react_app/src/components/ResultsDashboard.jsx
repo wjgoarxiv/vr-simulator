@@ -100,8 +100,8 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
       <div>
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="data-label">PERFORMANCE FLIGHT RECORDER</div>
-            <h3 className="font-display text-3xl font-bold uppercase tracking-[-0.03em] text-tx-primary">Portfolio telemetry</h3>
+            <div className="data-label">운용 기록</div>
+            <h3 className="font-display text-3xl font-bold tracking-[-0.03em] text-tx-primary">성과 요약</h3>
           </div>
           <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-tx-muted">
             E + Pool account view

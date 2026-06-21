@@ -12,7 +12,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.8+-green" /></a>
   <a href="./react_app"><img src="https://img.shields.io/badge/React-18-61dafb" /></a>
-  <a href="#-v321-changes"><img src="https://img.shields.io/badge/version-3.2.1-blueviolet" /></a>
+  <a href="#-v322-changes"><img src="https://img.shields.io/badge/version-3.2.2-blueviolet" /></a>
 </p>
 
 ---
@@ -39,8 +39,8 @@
 - **인터랙티브 차트** -- Plotly 기반 4종 차트 (V/E 추이, 밴드, Pool, 매수/매도 테이블)
 - **CSV 가져오기/내보내기** -- 사이클 기록 저장 및 불러오기, 유효성 검증 포함
 - **KST 마켓 상태** -- 한국 시간 기준 미국 주식 시장 상태 + 예약 매매 시간대 표시
-- **Financial cockpit UI** -- 공식/확장 모드, 트리거 거리, 공식 해석을 한 화면에서 확인
-- **Retrofuture cockpit refresh** -- React/GitHub Pages와 Streamlit 모두 어두운 HUD, 오로라/그리드 motion, 프리미엄 카드 계층으로 재정렬
+- **리밸런싱 보드 UI** -- 공식/확장 모드, 트리거 거리, 공식 해석을 한 화면에서 확인
+- **정제된 디자인 언어** -- React/GitHub Pages와 Streamlit 모두 같은 색상, 타이포그래피, 수식 표기 규칙을 사용
 
 ## 🚀 Quick Start
 
@@ -70,18 +70,18 @@ npm run dev
 
 실력공식 (Value Rebalancing Formula):
 
-```
-V_f = V_i + (Pool / G) + ((E - V_i) / (2 * sqrt(G))) + Deposit
-```
+$$
+V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}
+$$
 
 | 항목 | 설명 |
 |------|------|
-| `V_f` | 다음 사이클 목표 가치 |
-| `V_i` | 이전 사이클 목표 가치 |
+| `V_2` | 다음 사이클 목표 가치 |
+| `V_1` | 이전 사이클 목표 가치 |
 | `Pool` | 이전 사이클 종료 시 예수금 |
 | `G` | 그라데이션 값 (권장: 10~20) |
 | `E` | 이전 사이클 종료 시 평가금 (주식 수 x 가격) |
-| `Deposit` | 다음 사이클 적립/인출금 |
+| `D_2` | 다음 사이클 적립/인출금 |
 
 매수/매도 지정가 표는 공식 VR 자료의 체결 전 보유수 기준을 따릅니다.
 
@@ -92,11 +92,18 @@ V_f = V_i + (Pool / G) + ((E - V_i) / (2 * sqrt(G))) + Deposit
 
 보유주식이 0주인 시작 상태에서는 첫 매수를 1주 진입 기준으로 표시합니다.
 
+## 🔄 V3.2.2 Changes
+
+### V3.2.2 — Design language and LaTeX cleanup
+- 과하게 장식적인 영문 표현을 사용자 화면에서 제거하고 `VR 리밸런싱 보드` 용어로 정리했습니다.
+- React와 Streamlit 모두 공식 VR 식을 LaTeX 표기로 노출합니다.
+- `DESIGN.md`를 추가해 금지어, 용어, 타이포그래피, 수식 표기 규칙을 문서화했습니다.
+
 ## 🔄 V3.2.1 Changes
 
-### V3.2.1 — Retrofuture Trading Cockpit refresh
-- React/GitHub Pages 앱을 비대칭 cockpit shell, ambient grid/aurora motion, hero HUD, orbit signal gauge 중심으로 리디자인했습니다.
-- Streamlit 앱도 동일한 색상/타이포/카드 언어와 hero cockpit을 적용해 두 표면의 시각 경험을 맞췄습니다.
+### V3.2.1 — Rebalancing board refresh
+- React/GitHub Pages 앱을 비대칭 리밸런싱 보드, 절제된 배경 motion, 상태 범위 시각화 중심으로 리디자인했습니다.
+- Streamlit 앱도 동일한 색상/타이포/카드 언어와 리밸런싱 보드 구성을 적용해 두 표면의 시각 경험을 맞췄습니다.
 - 공식 VR 계산과 v3.2.0 검증 로직은 유지하고, 사용자에게 보이는 정보 계층과 motion polish만 강화했습니다.
 
 ## 🔄 V3.2.0 Changes

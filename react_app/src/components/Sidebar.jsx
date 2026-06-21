@@ -28,8 +28,8 @@ export default function Sidebar({
   return (
     <aside className="glass-panel space-y-2 rounded-[28px] p-4 font-sans">
       <div className="mb-3 border-b border-accent-cyan/10 pb-3">
-        <div className="font-display text-xl font-bold uppercase tracking-[0.18em] text-accent-cyan">Control Deck</div>
-        <div className="mt-1 text-xs leading-relaxed text-tx-muted">공식 VR 엔진을 조정하는 cockpit panel</div>
+        <div className="font-display text-xl font-bold tracking-[-0.02em] text-accent-cyan">운용 설정</div>
+        <div className="mt-1 text-xs leading-relaxed text-tx-muted">공식 VR 계산 기준을 조정합니다.</div>
       </div>
 
       {/* 시뮬레이션 설정 */}
@@ -37,7 +37,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">SETTINGS</span>
       </div>
 
-      <div className="cockpit-card">
+      <div className="board-card">
         {!simulationStarted ? (
           <div className="flex flex-col gap-3">
             <div>
@@ -100,7 +100,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">CALC MODE</span>
       </div>
 
-      <div className="cockpit-card">
+      <div className="board-card">
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setAdaptiveBandEnabled(!adaptiveBandEnabled)}
@@ -126,7 +126,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">MARKET STATUS</span>
       </div>
 
-      <div className="cockpit-card">
+      <div className="board-card">
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <span className="data-label">KST</span>
@@ -165,7 +165,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">HELP</span>
       </div>
 
-      <div className="cockpit-card">
+      <div className="board-card">
         <button
           type="button"
           onClick={() => setHelpOpen(!helpOpen)}
@@ -199,16 +199,16 @@ export default function Sidebar({
 
             <div className="surface-panel mt-1">
               <p className="data-label mb-2">VR 공식</p>
-              <p className="font-mono text-xs text-accent-cyan leading-relaxed">
-                V_f = V_i + pool/G + (E - V_i) / (2&radic;G) + deposit
-              </p>
+              <code className="formula-latex text-accent-cyan">
+                {String.raw`V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}`}
+              </code>
               <div className="mt-2 flex flex-col gap-1 text-xs text-tx-secondary">
-                <span><span className="text-tx-primary font-medium">V_f</span>: 다음 사이클 목표 가치</span>
-                <span><span className="text-tx-primary font-medium">V_i</span>: 이전 사이클 목표 가치</span>
-                <span><span className="text-tx-primary font-medium">pool</span>: 이전 사이클 종료 예수금 (적립금 추가 전)</span>
+                <span><span className="text-tx-primary font-medium">V₂</span>: 다음 사이클 목표 가치</span>
+                <span><span className="text-tx-primary font-medium">V₁</span>: 이전 사이클 목표 가치</span>
+                <span><span className="text-tx-primary font-medium">Pool</span>: 이전 사이클 종료 예수금 (적립/인출 전)</span>
                 <span><span className="text-tx-primary font-medium">G</span>: 그라데이션 값</span>
                 <span><span className="text-tx-primary font-medium">E</span>: 이전 사이클 종료 평가금</span>
-                <span><span className="text-tx-primary font-medium">deposit</span>: 다음 사이클 적립금 또는 인출금</span>
+                <span><span className="text-tx-primary font-medium">D₂</span>: 다음 사이클 적립금 또는 인출금</span>
                 <span><span className="text-tx-primary font-medium">첫 주문가</span>: Band ÷ 현재 보유주식수</span>
               </div>
             </div>

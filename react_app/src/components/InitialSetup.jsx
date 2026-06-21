@@ -58,18 +58,18 @@ export default function InitialSetup({ onStart, tickerName }) {
   const startDisabled = useCSV && (!csvStatus || csvStatus.type !== 'success');
 
   return (
-    <div className="hero-cockpit animate-section">
+    <div className="hero-board animate-section">
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <div className="space-y-4">
           <div className="inline-flex rounded-full border border-accent-cyan/20 bg-accent-cyan/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.28em] text-accent-cyan">
-            OFFICIAL VALUE REBALANCING · 2026 HUD
+            공식 밸류 리밸런싱 · ±15% 밴드
           </div>
           <div>
             <h2 className="font-display text-4xl font-bold uppercase leading-none tracking-[-0.03em] text-tx-primary md:text-6xl">
-              Build the next cycle before the market moves.
+              다음 사이클의 기준을 먼저 정합니다.
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-tx-secondary">
-              공식 VR ±15% 밴드를 기본으로, 매수·매도 대기 상태와 다음 주문가를 cockpit처럼 한 화면에서 추적합니다.
+              공식 VR ±15% 밴드를 기본으로, 대기 이유와 첫 주문 기준을 한 화면에 정리합니다.
             </p>
           </div>
         </div>

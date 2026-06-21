@@ -3,8 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const reactSource = readFileSync(new URL('../src/components/CycleViewer.jsx', import.meta.url), 'utf8');
+const initialSetupSource = readFileSync(new URL('../src/components/InitialSetup.jsx', import.meta.url), 'utf8');
+const sidebarSource = readFileSync(new URL('../src/components/Sidebar.jsx', import.meta.url), 'utf8');
+const resultsSource = readFileSync(new URL('../src/components/ResultsDashboard.jsx', import.meta.url), 'utf8');
+const htmlShellSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const streamlitSource = readFileSync(new URL('../../app.py', import.meta.url), 'utf8');
+const streamlitVisibleSource = streamlitSource.slice(streamlitSource.indexOf('# Streamlit UI 구성'));
 
 function extractBetween(source, start, end) {
   const startIndex = source.indexOf(start);
@@ -64,7 +69,7 @@ test('target safety notice uses Toss-like plain Korean on both app surfaces', ()
   }
 });
 
-test('cycle cockpit explains no-trade waiting and official mode on both surfaces', () => {
+test('cycle board explains no-trade waiting and official mode on both surfaces', () => {
   for (const surface of visibilitySurfaces) {
     assert.match(surface, /밴드\s*안쪽\s*대기/);
     assert.match(surface, /첫\s*매수/);
@@ -72,6 +77,36 @@ test('cycle cockpit explains no-trade waiting and official mode on both surfaces
     assert.match(surface, /OFFICIAL\s*±15%/);
     assert.match(surface, /Band\s*[÷/]\s*현재\s*보유주식/);
   }
+});
+
+test('user-facing design language avoids over-stylized English labels', () => {
+  const visibleSources = [reactSource, initialSetupSource, sidebarSource, resultsSource, htmlShellSource, streamlitVisibleSource];
+  const forbidden = [
+    /VR\s+Trading\s+Cockpit/i,
+    /Retrofuture/i,
+    /\bHUD\b/i,
+    /Control\s+Deck/i,
+    /telemetry/i,
+    /state-of-the-art/i,
+    /next-level/i,
+    /cutting-edge/i,
+    /V_f\s*=\s*V_i/i,
+    /pool_\{prev\}/i,
+    /deposit_\{next\}/i,
+  ];
+  for (const source of visibleSources) {
+    for (const pattern of forbidden) {
+      assert.doesNotMatch(source, pattern);
+    }
+  }
+  assert.match(initialSetupSource, /다음\s*사이클의\s*기준을\s*먼저\s*정합니다/);
+  assert.match(streamlitSource, /VR\s*리밸런싱\s*보드/);
+});
+
+test('official formula is exposed as LaTeX on both app surfaces', () => {
+  const latexPattern = /V_\{2\}=V_\{1\}\+\\frac\{Pool\}\{G\}\+\\frac\{E-V_\{1\}\}\{2\\sqrt\{G\}\}\+D_\{2\}/;
+  assert.match(reactSource, latexPattern);
+  assert.match(streamlitSource, latexPattern);
 });
 
 test('legacy React storage migration resets v3.1 adaptive default to official mode', () => {

@@ -25,6 +25,8 @@ function fmt(n, decimals = 2) {
   });
 }
 
+const OFFICIAL_VR_LATEX = String.raw`V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}`;
+
 export default function CycleViewer({ activeState, displayCycleNum, tickerName, adaptiveBandEnabled }) {
   const [tableOpen, setTableOpen] = useState(false);
 
@@ -119,7 +121,7 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="data-label">LIVE CYCLE HUD</div>
+          <div className="data-label">사이클 상태</div>
           <h2 className="font-display text-5xl font-bold uppercase leading-none tracking-[-0.04em] text-accent-cyan md:text-7xl">
             CYCLE {paddedNum}
           </h2>
@@ -157,8 +159,8 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
         </div>
       </div>
 
-      {/* Official VR cockpit */}
-      <div className="hero-cockpit overflow-hidden border-accent-cyan/20">
+      {/* Official VR status board */}
+      <div className="hero-board overflow-hidden border-accent-cyan/20">
         <div className="grid gap-5 lg:grid-cols-[1fr_210px] lg:items-center">
           <div className="space-y-4">
             <div className="data-label mb-1">이번 사이클 상태</div>
@@ -196,15 +198,19 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
           <div className="motion-safe-float hidden lg:block">
             <div className="orbit-gauge">
               <div className="text-center">
-                <div className={`font-display text-3xl font-bold ${cycleStatusTone}`}>{noImmediateTrade ? 'HOLD' : canBuyNow ? 'BUY' : 'SELL'}</div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-tx-muted">VR SIGNAL</div>
+                <div className={`font-display text-2xl font-bold ${cycleStatusTone}`}>{noImmediateTrade ? '대기' : canBuyNow ? '매수' : '매도'}</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-tx-muted">VR 상태</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-accent-cyan/10 bg-surface-0/70 px-3 py-2 font-mono text-[11px] text-tx-muted">
-          V₂ = V₁ + Pool/G + (E−V₁)/(2√G) + 적립/인출금 · L/H = 0.85V / 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
+        <div className="formula-panel">
+          <div className="data-label">공식 LaTeX</div>
+          <code className="formula-latex">{OFFICIAL_VR_LATEX}</code>
+          <div className="mt-2 font-sans text-xs leading-relaxed text-tx-muted">
+            공식 밴드: LBand = 0.85V, HBand = 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,23 +7,23 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --cockpit-bg: #05060a;
-  --cockpit-panel: rgba(14, 17, 28, 0.78);
-  --cockpit-line: rgba(78, 231, 255, 0.18);
-  --cockpit-cyan: #39e7ff;
-  --cockpit-green: #5dffb3;
-  --cockpit-red: #ff476f;
-  --cockpit-amber: #ffd166;
+  --board-bg: #05060a;
+  --board-panel: rgba(14, 17, 28, 0.78);
+  --board-line: rgba(78, 231, 255, 0.18);
+  --board-cyan: #39e7ff;
+  --board-green: #5dffb3;
+  --board-red: #ff476f;
+  --board-amber: #ffd166;
 }
 
 body {
-  background-color: var(--cockpit-bg);
+  background-color: var(--board-bg);
   background-image:
     radial-gradient(ellipse 90% 70% at 72% 4%, rgba(57, 231, 255, 0.14) 0%, transparent 55%),
     radial-gradient(ellipse 68% 48% at 14% 88%, rgba(255, 79, 216, 0.10) 0%, transparent 62%),
     linear-gradient(135deg, #05060a 0%, #090c15 44%, #0f1320 100%);
   color: #E8ECF4;
-  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  font-family: 'IBM Plex Sans KR', 'Noto Sans KR', system-ui, sans-serif;
   line-height: 1.6;
   min-height: 100vh;
 }
@@ -49,10 +49,10 @@ body::after {
 ::selection { background: rgba(0, 212, 255, 0.2); color: #E8ECF4; }
 
 @layer components {
-  .cockpit-shell {
+  .board-shell {
     @apply relative min-h-screen overflow-hidden bg-surface-0 text-tx-primary;
   }
-  .cockpit-shell::before {
+  .board-shell::before {
     content: '';
     position: fixed;
     inset: 0;
@@ -64,7 +64,7 @@ body::after {
     background-size: 76px 76px;
     mask-image: radial-gradient(circle at 50% 18%, black 0%, transparent 72%);
   }
-  .cockpit-aurora {
+  .board-ambient {
     @apply pointer-events-none fixed inset-0 z-0 animate-aurora-drift;
     background:
       radial-gradient(circle at 18% 22%, rgba(57, 231, 255, 0.16), transparent 32%),
@@ -72,10 +72,10 @@ body::after {
       radial-gradient(circle at 60% 86%, rgba(93, 255, 179, 0.10), transparent 34%);
     filter: blur(12px);
   }
-  .cockpit-content {
+  .board-content {
     @apply relative z-10;
   }
-  .cockpit-header {
+  .board-header {
     @apply sticky top-0 z-20 border-b border-accent-cyan/15 bg-surface-0/70 px-6 py-4;
     backdrop-filter: blur(18px) saturate(150%);
   }
@@ -102,7 +102,7 @@ body::after {
     transform: translateX(-22%);
     animation: signal-sweep 7s ease-in-out infinite;
   }
-  .hero-cockpit {
+  .hero-board {
     @apply glass-panel rounded-[28px] p-5 md:p-7;
   }
   .orbit-gauge {
@@ -124,11 +124,17 @@ body::after {
     border-radius: 9999px;
     border: 1px solid rgba(93, 255, 179, 0.16);
   }
-  .cockpit-card {
+  .board-card {
     @apply rounded-2xl border border-accent-cyan/10 bg-surface-1/70 p-4 shadow-[0_16px_48px_rgba(0,0,0,0.25)];
   }
   .motion-safe-float {
     animation: float-panel 8s ease-in-out infinite;
+  }
+  .formula-panel {
+    @apply mt-4 rounded-2xl border border-accent-cyan/10 bg-surface-0/70 px-3 py-3;
+  }
+  .formula-latex {
+    @apply mt-1 block overflow-x-auto whitespace-nowrap font-mono text-xs text-tx-secondary;
   }
 
   /* ── Surfaces ── */

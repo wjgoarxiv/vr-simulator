@@ -36,9 +36,9 @@ export default {
         },
       },
       fontFamily: {
-        mono: ['"Chakra Petch"', '"JetBrains Mono"', 'Menlo', 'monospace'],
-        sans: ['"Noto Sans KR"', '"Pretendard"', 'sans-serif'],
-        display: ['"Chakra Petch"', '"Noto Sans KR"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
+        sans: ['"IBM Plex Sans KR"', '"Noto Sans KR"', 'sans-serif'],
+        display: ['"IBM Plex Sans KR"', '"Noto Sans KR"', 'sans-serif'],
       },
       fontSize: {
         'display': ['50px', { lineHeight: '1.1', fontWeight: '800' }],

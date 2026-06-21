@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.2.1"
+VR_VERSION = "3.2.2"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -30,7 +30,7 @@ def inject_custom_css():
     st.markdown("""
     <style>
     /* === GOOGLE FONTS === */
-    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
 
     /* === CSS VARIABLES === */
     :root {
@@ -93,7 +93,7 @@ def inject_custom_css():
 
     /* === TYPOGRAPHY === */
     h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-        font-family: 'Noto Sans KR', sans-serif !important;
+        font-family: 'IBM Plex Sans KR', 'Noto Sans KR', sans-serif !important;
         font-weight: 700 !important;
         color: var(--text-primary) !important;
     }
@@ -107,7 +107,7 @@ def inject_custom_css():
     }
 
     p, span, label, .stMarkdown, div {
-        font-family: 'Noto Sans KR', sans-serif;
+        font-family: 'IBM Plex Sans KR', 'Noto Sans KR', sans-serif;
     }
 
     /* === METRIC CARDS === */
@@ -209,7 +209,7 @@ def inject_custom_css():
         padding: 1.5rem;
     }
 
-    /* === RETROFUTURE COCKPIT COMPONENTS === */
+    /* === VR REBALANCING BOARD COMPONENTS === */
     .vr-hero {
         position: relative;
         overflow: hidden;
@@ -237,14 +237,14 @@ def inject_custom_css():
         padding: 0.28rem 0.72rem;
         color: var(--accent-blue);
         background: rgba(57, 231, 255, 0.09);
-        font-family: 'Chakra Petch', monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 0.72rem;
         letter-spacing: 0.22em;
         text-transform: uppercase;
     }
     .vr-hero-title {
         margin-top: 0.7rem;
-        font-family: 'Chakra Petch', 'Noto Sans KR', sans-serif;
+        font-family: 'IBM Plex Sans KR', 'Noto Sans KR', sans-serif;
         font-size: clamp(2.3rem, 5vw, 5.6rem);
         line-height: 0.92;
         letter-spacing: -0.055em;
@@ -315,9 +315,9 @@ if 'adaptive_band_enabled' not in st.session_state:
 # =============================================================================
 
 def calculate_v_next(V_i, pool_before_deposit, E_calc, G, deposit_next):
-    """다음 목표 가치(V_f) 계산 - 공식 VR 실력공식
+    """다음 목표 가치(V2) 계산 - 공식 VR 실력공식
     
-    V_f = V_i + pool_prev/G + (E - V_i)/(2*sqrt(G)) + deposit_next
+    V_{2}=V_{1}+Pool/G+(E-V_{1})/(2*sqrt(G))+D_{2}
     """
     if G <= 0:
         return V_i
@@ -644,7 +644,7 @@ def create_plotly_charts(history_df):
     layout_common = dict(
         paper_bgcolor=colors['paper'],
         plot_bgcolor=colors['bg'],
-        font=dict(family='Noto Sans KR, Chakra Petch, sans-serif', color=colors['text']),
+        font=dict(family='IBM Plex Sans KR, Noto Sans KR, sans-serif', color=colors['text']),
         xaxis=dict(gridcolor=colors['grid'], linecolor=colors['grid']),
         yaxis=dict(gridcolor=colors['grid'], linecolor=colors['grid']),
         legend=dict(bgcolor='rgba(33, 38, 45, 0.9)', bordercolor=colors['grid']),
@@ -747,16 +747,16 @@ st.markdown(f"""
   <div style="display:grid; grid-template-columns:minmax(0,1fr) 180px; gap:1.4rem; align-items:center; position:relative; z-index:1;">
     <div>
       <div class="vr-eyebrow">OFFICIAL VALUE REBALANCING · V{VR_VERSION}</div>
-      <div class="vr-hero-title">VR Trading Cockpit</div>
+      <div class="vr-hero-title">VR 리밸런싱 보드</div>
       <div class="vr-hero-copy">
-        공식 ±15% 밴드, 체결 전 보유수 기준 주문가, 그리고 대기 사이클의 이유를 한 화면에서 읽는 레버리지 ETF 밸류 리밸런싱 HUD입니다.
+        공식 ±15% 밴드, 체결 전 보유수 기준 주문가, 그리고 대기 사이클의 이유를 한 화면에 정리합니다.
       </div>
       <div style="margin-top:0.9rem; color:#637085; font-size:0.82rem;">Written by <a href="https://woojingo.notion.site/" target="_blank" style="color:#39E7FF; text-decoration:none;">Woojin Go</a></div>
     </div>
     <div class="vr-orbit">
       <div style="text-align:center;">
-        <div style="font-family:'Chakra Petch', monospace; color:#39E7FF; font-size:2.4rem; font-weight:700; line-height:1;">VR</div>
-        <div style="font-family:'Chakra Petch', monospace; color:#637085; font-size:0.66rem; letter-spacing:0.28em;">±15 BAND</div>
+        <div style="font-family:'IBM Plex Sans KR','Noto Sans KR',sans-serif; color:#39E7FF; font-size:2.4rem; font-weight:700; line-height:1;">VR</div>
+        <div style="font-family:'JetBrains Mono', monospace; color:#637085; font-size:0.66rem; letter-spacing:0.24em;">±15 BAND</div>
       </div>
     </div>
   </div>
@@ -820,17 +820,15 @@ with st.sidebar:
 - **괴리율**: V와 E의 차이 비율 (0%가 이상적)
         """)
 
+        st.markdown("#### Value Rebalancing (VR) 공식:")
+        st.latex(r"V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}")
         st.markdown(r"""
-#### Value Rebalancing (VR) 공식:
-$$
-V_f = V_i + \frac{pool_{prev}}{G} + \frac{(E - V_i)}{2\sqrt{G}} + deposit_{next}
-$$
-- $V_f$: **다음** 사이클 목표 가치
-- $V_i$: **이전** 사이클 목표 가치
-- $pool_{prev}$: 이전 사이클 종료 시점의 예수금 (**적립금 추가 전**)
+- $V_2$: **다음** 사이클 목표 가치
+- $V_1$: **이전** 사이클 목표 가치
+- $Pool$: 이전 사이클 종료 시점의 예수금 (**적립/인출 전**)
 - $G$: 그라데이션 값 (설정값)
 - $E$: 이전 사이클 종료 시점의 평가금 (최종 주식 수 × 최종 가격)
-- $deposit_{next}$: 다음 사이클 시작 시 추가될 적립/인출금
+- $D_2$: 다음 사이클 시작 시 추가될 적립/인출금
 
 #### 매수/매도표 해석:
 - **매수표**: 이 가격 **이하**에서 매수 가능
@@ -1018,25 +1016,26 @@ if st.session_state.simulation_started and st.session_state.history:
             <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
                 <div>
                     <div style="color:#8B949E; font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; font-weight:700;">이번 사이클 상태</div>
-                    <div style="font-family:'Chakra Petch','Noto Sans KR',sans-serif; color:{status_color}; font-size:clamp(1.8rem, 3vw, 3.4rem); font-weight:800; margin-top:0.2rem; letter-spacing:-0.04em;">{cycle_status}</div>
+                    <div style="font-family:'IBM Plex Sans KR','Noto Sans KR',sans-serif; color:{status_color}; font-size:clamp(1.8rem, 3vw, 3.4rem); font-weight:800; margin-top:0.2rem; letter-spacing:-0.04em;">{cycle_status}</div>
                     <div style="color:#8B949E; font-size:0.86rem; margin-top:0.25rem; line-height:1.55;">
                         {wait_message if no_immediate_trade else '현재가가 공식 VR 지정가 조건에 닿았습니다. 실제 주문 가능 여부는 증권사에서 확인하세요.'}
                     </div>
                 </div>
                 <div style="display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:flex-end;">
-                    <span style="font-family:'Chakra Petch',monospace; font-size:0.72rem; color:#39E7FF; border:1px solid #39E7FF55; background:#39E7FF12; border-radius:999px; padding:0.32rem 0.62rem;">{mode_badge}</span>
-                    <span style="font-family:'Chakra Petch',monospace; font-size:0.72rem; color:#9AA8BA; border:1px solid #39E7FF22; background:#05060A99; border-radius:999px; padding:0.32rem 0.62rem;">PRE-TRADE SHARE BASIS</span>
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#39E7FF; border:1px solid #39E7FF55; background:#39E7FF12; border-radius:999px; padding:0.32rem 0.62rem;">{mode_badge}</span>
+                    <span style="font-family:'IBM Plex Sans KR','Noto Sans KR',sans-serif; font-size:0.72rem; color:#9AA8BA; border:1px solid #39E7FF22; background:#05060A99; border-radius:999px; padding:0.32rem 0.62rem;">체결 전 보유수 기준</span>
                 </div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.55rem; margin-top:0.9rem;">
                 <div style="border:1px solid #5DFFB344; background:#5DFFB30D; border-radius:16px; padding:0.65rem 0.8rem; color:#9AA8BA; font-size:0.82rem;"><b style="color:#5DFFB3;">매수 거리</b> · {buy_distance}</div>
                 <div style="border:1px solid #FF476F44; background:#FF476F0D; border-radius:16px; padding:0.65rem 0.8rem; color:#9AA8BA; font-size:0.82rem; text-align:right;"><b style="color:#FF476F;">매도 거리</b> · {sell_distance}</div>
             </div>
-            <div style="font-family:'Chakra Petch',monospace; color:#9AA8BA; font-size:0.76rem; border:1px solid #39E7FF22; background:#05060ACC; border-radius:16px; padding:0.6rem 0.78rem; margin-top:0.75rem;">
-                V₂ = V₁ + Pool/G + (E−V₁)/(2√G) + 적립/인출금 · L/H = 0.85V / 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
+            <div style="font-family:'JetBrains Mono',monospace; color:#9AA8BA; font-size:0.76rem; border:1px solid #39E7FF22; background:#05060ACC; border-radius:16px; padding:0.6rem 0.78rem; margin-top:0.75rem;">
+                공식은 아래 LaTeX 표기로 확인하세요. LBand = 0.85V, HBand = 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
             </div>
         </div>
         """, unsafe_allow_html=True)
+        st.latex(r"V_{2}=V_{1}+\frac{Pool}{G}+\frac{E-V_{1}}{2\sqrt{G}}+D_{2}")
 
         # 매수/매도 신호 카드
         st.markdown("#### 🎯 거래 신호")
@@ -1056,7 +1055,7 @@ if st.session_state.simulation_started and st.session_state.history:
                     <span style="font-size: 1.5rem;">{buy_icon}</span>
                     <span style="color: {'#5DFFB3' if buy_status == 'success' else '#FFD166' if buy_status == 'warning' else '#39E7FF'}; font-weight: 700;">매수 (+1주) {buy_msg}</span>
                 </div>
-                <div style="font-family:'Chakra Petch',monospace; color: #EAF2F8; font-size: 1.55rem; font-weight: 700; margin: 8px 0;">${buy_target_simple:,.2f}</div>
+                <div style="font-family:'JetBrains Mono',monospace; color: #EAF2F8; font-size: 1.55rem; font-weight: 700; margin: 8px 0;">${buy_target_simple:,.2f}</div>
                 <div style="color: #9AA8BA; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {buy_gap:.1f}%</div>
             </div>
             """, unsafe_allow_html=True)
@@ -1076,7 +1075,7 @@ if st.session_state.simulation_started and st.session_state.history:
                         <span style="font-size: 1.5rem;">{sell_icon}</span>
                         <span style="color: {'#FF476F' if sell_status == 'danger' else '#FFD166' if sell_status == 'warning' else '#39E7FF'}; font-weight: 700;">매도 (-1주) {sell_msg}</span>
                     </div>
-                    <div style="font-family:'Chakra Petch',monospace; color: #EAF2F8; font-size: 1.55rem; font-weight: 700; margin: 8px 0;">${sell_target_simple:,.2f}</div>
+                    <div style="font-family:'JetBrains Mono',monospace; color: #EAF2F8; font-size: 1.55rem; font-weight: 700; margin: 8px 0;">${sell_target_simple:,.2f}</div>
                     <div style="color: #9AA8BA; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {sell_gap:.1f}%</div>
                 </div>
                 """, unsafe_allow_html=True)

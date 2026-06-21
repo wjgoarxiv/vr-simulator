@@ -190,16 +190,16 @@ export default function App() {
   const isLatestCycle = viewCycleIndex === history.length - 1;
 
   return (
-    <div className="cockpit-shell">
-      <div className="cockpit-aurora" />
+    <div className="board-shell">
+      <div className="board-ambient" />
       {/* Header */}
-      <header className="cockpit-header">
+      <header className="board-header">
         <div className="mx-auto flex max-w-[1520px] items-center justify-between">
           <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
             <h1 className="brand-lockup">
               VR SIMULATOR
             </h1>
-            <span className="font-mono text-xs uppercase tracking-[0.28em] text-tx-muted">v{VR_VERSION} · OFFICIAL VR COCKPIT</span>
+            <span className="font-mono text-xs uppercase tracking-[0.24em] text-tx-muted">v{VR_VERSION} · OFFICIAL VR BOARD</span>
           </div>
           {simulationStarted && (
             <button onClick={handleReset} className="btn-danger">
@@ -209,7 +209,7 @@ export default function App() {
         </div>
       </header>
 
-      <div className="cockpit-content mx-auto max-w-[1520px] px-4 py-6 md:px-6 md:py-8">
+      <div className="board-content mx-auto max-w-[1520px] px-4 py-6 md:px-6 md:py-8">
         <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
           {/* Sidebar */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
