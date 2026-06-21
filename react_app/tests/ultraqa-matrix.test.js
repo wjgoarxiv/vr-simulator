@@ -51,13 +51,12 @@ const ULTRAQA_MATRIX = [
     expectedDirection: 'neutral',
   },
   {
-    name: 've-cap-overheated-target',
+    name: 'high-target-remains-official-uncapped',
     V_i: 15000,
     pool: 12000,
     E: 8000,
     G: 2,
     deposit: 1000,
-    expectedCapped: true,
     expectedDirection: 'over',
   },
   {
@@ -103,8 +102,7 @@ const ULTRAQA_MATRIX = [
 function independentNextV({ V_i, pool, E, G, deposit }) {
   if (G <= 0) return V_i;
   const raw = V_i + pool / G + (E - V_i) / (2 * Math.sqrt(G)) + deposit;
-  const capped = E > 0 && raw > E * MAX_V_E_RATIO ? E * MAX_V_E_RATIO : raw;
-  return Math.max(capped, 0.01);
+  return Math.max(raw, 0.01);
 }
 
 function assertClose(actual, expected, epsilon = 1e-9) {
@@ -131,9 +129,6 @@ test('UltraQA adversarial matrix preserves next-V formula behavior', () => {
     const expected = independentNextV(row);
     assertClose(actual, expected, 1e-9);
 
-    if (row.expectedCapped) {
-      assertClose(actual, row.E * MAX_V_E_RATIO, 1e-9);
-    }
     if (row.expectedFloor) {
       assert.equal(actual, 0.01);
     }
@@ -216,14 +211,13 @@ test('history normalization backfills snake_case and camelCase adaptive metadata
   assert.equal(computed.veDivergenceDirection, 'over');
 });
 
-test('V/E cap detection reports only capped formula outputs', () => {
-  const cappedInput = ULTRAQA_MATRIX.find((row) => row.expectedCapped);
-  const cappedV = calculateNextV(cappedInput.V_i, cappedInput.pool, cappedInput.E, cappedInput.G, cappedInput.deposit);
-  const capped = detectVECapActivation(cappedV, cappedInput.E, cappedInput.V_i, cappedInput.pool, cappedInput.G, cappedInput.deposit);
-  assert.equal(capped.capActive, true);
-  assert.ok(capped.uncappedV > cappedV);
-
+test('V/E cap detection stays inactive in official VR mode', () => {
   const base = ULTRAQA_MATRIX[0];
   const baseV = calculateNextV(base.V_i, base.pool, base.E, base.G, base.deposit);
   assert.equal(detectVECapActivation(baseV, base.E, base.V_i, base.pool, base.G, base.deposit).capActive, false);
+
+  const highTarget = ULTRAQA_MATRIX.find((row) => row.name === 'high-target-remains-official-uncapped');
+  const highTargetV = calculateNextV(highTarget.V_i, highTarget.pool, highTarget.E, highTarget.G, highTarget.deposit);
+  const cap = detectVECapActivation(highTargetV, highTarget.E, highTarget.V_i, highTarget.pool, highTarget.G, highTarget.deposit);
+  assert.deepEqual(cap, { capActive: false, uncappedV: null });
 });

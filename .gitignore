@@ -50,3 +50,7 @@ CLAUDE.md
 
 # oh-my-claudecode
 .omc/
+
+# Local agent ledgers and evidence captures
+.litopencode/
+_resources/

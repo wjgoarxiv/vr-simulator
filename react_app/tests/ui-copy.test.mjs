@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const reactSource = readFileSync(new URL('../src/components/CycleViewer.jsx', import.meta.url), 'utf8');
+const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const streamlitSource = readFileSync(new URL('../../app.py', import.meta.url), 'utf8');
 
 function extractBetween(source, start, end) {
@@ -16,6 +17,11 @@ function extractBetween(source, start, end) {
 const targetSafetyNotices = [
   extractBetween(streamlitSource, '# MOD-05: 목표 V 안전 조정 안내', '        st.markdown("**매수/매도 임계 참고:**")'),
   extractBetween(reactSource, '{/* Target V safety adjustment notice */}', '      {/* Trade Signals'),
+];
+
+const visibilitySurfaces = [
+  extractBetween(streamlitSource, 'cycle_status = "매수 구간 진입"', '        # 매수/매도 신호 카드'),
+  extractBetween(reactSource, 'const cycleStatus = canBuyNow', '      {/* Target V safety adjustment notice */}'),
 ];
 
 const forbiddenUserCopy = [
@@ -56,4 +62,20 @@ test('target safety notice uses Toss-like plain Korean on both app surfaces', ()
       assert.match(notice, pattern);
     }
   }
+});
+
+test('cycle cockpit explains no-trade waiting and official mode on both surfaces', () => {
+  for (const surface of visibilitySurfaces) {
+    assert.match(surface, /밴드\s*안쪽\s*대기/);
+    assert.match(surface, /첫\s*매수/);
+    assert.match(surface, /첫\s*매도/);
+    assert.match(surface, /OFFICIAL\s*±15%/);
+    assert.match(surface, /Band\s*[÷/]\s*현재\s*보유주식/);
+  }
+});
+
+test('legacy React storage migration resets v3.1 adaptive default to official mode', () => {
+  assert.match(appSource, /LEGACY_STORAGE_KEYS\s*=\s*\['vr-simulator-state-v3\.1\.2'\]/);
+  assert.match(appSource, /resetAdaptiveDefault:\s*key\s*!==\s*STORAGE_KEY/);
+  assert.match(appSource, /v3\.1\.x auto-persisted adaptiveBandEnabled=true/);
 });

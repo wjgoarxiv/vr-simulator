@@ -75,7 +75,7 @@ function validateDomain(parsed, rowIndex) {
 
   const nonNegativeColumns = [
     'cycle_num', 'V_target', 'LBand', 'HBand', 'shares_end',
-    'pool_end_before_deposit', 'deposit_next', 'E_calc', 'V_i',
+    'pool_end_before_deposit', 'E_calc', 'V_i',
   ];
 
   const negativeColumn = nonNegativeColumns.find((col) => parsed[col] < 0);
@@ -85,6 +85,10 @@ function validateDomain(parsed, rowIndex) {
 
   if (parsed.LBand > parsed.HBand) {
     return buildError("'LBand' 값은 'HBand'보다 클 수 없습니다.", rowIndex);
+  }
+
+  if (parsed.deposit_next < -parsed.pool_end_before_deposit) {
+    return buildError("'deposit_next' 인출금은 'pool_end_before_deposit' 예수금을 초과할 수 없습니다.", rowIndex);
   }
 
   return null;

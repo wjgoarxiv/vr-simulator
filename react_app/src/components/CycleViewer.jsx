@@ -58,14 +58,14 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
     buyStatusText = '기다리는 중';
   }
 
-  let sellSignalClass, sellStatusText, sellGap;
+  let sellSignalClass, sellStatusText, sellGap, canSellNow = false;
   if (sellTargetPrice === 0) {
     sellSignalClass = 'signal-disabled';
     sellStatusText = '보유량 부족';
     sellGap = 0;
   } else {
     sellGap = lastPrice > 0 ? ((sellTargetPrice - lastPrice) / lastPrice) * 100 : 0;
-    const canSellNow = lastPrice >= sellTargetPrice;
+    canSellNow = lastPrice >= sellTargetPrice;
     if (canSellNow) {
       sellSignalClass = 'signal-sell-active';
       sellStatusText = '지금 매도 가능';
@@ -85,6 +85,26 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
   const lowerRatio = activeState.band_lower_ratio ?? 0.85;
   const upperRatio = activeState.band_upper_ratio ?? 1.15;
   const directionText = { over: '목표>평가금', under: '평가금>목표', neutral: '균형' }[divergenceDirection] ?? '균형';
+  const cycleAdaptiveBandEnabled = Boolean(activeState.adaptive_band_enabled);
+  const officialMode = !cycleAdaptiveBandEnabled;
+  const noImmediateTrade = !canBuyNow && !canSellNow;
+  const triggerSpan = sellTargetPrice > buyTargetPrice ? sellTargetPrice - buyTargetPrice : 0;
+  const triggerPosition = triggerSpan > 0
+    ? Math.min(Math.max(((lastPrice - buyTargetPrice) / triggerSpan) * 100, 0), 100)
+    : 50;
+  const cycleStatus = canBuyNow
+    ? '매수 구간 진입'
+    : canSellNow
+    ? '매도 구간 진입'
+    : '밴드 안쪽 대기';
+  const cycleStatusTone = canBuyNow ? 'text-accent-green' : canSellNow ? 'text-accent-red' : 'text-accent-cyan';
+  const waitMessage = sellTargetPrice > 0
+    ? '현재가는 첫 매수·첫 매도 지정가 사이에 있어 이번 사이클은 대기 상태입니다.'
+    : '현재가는 첫 매수 지정가보다 위에 있고, 매도 기준은 보유 주식이 생긴 뒤 표시됩니다.';
+  const buyDistanceText = canBuyNow ? '매수 조건 충족' : `${Math.max(buyGap, 0).toFixed(1)}% 하락 시 첫 매수`;
+  const sellDistanceText = sellTargetPrice > 0
+    ? (canSellNow ? '매도 조건 충족' : `${Math.max(sellGap, 0).toFixed(1)}% 상승 시 첫 매도`)
+    : '보유량 부족';
 
   // Buy/sell tables
   const buyPool = poolStart;
@@ -126,6 +146,57 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
         <div className="metric-cell">
           <div className="data-value-md font-mono text-accent-red">${fmt(HBand)}</div>
           <div className="data-label">HBand</div>
+        </div>
+      </div>
+
+      {/* Official VR cockpit */}
+      <div className="surface-panel overflow-hidden border-accent-cyan/20">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="data-label mb-1">이번 사이클 상태</div>
+            <div className={`font-sans text-lg font-semibold ${cycleStatusTone}`}>{cycleStatus}</div>
+            <div className="mt-1 text-xs leading-relaxed text-tx-secondary">
+              {noImmediateTrade
+                ? waitMessage
+                : '현재가가 공식 VR 지정가 조건에 닿았습니다. 실제 주문 가능 여부는 증권사와 예약 주문 상태를 확인하세요.'}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 font-mono text-[11px] uppercase tracking-wider">
+            <span className="rounded-sm border border-accent-cyan/30 bg-accent-cyan/10 px-2 py-1 text-accent-cyan">
+              {officialMode ? 'OFFICIAL ±15%' : 'ADVANCED BAND'}
+            </span>
+            <span className="rounded-sm border border-border-default bg-surface-3 px-2 py-1 text-tx-secondary">
+              PRE-TRADE SHARE BASIS
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="mb-2 flex justify-between font-mono text-[11px] text-tx-muted">
+            <span>BUY ${fmt(buyTargetPrice)}</span>
+            <span>LAST ${fmt(lastPrice)}</span>
+            <span>SELL {sellTargetPrice > 0 ? `$${fmt(sellTargetPrice)}` : '—'}</span>
+          </div>
+          <div className="relative h-2 overflow-hidden rounded-sm bg-surface-0 ring-1 ring-border-default">
+            <div className="absolute inset-y-0 left-0 w-1/2 bg-accent-green/10" />
+            <div className="absolute inset-y-0 right-0 w-1/2 bg-accent-red/10" />
+            <div
+              className="absolute top-1/2 h-4 w-px -translate-y-1/2 bg-accent-cyan shadow-glow-cyan"
+              style={{ left: `${triggerPosition}%` }}
+            />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 font-sans text-xs text-tx-secondary">
+            <div className="rounded-sm border border-accent-green/20 bg-accent-green/5 px-2 py-1">
+              <span className="text-accent-green">매수 거리</span> · {buyDistanceText}
+            </div>
+            <div className="rounded-sm border border-accent-red/20 bg-accent-red/5 px-2 py-1 text-right">
+              <span className="text-accent-red">매도 거리</span> · {sellDistanceText}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-sm border border-border-default bg-surface-0 px-3 py-2 font-mono text-[11px] text-tx-muted">
+          V₂ = V₁ + Pool/G + (E−V₁)/(2√G) + 적립/인출금 · L/H = 0.85V / 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
         </div>
       </div>
 
@@ -195,7 +266,7 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
       )}
 
       {/* Adaptive Band Status */}
-      {(activeState.adaptive_band_enabled || adaptiveBandEnabled) && (
+      {cycleAdaptiveBandEnabled && (
         <div className="surface-panel">
           <div className="data-label mb-2">적응형 밴드 상태</div>
           <div className="metric-strip">

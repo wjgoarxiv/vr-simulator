@@ -61,13 +61,12 @@ export default function Sidebar({
               />
             </div>
             <div>
-              <label className="data-label block mb-1">기본 적립금 ($)</label>
+              <label className="data-label block mb-1">기본 적립/인출금 ($)</label>
               <input
                 type="number"
                 className="input-field"
                 value={defaultDeposit}
                 onChange={(e) => setDefaultDeposit(parseFloat(e.target.value) || 0)}
-                min={0}
                 step={1}
               />
             </div>
@@ -83,7 +82,7 @@ export default function Sidebar({
               <span className="font-mono text-sm text-accent-cyan">{currentG}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="data-label self-center">현재 적립금</span>
+              <span className="data-label self-center">현재 적립/인출금</span>
               <span className="font-mono text-sm text-accent-cyan">
                 ${Number(defaultDeposit).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -94,7 +93,7 @@ export default function Sidebar({
 
       {/* 적응형 밴드 */}
       <div className="terminal-divider">
-        <span className="terminal-divider-label">ADAPTIVE BAND</span>
+        <span className="terminal-divider-label">CALC MODE</span>
       </div>
 
       <div className="surface-panel">
@@ -108,13 +107,13 @@ export default function Sidebar({
         >
           <span className={adaptiveBandEnabled ? 'status-led-on' : 'status-led-off'} />
           <span className="font-mono text-xs uppercase tracking-wider text-tx-primary">
-            ADAPTIVE BAND
+            ADVANCED BAND
           </span>
         </div>
         <p className="text-xs text-tx-muted mt-2">
           {adaptiveBandEnabled
-            ? `V/E 괴리율 ${VE_DIVERGENCE_THRESHOLD * 100}% 초과 시 밴드 자동 압축 (최대 \u00b1${((MAX_BAND_UPPER - 1.0) * 100).toFixed(0)}%)`
-            : '기본 거래 범위 \u00b115% 적용 (완화 없음)'}
+            ? `Advanced: V/E 괴리율 ${VE_DIVERGENCE_THRESHOLD * 100}% 초과 시 밴드 자동 압축 (최대 \u00b1${((MAX_BAND_UPPER - 1.0) * 100).toFixed(0)}%)`
+            : 'Official: 기본 거래 범위 \u00b115%, V/E 상한 없음'}
         </p>
       </div>
 
@@ -195,7 +194,7 @@ export default function Sidebar({
             </div>
 
             <div className="surface-panel mt-1">
-              <p className="data-label mb-2">VR 공식 (변형)</p>
+              <p className="data-label mb-2">VR 공식</p>
               <p className="font-mono text-xs text-accent-cyan leading-relaxed">
                 V_f = V_i + pool/G + (E - V_i) / (2&radic;G) + deposit
               </p>
@@ -205,7 +204,8 @@ export default function Sidebar({
                 <span><span className="text-tx-primary font-medium">pool</span>: 이전 사이클 종료 예수금 (적립금 추가 전)</span>
                 <span><span className="text-tx-primary font-medium">G</span>: 그라데이션 값</span>
                 <span><span className="text-tx-primary font-medium">E</span>: 이전 사이클 종료 평가금</span>
-                <span><span className="text-tx-primary font-medium">deposit</span>: 다음 사이클 추가 적립금</span>
+                <span><span className="text-tx-primary font-medium">deposit</span>: 다음 사이클 적립금 또는 인출금</span>
+                <span><span className="text-tx-primary font-medium">첫 주문가</span>: Band ÷ 현재 보유주식수</span>
               </div>
             </div>
           </div>

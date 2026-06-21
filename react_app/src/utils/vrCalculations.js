@@ -5,7 +5,6 @@ import {
   MAX_BAND_UPPER,
   VE_DIVERGENCE_THRESHOLD,
   VE_MAX_DIVERGENCE,
-  MAX_V_E_RATIO,
 } from '../constants.js';
 
 /**
@@ -29,12 +28,7 @@ export function calculateNextV(V_i, poolBeforeDeposit, E_calc, G, depositNext) {
   const term2 = poolBeforeDeposit / G;
   const term3 = (E_calc - V_i) / (2 * Math.sqrt(G));
   const term4 = depositNext;
-  let V_f = term1 + term2 + term3 + term4;
-
-  // V3.1.1: V growth cap - suppress V if it exceeds E excessively
-  if (E_calc > 0 && V_f > E_calc * MAX_V_E_RATIO) {
-    V_f = E_calc * MAX_V_E_RATIO;
-  }
+  const V_f = term1 + term2 + term3 + term4;
 
   return Math.max(V_f, 0.01);
 }
@@ -144,7 +138,7 @@ export function calculateAdaptiveBands(V_target, E_calc) {
 }
 
 /**
- * Calculate simple buy/sell target prices (+/- 1 share basis).
+ * Calculate simple buy/sell trigger prices on the official VR pre-trade share basis.
  *
  * @param {number} sharesStart - Current number of shares
  * @param {number} LBand - Lower band value
@@ -153,14 +147,9 @@ export function calculateAdaptiveBands(V_target, E_calc) {
  */
 export function calculateSimpleTargets(sharesStart, LBand, HBand) {
   const s = Math.max(0, Math.floor(sharesStart));
-  const buyTargetPrice = (s + 1) > 0 ? LBand / (s + 1) : 0;
-
-  let sellTargetPrice = 0;
-  if (s > 1) {
-    sellTargetPrice = HBand / (s - 1);
-  } else if (s === 1) {
-    sellTargetPrice = s > 0 ? HBand / s : 0;
-  }
+  const buyDenominator = s > 0 ? s : 1;
+  const buyTargetPrice = buyDenominator > 0 ? LBand / buyDenominator : 0;
+  const sellTargetPrice = s > 0 ? HBand / s : 0;
 
   return {
     buyTargetPrice: Math.round(buyTargetPrice * 100) / 100,
@@ -188,8 +177,9 @@ export function calculateBuyTable(LBand, currentShares, pool, currentPrice, maxL
   }
 
   for (let i = 0; i < maxLevels; i++) {
+    const denominator = s > 0 ? s : 1;
     const nextShares = s + 1;
-    const limitPrice = nextShares > 0 ? LBand / nextShares : 0;
+    const limitPrice = denominator > 0 ? LBand / denominator : 0;
     if (limitPrice <= 0 || remainingCash < limitPrice) {
       break;
     }
@@ -227,9 +217,8 @@ export function calculateSellTable(HBand, currentShares, currentPrice, pool, max
   const levels = Math.min(s, maxLevels);
   for (let i = 0; i < levels; i++) {
     const targetAfterSell = s - 1;
-    const threshold = targetAfterSell === 0 ? HBand : HBand / targetAfterSell;
-    // Sell proceeds estimated at current price (actual sale at threshold or above)
-    const sellProceeds = currentPrice > 0 ? currentPrice : threshold;
+    const threshold = HBand / s;
+    const sellProceeds = threshold;
     cumulativeProceeds += sellProceeds;
     sellTable.push({
       targetShares: targetAfterSell,
@@ -339,14 +328,19 @@ export function calculatePortfolioSummary(history) {
   const first = history[0];
   const last = history[history.length - 1];
 
+  const firstPoolBeforeDeposit = first.pool_end_before_deposit ?? 0;
+  const firstPool = firstPoolBeforeDeposit + (first.deposit_next ?? 0);
+  const lastPool = (last.pool_end_before_deposit ?? 0) + (last.deposit_next ?? 0);
   const initialE = first.E_calc ?? 0;
   const currentE = last.E_calc ?? 0;
+  const initialAccountValue = initialE + firstPool;
+  const currentAccountValue = currentE + lastPool;
   const initialV = first.V_target ?? 0;
   const currentV = last.V_target ?? 0;
   const totalDeposits = history.reduce((sum, h) => sum + (h.deposit_next ?? 0), 0);
 
-  const totalInvested = initialE + totalDeposits;
-  const roi = totalInvested > 0 ? ((currentE - totalInvested) / totalInvested) * 100 : 0;
+  const totalInvested = initialE + firstPoolBeforeDeposit + totalDeposits;
+  const roi = totalInvested > 0 ? ((currentAccountValue - totalInvested) / totalInvested) * 100 : 0;
   const vGrowth = initialV > 0 ? ((currentV - initialV) / initialV) * 100 : 0;
 
   let avgDivergence = 0;
@@ -364,7 +358,13 @@ export function calculatePortfolioSummary(history) {
     totalCycles: history.length,
     initialE,
     currentE,
+    initialPool: firstPool,
+    initialPoolBeforeDeposit: firstPoolBeforeDeposit,
+    currentPool: lastPool,
+    initialAccountValue,
+    currentAccountValue,
     totalDeposits,
+    totalInvested,
     roi,
     vGrowth,
     avgDivergence,
@@ -386,12 +386,11 @@ export function calculatePortfolioSummary(history) {
  * @returns {{ capActive: boolean, uncappedV: number|null }}
  */
 export function detectVECapActivation(V_next, E_calc, V_i, pool, G, deposit) {
-  const capActive = E_calc > 0 && Math.abs(V_next - E_calc * MAX_V_E_RATIO) < 0.01;
-
-  let uncappedV = null;
-  if (capActive && G > 0) {
-    uncappedV = V_i + pool / G + (E_calc - V_i) / (2 * Math.sqrt(G)) + deposit;
-  }
-
-  return { capActive, uncappedV };
+  void V_next;
+  void E_calc;
+  void V_i;
+  void pool;
+  void G;
+  void deposit;
+  return { capActive: false, uncappedV: null };
 }

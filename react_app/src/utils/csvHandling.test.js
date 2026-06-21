@@ -47,6 +47,21 @@ test('parseCSV validates domain constraints with row context', () => {
   assert.match(result.error, /price_end/);
 });
 
+test('parseCSV allows negative deposit_next for withdrawal-style VR', () => {
+  const result = parseCSV(`${header}\n0,100,85,115,2,50,-25,40,10,80,100`);
+
+  assert.equal(result.success, true);
+  assert.equal(result.records[0].deposit_next, -25);
+});
+
+test('parseCSV rejects withdrawals larger than available pool', () => {
+  const result = parseCSV(`${header}\n0,100,85,115,2,50,-51,40,10,80,100`);
+
+  assert.equal(result.success, false);
+  assert.match(result.error, /deposit_next/);
+  assert.match(result.error, /pool_end_before_deposit/);
+});
+
 test('parseCSV preserves optional adaptive columns with strict typing', () => {
   const csv = `${header},adaptive_band_enabled,ve_divergence_ratio\n${validRow},true,0.12`;
   const result = parseCSV(csv);

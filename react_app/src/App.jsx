@@ -8,7 +8,8 @@ import CycleInput from './components/CycleInput';
 
 const ResultsDashboard = lazy(() => import('./components/ResultsDashboard'));
 
-const STORAGE_KEY = 'vr-simulator-state-v3.1.2';
+const STORAGE_KEY = 'vr-simulator-state-v3.2.0';
+const LEGACY_STORAGE_KEYS = ['vr-simulator-state-v3.1.2'];
 
 const DEFAULT_STATE = {
   history: [],
@@ -17,7 +18,7 @@ const DEFAULT_STATE = {
   simulationStarted: false,
   viewCycleIndex: 0,
   tickerName: 'TQQQ',
-  adaptiveBandEnabled: true,
+  adaptiveBandEnabled: false,
 };
 
 function toFiniteNumber(value, fallback) {
@@ -25,8 +26,9 @@ function toFiniteNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function sanitizeSavedState(candidate) {
+function sanitizeSavedState(candidate, options = {}) {
   if (!candidate || typeof candidate !== 'object') return DEFAULT_STATE;
+  const { resetAdaptiveDefault = false } = options;
 
   const history = Array.isArray(candidate.history)
     ? candidate.history.map((entry) => normalizeHistoryEntry(entry)).filter(Boolean)
@@ -37,20 +39,30 @@ function sanitizeSavedState(candidate) {
   return {
     history,
     currentG: Math.max(1, toFiniteNumber(candidate.currentG, DEFAULT_STATE.currentG)),
-    defaultDeposit: Math.max(0, toFiniteNumber(candidate.defaultDeposit, DEFAULT_STATE.defaultDeposit)),
+    defaultDeposit: toFiniteNumber(candidate.defaultDeposit, DEFAULT_STATE.defaultDeposit),
     simulationStarted: Boolean(candidate.simulationStarted && history.length > 0),
     viewCycleIndex: Math.min(Math.max(requestedIndex, 0), maxIndex),
     tickerName: typeof candidate.tickerName === 'string' && candidate.tickerName.trim()
       ? candidate.tickerName.trim()
       : DEFAULT_STATE.tickerName,
-    adaptiveBandEnabled: Boolean(candidate.adaptiveBandEnabled ?? DEFAULT_STATE.adaptiveBandEnabled),
+    adaptiveBandEnabled: resetAdaptiveDefault
+      ? DEFAULT_STATE.adaptiveBandEnabled
+      : Boolean(candidate.adaptiveBandEnabled ?? DEFAULT_STATE.adaptiveBandEnabled),
   };
 }
 
 function loadState() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? sanitizeSavedState(JSON.parse(saved)) : DEFAULT_STATE;
+    const storageKeys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
+    for (const key of storageKeys) {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        // v3.1.x auto-persisted adaptiveBandEnabled=true as its default. On legacy
+        // migration, reset the global toggle to the v3.2 official-VR default.
+        return sanitizeSavedState(JSON.parse(saved), { resetAdaptiveDefault: key !== STORAGE_KEY });
+      }
+    }
+    return DEFAULT_STATE;
   } catch {
     return DEFAULT_STATE;
   }

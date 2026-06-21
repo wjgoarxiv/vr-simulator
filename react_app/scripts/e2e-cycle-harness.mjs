@@ -13,7 +13,7 @@ const scenarios = [
   { label: 'balanced-start', price: 100, shares: 100, pool: 1500, deposit: 250, G: 10 },
   { label: 'drawdown-over-target', price: 62, shares: 100, pool: 5000, deposit: 250, G: 8 },
   { label: 'rebound-under-target', price: 145, shares: 112, pool: 750, deposit: 250, G: 12 },
-  { label: 'cap-pressure', price: 40, shares: 40, pool: 25000, deposit: 1000, G: 2 },
+  { label: 'high-target-official-mode', price: 40, shares: 40, pool: 25000, deposit: 1000, G: 2 },
 ];
 
 let active = normalizeHistoryEntry({
@@ -82,6 +82,6 @@ for (let i = 1; i < scenarios.length; i += 1) {
   });
 }
 
-assert.equal(rows.some((row) => row.cap), true, 'expected one cap-pressure scenario');
+assert.equal(rows.some((row) => row.cap), false, 'official VR mode should not cap next V');
 console.table(rows);
-console.log(`E2E PASS: simulated ${rows.length} adaptive cycles with finite bands, cap metadata, and buy/sell tables.`);
+console.log(`E2E PASS: simulated ${rows.length} adaptive cycles with finite bands, official uncapped V, and buy/sell tables.`);

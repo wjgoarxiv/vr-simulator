@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.1.4"
+VR_VERSION = "3.2.0"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -19,7 +19,7 @@ MIN_BAND_LOWER = 0.92  # 최소(압축 시) LBand 비율
 MAX_BAND_UPPER = 1.08  # 최대(압축 시) HBand 비율
 VE_DIVERGENCE_THRESHOLD = 0.05  # V/E 괴리율 임계값 (5% 초과 시 압축 시작)
 VE_MAX_DIVERGENCE = 0.50  # 최대 괴리율 (50%에서 최대 압축)
-MAX_V_E_RATIO = 1.15  # V/E 비율 상한: V가 E의 115%를 초과하지 않도록 제한
+MAX_V_E_RATIO = 1.15  # 레거시 안전 안내 호환용 상수 (공식 VR 계산에는 적용하지 않음)
 
 # --- 페이지 설정 ---
 st.set_page_config(page_title=f"VR 시뮬레이터 V{VR_VERSION}", layout="wide", page_icon="📊")
@@ -206,14 +206,14 @@ if 'view_cycle_index' not in st.session_state:
 if 'ticker_name' not in st.session_state:
     st.session_state.ticker_name = "TQQQ"
 if 'adaptive_band_enabled' not in st.session_state:
-    st.session_state.adaptive_band_enabled = True
+    st.session_state.adaptive_band_enabled = False
 
 # =============================================================================
 # 핵심 계산 함수
 # =============================================================================
 
 def calculate_v_next(V_i, pool_before_deposit, E_calc, G, deposit_next):
-    """다음 목표 가치(V_f) 계산 - VR 공식 (변형)
+    """다음 목표 가치(V_f) 계산 - 공식 VR 실력공식
     
     V_f = V_i + pool_prev/G + (E - V_i)/(2*sqrt(G)) + deposit_next
     """
@@ -225,9 +225,6 @@ def calculate_v_next(V_i, pool_before_deposit, E_calc, G, deposit_next):
         term3 = (E_calc - V_i) / (2 * math.sqrt(G))
         term4 = deposit_next
         V_f = term1 + term2 + term3 + term4
-        # V3.1.1: V 성장 상한 - V가 E를 과도하게 초과하면 억제
-        if E_calc > 0 and V_f > E_calc * MAX_V_E_RATIO:
-            V_f = E_calc * MAX_V_E_RATIO
         return max(V_f, 0.01)
     except Exception as e:
         st.error(f"V 계산 오류: {e}")
@@ -263,7 +260,7 @@ def calculate_band_compression_factor(V_target, E_calc):
 def calculate_bands(V_target, E_calc=None, use_adaptive=None):
     """LBand, HBand 계산 (적응형 밴드 지원)"""
     if use_adaptive is None:
-        use_adaptive = st.session_state.get('adaptive_band_enabled', True)
+        use_adaptive = st.session_state.get('adaptive_band_enabled', False)
 
     if not use_adaptive or E_calc is None or E_calc <= 0:
         return BASE_BAND_LOWER * V_target, BASE_BAND_UPPER * V_target
@@ -310,15 +307,11 @@ def calculate_adaptive_bands(V_target, E_calc):
 
 
 def calculate_simple_targets(shares_start, LBand, HBand):
-    """단순 매수/매도 임계가 계산 (+/- 1주 기준)"""
+    """공식 VR의 체결 전 보유수 기준 단순 매수/매도 임계가 계산"""
     s = max(0, int(math.floor(shares_start)))
-    buy_target_price = LBand / (s + 1) if (s + 1) > 0 else 0
-    
-    sell_target_price = 0
-    if s > 1:
-        sell_target_price = HBand / (s - 1)
-    elif s == 1:
-        sell_target_price = HBand / s if s > 0 else 0
+    buy_denominator = s if s > 0 else 1
+    buy_target_price = LBand / buy_denominator if buy_denominator > 0 else 0
+    sell_target_price = HBand / s if s > 0 else 0
     
     return round(buy_target_price, 2), round(sell_target_price, 2)
 
@@ -333,8 +326,9 @@ def calculate_buy_table(LBand, current_shares, pool, current_price, max_levels=5
         return buy_table
     
     for _ in range(max_levels):
+        denominator = s if s > 0 else 1
         next_shares = s + 1
-        limit_price = LBand / next_shares if next_shares > 0 else 0
+        limit_price = LBand / denominator if denominator > 0 else 0
         if limit_price <= 0 or remaining_cash < limit_price:
             break
         remaining_cash -= limit_price
@@ -359,9 +353,8 @@ def calculate_sell_table(HBand, current_shares, current_price, pool, max_levels=
     
     for _ in range(min(s, max_levels)):
         target_after_sell = s - 1
-        threshold = HBand if target_after_sell == 0 else (HBand / target_after_sell)
-        # 매도 시 현재가로 팔면 얻는 수익 (실제로는 threshold 이상에서 팔지만 현재가 기준 추정)
-        sell_proceeds = current_price if current_price > 0 else threshold
+        threshold = HBand / s
+        sell_proceeds = threshold
         cumulative_proceeds += sell_proceeds
         sell_table.append({
             '목표 주식수': target_after_sell,
@@ -604,12 +597,17 @@ def calculate_portfolio_summary(history):
     
     initial_e = df.iloc[0].get('E_calc', 0)
     current_e = df.iloc[-1].get('E_calc', 0)
+    initial_pool_before_deposit = df.iloc[0].get('pool_end_before_deposit', 0)
+    initial_pool = initial_pool_before_deposit + df.iloc[0].get('deposit_next', 0)
+    current_pool = df.iloc[-1].get('pool_end_before_deposit', 0) + df.iloc[-1].get('deposit_next', 0)
+    initial_account_value = initial_e + initial_pool
+    current_account_value = current_e + current_pool
     initial_v = df.iloc[0].get('V_target', 0)
     current_v = df.iloc[-1].get('V_target', 0)
     total_deposits = df['deposit_next'].sum() if 'deposit_next' in df.columns else 0
     
-    total_invested = initial_e + total_deposits
-    roi = ((current_e - total_invested) / total_invested * 100) if total_invested > 0 else 0
+    total_invested = initial_e + initial_pool_before_deposit + total_deposits
+    roi = ((current_account_value - total_invested) / total_invested * 100) if total_invested > 0 else 0
     v_growth = ((current_v - initial_v) / initial_v * 100) if initial_v > 0 else 0
     
     avg_divergence = 0
@@ -623,7 +621,13 @@ def calculate_portfolio_summary(history):
         'total_cycles': len(df),
         'initial_e': initial_e,
         'current_e': current_e,
+        'initial_pool': initial_pool,
+        'initial_pool_before_deposit': initial_pool_before_deposit,
+        'current_pool': current_pool,
+        'initial_account_value': initial_account_value,
+        'current_account_value': current_account_value,
         'total_deposits': total_deposits,
+        'total_invested': total_invested,
         'roi': roi,
         'v_growth': v_growth,
         'avg_divergence': avg_divergence,
@@ -648,26 +652,26 @@ with st.sidebar:
     if not st.session_state.simulation_started:
         st.session_state.ticker_name = st.text_input("분석 종목명/티커", value=st.session_state.ticker_name)
         st.session_state.current_G = st.number_input("초기 G 값 (Gradient)", min_value=1.0, value=st.session_state.current_G, step=0.1, help="VR 공식의 안정성 계수 (10~20 추천)")
-        st.session_state.default_deposit = st.number_input("기본 적립금 ($)", min_value=0.0, value=st.session_state.default_deposit, step=1.0, help="매 사이클 종료 후 추가될 기본 예수금")
+        st.session_state.default_deposit = st.number_input("기본 적립/인출금 ($)", value=st.session_state.default_deposit, step=1.0, help="매 사이클 종료 후 추가될 기본 예수금입니다. 인출식 VR은 음수로 입력할 수 있습니다.")
     else:
         st.write(f"**분석 종목:** {st.session_state.ticker_name}")
         st.write(f"**현재 기준 G 값:** {st.session_state.current_G}")
-        st.write(f"**현재 기준 적립금:** ${st.session_state.default_deposit:,.2f}")
+        st.write(f"**현재 기준 적립/인출금:** ${st.session_state.default_deposit:,.2f}")
 
     st.divider()
-    st.header("📐 적응형 밴드")
+    st.header("📐 계산 모드")
     adaptive_enabled_ui = st.toggle(
-        "적응형 밴드 활성화",
+        "확장 밴드 활성화 (Advanced)",
         value=st.session_state.adaptive_band_enabled,
         key="adaptive_toggle",
-        help="목표 가치(V)와 실제 평가금(E)의 차이가 클 때, 거래 가능 범위를 자동으로 좁혀서 매수/매도가 더 쉽게 일어나도록 합니다."
+        help="공식 VR 기본값은 OFF입니다. 켜면 목표 가치(V)와 평가금(E)의 차이가 클 때 거래 가능 범위를 자동으로 좁히는 앱 확장 기능을 적용합니다."
     )
     st.session_state.adaptive_band_enabled = adaptive_enabled_ui
 
     if adaptive_enabled_ui:
-        st.caption(f"📊 목표-실제 차이 {VE_DIVERGENCE_THRESHOLD*100:.0f}% 초과 시 거래 조건 완화 | 최대 완화: ±{(MAX_BAND_UPPER-1.0)*100:.0f}% 범위")
+        st.caption(f"Advanced: 목표-실제 차이 {VE_DIVERGENCE_THRESHOLD*100:.0f}% 초과 시 거래 조건 완화 | 최대 완화: ±{(MAX_BAND_UPPER-1.0)*100:.0f}% 범위")
     else:
-        st.caption("기본 거래 범위 ±15% 적용 (완화 없음)")
+        st.caption("Official: 기본 거래 범위 ±15% 적용, V/E 상한 없음")
 
     st.divider()
     st.header("📈 미국 마켓 정보")
@@ -697,7 +701,7 @@ with st.sidebar:
         """)
 
         st.markdown(r"""
-#### Value Rebalancing (VR) 공식 (변형):
+#### Value Rebalancing (VR) 공식:
 $$
 V_f = V_i + \frac{pool_{prev}}{G} + \frac{(E - V_i)}{2\sqrt{G}} + deposit_{next}
 $$
@@ -706,7 +710,7 @@ $$
 - $pool_{prev}$: 이전 사이클 종료 시점의 예수금 (**적립금 추가 전**)
 - $G$: 그라데이션 값 (설정값)
 - $E$: 이전 사이클 종료 시점의 평가금 (최종 주식 수 × 최종 가격)
-- $deposit_{next}$: 다음 사이클 시작 시 추가될 적립금
+- $deposit_{next}$: 다음 사이클 시작 시 추가될 적립/인출금
 
 #### 매수/매도표 해석:
 - **매수표**: 이 가격 **이하**에서 매수 가능
@@ -749,6 +753,10 @@ if not st.session_state.simulation_started:
                         st.stop()
                     if (df_history['G'] < 1).any():
                         st.error("CSV 오류: 'G' 값은 1 이상이어야 합니다.")
+                        st.session_state.history = []
+                        st.stop()
+                    if (df_history['deposit_next'] < -df_history['pool_end_before_deposit']).any():
+                        st.error("CSV 오류: 'deposit_next' 인출금은 'pool_end_before_deposit' 예수금을 초과할 수 없습니다.")
                         st.session_state.history = []
                         st.stop()
                     records = df_history.to_dict('records')
@@ -869,17 +877,50 @@ if st.session_state.simulation_started and st.session_state.history:
 
         st.markdown("**매수/매도 임계 참고:**")
         buy_target_simple, sell_target_simple = calculate_simple_targets(shares_start_display, LBand_display, HBand_display)
+        buy_gap = ((last_price_display - buy_target_simple) / last_price_display * 100) if last_price_display > 0 else 0
+        can_buy_now = last_price_display <= buy_target_simple
+        sell_gap = ((sell_target_simple - last_price_display) / last_price_display * 100) if (last_price_display > 0 and sell_target_simple > 0) else 0
+        can_sell_now = sell_target_simple > 0 and last_price_display >= sell_target_simple
+        no_immediate_trade = not can_buy_now and not can_sell_now
+        cycle_status = "매수 구간 진입" if can_buy_now else ("매도 구간 진입" if can_sell_now else "밴드 안쪽 대기")
+        status_color = "#3FB950" if can_buy_now else ("#F85149" if can_sell_now else "#58A6FF")
+        mode_badge = "OFFICIAL ±15%" if not active_state.get('adaptive_band_enabled', False) else "ADVANCED BAND"
+        buy_distance = "매수 조건 충족" if can_buy_now else f"{max(buy_gap, 0):.1f}% 하락 시 첫 매수"
+        sell_distance = "매도 조건 충족" if can_sell_now else (f"{max(sell_gap, 0):.1f}% 상승 시 첫 매도" if sell_target_simple > 0 else "보유량 부족")
+        wait_message = "현재가는 첫 매수·첫 매도 지정가 사이에 있어 이번 사이클은 대기 상태입니다." if sell_target_simple > 0 else "현재가는 첫 매수 지정가보다 위에 있고, 매도 기준은 보유 주식이 생긴 뒤 표시됩니다."
 
         col_t1, col_t2 = st.columns(2)
         col_t1.metric("📉 LBand ($)", f"${LBand_display:,.2f}", help="Lower Band - 평가금이 이 값 이하로 떨어지면 매수 권장")
         col_t2.metric("📈 HBand ($)", f"${HBand_display:,.2f}", help="Higher Band - 평가금이 이 값 이상으로 오르면 매도 권장")
 
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, {status_color}14 0%, #151820 100%); border: 1px solid {status_color}55; border-left: 4px solid {status_color}; border-radius: 14px; padding: 1.1rem 1.3rem; margin: 1rem 0;">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+                <div>
+                    <div style="color:#8B949E; font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; font-weight:700;">이번 사이클 상태</div>
+                    <div style="color:{status_color}; font-size:1.35rem; font-weight:800; margin-top:0.2rem;">{cycle_status}</div>
+                    <div style="color:#8B949E; font-size:0.86rem; margin-top:0.25rem; line-height:1.55;">
+                        {wait_message if no_immediate_trade else '현재가가 공식 VR 지정가 조건에 닿았습니다. 실제 주문 가능 여부는 증권사에서 확인하세요.'}
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:flex-end;">
+                    <span style="font-family:monospace; font-size:0.72rem; color:#58A6FF; border:1px solid #58A6FF55; background:#58A6FF12; border-radius:4px; padding:0.28rem 0.45rem;">{mode_badge}</span>
+                    <span style="font-family:monospace; font-size:0.72rem; color:#8B949E; border:1px solid #30363D; background:#21262D; border-radius:4px; padding:0.28rem 0.45rem;">PRE-TRADE SHARE BASIS</span>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.55rem; margin-top:0.9rem;">
+                <div style="border:1px solid #3FB95044; background:#3FB9500D; border-radius:8px; padding:0.55rem 0.7rem; color:#8B949E; font-size:0.82rem;"><b style="color:#3FB950;">매수 거리</b> · {buy_distance}</div>
+                <div style="border:1px solid #F8514944; background:#F851490D; border-radius:8px; padding:0.55rem 0.7rem; color:#8B949E; font-size:0.82rem; text-align:right;"><b style="color:#F85149;">매도 거리</b> · {sell_distance}</div>
+            </div>
+            <div style="font-family:monospace; color:#8B949E; font-size:0.76rem; border:1px solid #30363D; background:#0D1117; border-radius:8px; padding:0.55rem 0.7rem; margin-top:0.65rem;">
+                V₂ = V₁ + Pool/G + (E−V₁)/(2√G) + 적립/인출금 · L/H = 0.85V / 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         # 매수/매도 신호 카드
         st.markdown("#### 🎯 거래 신호")
         signal_col1, signal_col2 = st.columns(2)
-
-        buy_gap = ((last_price_display - buy_target_simple) / last_price_display * 100) if last_price_display > 0 else 0
-        can_buy_now = last_price_display <= buy_target_simple
 
         with signal_col1:
             if can_buy_now:
@@ -902,9 +943,6 @@ if st.session_state.simulation_started and st.session_state.history:
 
         with signal_col2:
             if sell_target_simple > 0:
-                sell_gap = ((sell_target_simple - last_price_display) / last_price_display * 100) if last_price_display > 0 else 0
-                can_sell_now = last_price_display >= sell_target_simple
-
                 if can_sell_now:
                     sell_status, sell_icon, sell_msg = "danger", "✅", "지금 매도 가능"
                 elif sell_gap <= 5:
@@ -1012,7 +1050,9 @@ if st.session_state.simulation_started and st.session_state.history:
             st.markdown("**💰 자금 현황**")
             fund_cols = st.columns(2)
             pool_end_input = fund_cols[0].number_input("종료 시점 예수금 ($)", min_value=0.0, value=float(default_pool), step=0.01, key=f"pool_{input_cycle_num}")
-            deposit_next_input = fund_cols[1].number_input("다음 사이클 적립금 ($)", min_value=0.0, value=float(default_deposit), step=1.0, key=f"deposit_{input_cycle_num}")
+            min_deposit_next = -float(pool_end_input)
+            deposit_default = max(float(default_deposit), min_deposit_next)
+            deposit_next_input = fund_cols[1].number_input("다음 사이클 적립/인출금 ($)", min_value=min_deposit_next, value=deposit_default, step=1.0, key=f"deposit_{input_cycle_num}")
 
             st.markdown("**⚙️ 전략 설정**")
             g_input = st.number_input("적용 G 값", min_value=1.0, value=float(default_g), step=0.1, key=f"g_{input_cycle_num}")
@@ -1027,14 +1067,15 @@ if st.session_state.simulation_started and st.session_state.history:
                 E_calc = shares_end_int * price_end_input
                 V_i_calc = active_state['V_target']
 
+                if deposit_next_input < -pool_end_input:
+                    st.error("인출금은 종료 시점 예수금을 초과할 수 없습니다.")
+                    st.stop()
+
                 V_next = calculate_v_next(V_i_calc, pool_end_input, E_calc, g_input, deposit_next_input)
 
-                # MOD-05: V/E cap 작동 여부 post-hoc 감지
-                ve_cap_active = (E_calc > 0 and abs(V_next - E_calc * MAX_V_E_RATIO) < 0.01)
+                # v3.2.0: 공식 VR 모드에서는 V/E 상한을 적용하지 않는다.
+                ve_cap_active = False
                 ve_cap_uncapped = None
-                if ve_cap_active:
-                    # 보정 전 V_f 역산
-                    ve_cap_uncapped = V_i_calc + pool_end_input / g_input + (E_calc - V_i_calc) / (2 * math.sqrt(g_input)) + deposit_next_input
 
                 use_adaptive = st.session_state.get('adaptive_band_enabled', False)
                 if use_adaptive:
@@ -1083,7 +1124,7 @@ if st.session_state.simulation_started and st.session_state.history:
 
             with kpi_col1:
                 roi_delta = f"{summary['roi']:+.1f}%" if summary['roi'] != 0 else None
-                st.metric("💰 총 수익률 (ROI)", f"${summary['current_e']:,.0f}", delta=roi_delta, delta_color="normal" if summary['roi'] >= 0 else "inverse")
+                st.metric("💰 총 수익률 (ROI)", f"${summary['current_account_value']:,.0f}", delta=roi_delta, delta_color="normal" if summary['roi'] >= 0 else "inverse")
 
             with kpi_col2:
                 v_delta = f"{summary['v_growth']:+.1f}%" if summary['v_growth'] != 0 else None
@@ -1098,14 +1139,14 @@ if st.session_state.simulation_started and st.session_state.history:
 
             sub_col1, sub_col2, sub_col3, sub_col4 = st.columns(4)
             with sub_col1:
-                st.metric("💵 총 투자금", f"${summary['initial_e'] + summary['total_deposits']:,.0f}")
+                st.metric("💵 총 투자금", f"${summary['total_invested']:,.0f}")
             with sub_col2:
-                st.metric("📥 총 적립금", f"${summary['total_deposits']:,.0f}")
+                st.metric("🏦 현재 총자산", f"${summary['current_account_value']:,.0f}")
             with sub_col3:
                 divergence_status = "정상" if summary['avg_divergence'] < 5 else ("주의" if summary['avg_divergence'] < 10 else "위험")
                 st.metric("⚖️ 평균 V/E 괴리율", f"{summary['avg_divergence']:.1f}%", delta=divergence_status, delta_color="off")
             with sub_col4:
-                profit_loss = summary['current_e'] - (summary['initial_e'] + summary['total_deposits'])
+                profit_loss = summary['current_account_value'] - summary['total_invested']
                 pl_delta = f"{'+'if profit_loss>=0 else ''}{profit_loss:,.0f}$"
                 st.metric("💹 순이익", f"${profit_loss:,.0f}", delta=pl_delta, delta_color="normal" if profit_loss >= 0 else "inverse")
 
@@ -1125,7 +1166,7 @@ if st.session_state.simulation_started and st.session_state.history:
 
             rename_map = {
                 'display_cycle': '사이클', 'V_i': '시작 V', 'price_end': '종료 가격', 'shares_end': '종료 주식수',
-                'pool_end_before_deposit': '종료 예수금', 'E_calc': '평가금(E)', 'deposit_next': '다음 적립금',
+                'pool_end_before_deposit': '종료 예수금', 'E_calc': '평가금(E)', 'deposit_next': '다음 적립/인출금',
                 'G': '적용 G', 'V_target': '다음 V', 'LBand': '다음 LBand', 'HBand': '다음 HBand',
                 've_divergence_ratio': 'V/E 괴리율', 'band_compression_factor': '밴드 압축률',
                 'band_lower_ratio': 'LBand 비율', 'band_upper_ratio': 'HBand 비율'
@@ -1134,7 +1175,7 @@ if st.session_state.simulation_started and st.session_state.history:
 
             format_dict = {
                 '시작 V': '{:,.2f}', '종료 가격': '{:,.2f}', '종료 주식수': '{:.0f}', '종료 예수금': '{:,.2f}',
-                '평가금(E)': '{:,.2f}', '다음 적립금': '{:,.2f}', '적용 G': '{:.1f}',
+                '평가금(E)': '{:,.2f}', '다음 적립/인출금': '{:,.2f}', '적용 G': '{:.1f}',
                 '다음 V': '{:,.2f}', '다음 LBand': '{:,.2f}', '다음 HBand': '{:,.2f}',
                 'V/E 괴리율': '{:.1%}', '밴드 압축률': '{:.1%}', 'LBand 비율': '{:.1%}', 'HBand 비율': '{:.1%}'
             }

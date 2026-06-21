@@ -40,6 +40,7 @@ export default function CycleInput({
 
   const previewE = sharesNum * priceNum;
   const previewTotal = previewE + poolNum;
+  const withdrawalTooLarge = depositNum < -poolNum;
 
   function fmt(n, decimals = 2) {
     return Number(n).toLocaleString('en-US', {
@@ -52,6 +53,7 @@ export default function CycleInput({
     e.preventDefault();
 
     if (!activeState) return;
+    if (withdrawalTooLarge) return;
 
     const E_calc = sharesNum * priceNum;
     const V_i = activeState.V_target ?? 0;
@@ -153,16 +155,21 @@ export default function CycleInput({
           />
         </div>
         <div>
-          <div className="data-label mb-1">다음 적립금 ($)</div>
-          <input
-            type="number"
-            className="input-field"
-            value={deposit}
-            min="0"
-            step="1"
-            onChange={(e) => setDeposit(e.target.value)}
-            required
-          />
+          <div className="data-label mb-1">다음 적립/인출금 ($)</div>
+            <input
+              type="number"
+              className="input-field"
+              value={deposit}
+              min={-poolNum}
+              step="1"
+              onChange={(e) => setDeposit(e.target.value)}
+              required
+            />
+            {withdrawalTooLarge && (
+              <p className="mt-1 text-xs text-accent-red">
+                인출금은 현재 예수금 ${fmt(poolNum)}을 넘을 수 없습니다.
+              </p>
+            )}
         </div>
         <div>
           <div className="data-label mb-1">G 값</div>
@@ -188,7 +195,7 @@ export default function CycleInput({
       </div>
 
       {/* Submit */}
-      <button type="submit" className="btn-primary w-full font-mono uppercase tracking-wider">
+      <button type="submit" disabled={withdrawalTooLarge} className="btn-primary w-full font-mono uppercase tracking-wider disabled:opacity-50">
         → 계산
       </button>
     </form>

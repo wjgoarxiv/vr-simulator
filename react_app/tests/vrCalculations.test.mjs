@@ -21,26 +21,43 @@ const nearlyEqual = (actual, expected, tolerance = 1e-10) => {
   );
 };
 
-function testCalculateNextVFormulaAndCap() {
+function testCalculateNextVFormula() {
   const V_i = 1000;
   const pool = 300;
   const E = 1100;
   const G = 9;
   const deposit = 250;
-  const uncapped = calculateNextV(V_i, pool, E, G, deposit);
+  const actual = calculateNextV(V_i, pool, E, G, deposit);
   const expected = V_i + pool / G + (E - V_i) / (2 * Math.sqrt(G)) + deposit;
-  const capped = Math.min(expected, E * 1.15);
-  nearlyEqual(uncapped, capped);
+  nearlyEqual(actual, expected);
 
-  const cappedResult = calculateNextV(1000, 2000, 100, 1, 0);
-  nearlyEqual(cappedResult, 115);
-  assert.deepEqual(detectVECapActivation(cappedResult, 100, 1000, 2000, 1, 0), {
-    capActive: true,
-    uncappedV: 2550,
+  const highTargetResult = calculateNextV(1000, 2000, 100, 1, 0);
+  nearlyEqual(highTargetResult, 2550);
+  assert.deepEqual(detectVECapActivation(highTargetResult, 100, 1000, 2000, 1, 0), {
+    capActive: false,
+    uncappedV: null,
   });
 
   assert.equal(calculateNextV(123, 999, 456, 0, 111), 123);
   assert.equal(calculateNextV(-100, 0, 0, 1, 0), 0.01);
+}
+
+function testResourceGoldenFormula() {
+  const V_i = 1166.58;
+  const pool = 418.83;
+  const E = 1022.70;
+  const G = 10;
+  const deposit = 100;
+
+  nearlyEqual(round2(calculateNextV(V_i, pool, E, G, deposit)), 1285.71);
+  const bands = calculateBands(1285.71, E, false);
+  nearlyEqual(round2(bands.LBand), 1092.85);
+  nearlyEqual(round2(bands.HBand), 1478.57);
+
+  assert.deepEqual(calculateSimpleTargets(14, 1092.85, 1478.57), {
+    buyTargetPrice: 78.06,
+    sellTargetPrice: 105.61,
+  });
 }
 
 function testBandCompressionAndAdaptiveBands() {
@@ -67,23 +84,22 @@ function testBandCompressionAndAdaptiveBands() {
 
 function testTablesAndTargets() {
   assert.deepEqual(calculateSimpleTargets(3.9, 850, 1150), {
-    buyTargetPrice: round2(850 / 4),
-    sellTargetPrice: round2(1150 / 2),
+    buyTargetPrice: round2(850 / 3),
+    sellTargetPrice: round2(1150 / 3),
   });
   assert.deepEqual(calculateSimpleTargets(1, 850, 1150), {
-    buyTargetPrice: 425,
+    buyTargetPrice: 850,
     sellTargetPrice: 1150,
   });
 
   assert.deepEqual(calculateBuyTable(300, 1, 500, 100, 3), [
-    { targetShares: 2, limitPrice: 150, remainingCash: 350 },
-    { targetShares: 3, limitPrice: 100, remainingCash: 250 },
-    { targetShares: 4, limitPrice: 75, remainingCash: 175 },
+    { targetShares: 2, limitPrice: 300, remainingCash: 200 },
+    { targetShares: 3, limitPrice: 150, remainingCash: 50 },
   ]);
 
   assert.deepEqual(calculateSellTable(300, 2, 90, 10, 3), [
-    { targetShares: 1, threshold: 300, cumulativeProceeds: 100 },
-    { targetShares: 0, threshold: 300, cumulativeProceeds: 190 },
+    { targetShares: 1, threshold: 150, cumulativeProceeds: 160 },
+    { targetShares: 0, threshold: 300, cumulativeProceeds: 460 },
   ]);
 }
 
@@ -120,14 +136,17 @@ function testPortfolioSummaryUsesSnakeCaseDivergence() {
 
   assert.equal(summary.totalCycles, 2);
   assert.equal(summary.totalDeposits, 200);
-  nearlyEqual(summary.roi, ((1250 - 1200) / 1200) * 100);
+  nearlyEqual(summary.initialAccountValue, 1100);
+  nearlyEqual(summary.currentAccountValue, 1350);
+  nearlyEqual(summary.roi, ((1350 - 1200) / 1200) * 100);
   nearlyEqual(summary.vGrowth, 20);
   nearlyEqual(summary.avgDivergence, 15);
   assert.equal(summary.sharesChange, 2);
 }
 
 const tests = [
-  testCalculateNextVFormulaAndCap,
+  testCalculateNextVFormula,
+  testResourceGoldenFormula,
   testBandCompressionAndAdaptiveBands,
   testTablesAndTargets,
   testNormalizeHistoryUsesPythonCompatibleSnakeCase,

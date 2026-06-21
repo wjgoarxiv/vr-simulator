@@ -1,4 +1,4 @@
-# UI Copy Verification Report — Target Safety Notice
+# UI Copy Verification Report — V3.2.0 Official VR Copy
 
 Scope: Streamlit `app.py`, React `react_app/src/components/CycleViewer.jsx`, and built React assets after `npm run build`.
 
@@ -17,13 +17,15 @@ Scope: Streamlit `app.py`, React `react_app/src/components/CycleViewer.jsx`, and
 
 ## Verification evidence
 
-- `cd react_app && npm test` → pass, 17/17 tests.
+- `cd react_app && npm test` → pass, 21/21 tests after the final migration/withdrawal guards.
 - `cd react_app && npm run qa:matrix` → pass, 6/6 UltraQA tests.
-- `cd react_app && npm run e2e` → pass, 3 adaptive cycles with finite bands, cap metadata, buy/sell tables.
+- `cd react_app && npm run e2e` → pass, 3 cycles with finite bands, official uncapped V, and buy/sell tables.
 - `cd react_app && npm run build` → pass; Vite built production assets. Pre-existing Plotly chunk-size warning remains.
 - `cd react_app && npm run smoke` → pass; 4 built assets referenced from `react_app/dist/index.html`. Pre-existing Plotly chunk-size warning remains.
-- `python3 -m py_compile app.py generate_cover.py` → pass.
+- `python3 -m py_compile app.py generate_cover.py && python3 tests/streamlit_formula_static_test.py` → pass.
 - Forbidden-copy scan over `app.py`, `react_app/src`, and `react_app/dist` → pass.
+
+Re-run the command block above after any edit that changes copy, migration, or withdrawal validation.
 
 ## Notes
 

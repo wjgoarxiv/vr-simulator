@@ -53,7 +53,8 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
   const summary = calculatePortfolioSummary(history);
   if (!summary) return null;
 
-  const profitLoss = summary.currentE - (summary.initialE + summary.totalDeposits);
+  const totalInvested = summary.totalInvested;
+  const profitLoss = summary.currentAccountValue - totalInvested;
   const divergenceStatus =
     summary.avgDivergence < 5 ? '정상' : summary.avgDivergence < 10 ? '주의' : '위험';
 
@@ -64,7 +65,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
     { key: 'shares_end', label: '종료 주식수', format: (v) => `${Number(v).toFixed(0)}주` },
     { key: 'pool_end_before_deposit', label: '종료 예수금', format: fmt.currency },
     { key: 'E_calc', label: '평가금(E)', format: fmt.currency },
-    { key: 'deposit_next', label: '다음 적립금', format: fmt.currency },
+    { key: 'deposit_next', label: '다음 적립/인출금', format: fmt.currency },
     { key: 'G', label: '적용 G', format: fmt.number1 },
     { key: 'V_target', label: '다음 V', format: fmt.currency },
     { key: 'LBand', label: '다음 LBand', format: fmt.currency },
@@ -131,20 +132,30 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
           </div>
         </div>
 
-        {/* Row 2: Total Invested, Deposits, Avg Divergence, Net P&L */}
+        {/* Row 2: Total Invested, Net Contributions, Avg Divergence, Net P&L */}
         <div className="metric-strip">
           <div className="metric-cell">
             <div className="data-value-md">
-              ${(summary.initialE + summary.totalDeposits).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              ${totalInvested.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className="data-label mt-1">TOTAL INVESTED</div>
           </div>
 
           <div className="metric-cell">
             <div className="data-value-md">
+              ${summary.currentAccountValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </div>
+            <div className="text-xs mt-0.5 text-tx-muted">
+              E ${summary.currentE.toLocaleString('en-US', { maximumFractionDigits: 0 })} + Pool ${summary.currentPool.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </div>
+            <div className="data-label mt-1">ACCOUNT VALUE</div>
+          </div>
+
+          <div className="metric-cell">
+            <div className="data-value-md">
               ${summary.totalDeposits.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
-            <div className="data-label mt-1">DEPOSITS</div>
+            <div className="data-label mt-1">NET CONTRIBUTIONS</div>
           </div>
 
           <div className="metric-cell">
