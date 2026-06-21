@@ -17,11 +17,12 @@ export default {
           muted: '#4A5168',
         },
         accent: {
-          cyan: '#00D4FF',
-          green: '#00FF88',
-          red: '#FF3860',
-          amber: '#FFB020',
-          violet: '#8B5CF6',
+          cyan: '#39E7FF',
+          green: '#5DFFB3',
+          red: '#FF476F',
+          amber: '#FFD166',
+          violet: '#B18CFF',
+          plasma: '#FF4FD8',
         },
         glow: {
           cyan: 'rgba(0, 212, 255, 0.15)',
@@ -35,8 +36,9 @@ export default {
         },
       },
       fontFamily: {
-        mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
-        sans: ['"Noto Sans KR"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"Chakra Petch"', '"JetBrains Mono"', 'Menlo', 'monospace'],
+        sans: ['"Noto Sans KR"', '"Pretendard"', 'sans-serif'],
+        display: ['"Chakra Petch"', '"Noto Sans KR"', 'sans-serif'],
       },
       fontSize: {
         'display': ['50px', { lineHeight: '1.1', fontWeight: '800' }],
@@ -66,6 +68,9 @@ export default {
         'pulse-amber': 'pulse-glow-amber 3s ease-in-out infinite',
         'fade-in': 'fade-in 0.4s ease-out forwards',
         'slide-up': 'slide-up 0.4s ease-out forwards',
+        'orbital-scan': 'orbital-scan 9s linear infinite',
+        'aurora-drift': 'aurora-drift 28s ease-in-out infinite alternate',
+        'signal-sweep': 'signal-sweep 4.5s ease-in-out infinite',
       },
       keyframes: {
         'pulse-glow-green': {
@@ -91,6 +96,18 @@ export default {
         'slide-up': {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'orbital-scan': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
+        'aurora-drift': {
+          '0%': { transform: 'translate3d(-2%, -1%, 0) scale(1)' },
+          '100%': { transform: 'translate3d(2%, 1%, 0) scale(1.08)' },
+        },
+        'signal-sweep': {
+          '0%, 100%': { transform: 'translateX(-18%)', opacity: '0.35' },
+          '50%': { transform: 'translateX(18%)', opacity: '0.7' },
         },
       },
     },

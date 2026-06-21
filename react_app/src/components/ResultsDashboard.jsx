@@ -95,15 +95,21 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="glass-panel flex flex-col gap-4 rounded-[28px] p-4 md:p-5">
       {/* Performance KPI Section */}
       <div>
-        <div className="terminal-divider">
-          <span className="terminal-divider-label">PERFORMANCE</span>
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="data-label">PERFORMANCE FLIGHT RECORDER</div>
+            <h3 className="font-display text-3xl font-bold uppercase tracking-[-0.03em] text-tx-primary">Portfolio telemetry</h3>
+          </div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-tx-muted">
+            E + Pool account view
+          </div>
         </div>
 
         {/* Row 1: ROI, V Growth, Cycles, Shares */}
-        <div className="metric-strip mb-px">
+        <div className="metric-strip mb-2 rounded-[22px]">
           <div className="metric-cell">
             <div className={`data-value-md ${summary.roi >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
               {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
@@ -133,7 +139,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
         </div>
 
         {/* Row 2: Total Invested, Net Contributions, Avg Divergence, Net P&L */}
-        <div className="metric-strip">
+        <div className="metric-strip rounded-[22px]">
           <div className="metric-cell">
             <div className="data-value-md">
               ${totalInvested.toLocaleString('en-US', { maximumFractionDigits: 0 })}
@@ -194,7 +200,7 @@ export default function ResultsDashboard({ history, adaptiveBandEnabled }) {
 
       {/* Tab System */}
       <div>
-        <div className="tab-strip">
+        <div className="tab-strip overflow-hidden rounded-t-2xl border border-accent-cyan/10 bg-surface-0/50">
           {TABS.map((tab, i) => (
             <button
               key={tab}

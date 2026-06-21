@@ -12,7 +12,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.8+-green" /></a>
   <a href="./react_app"><img src="https://img.shields.io/badge/React-18-61dafb" /></a>
-  <a href="#-v320-changes"><img src="https://img.shields.io/badge/version-3.2.0-blueviolet" /></a>
+  <a href="#-v321-changes"><img src="https://img.shields.io/badge/version-3.2.1-blueviolet" /></a>
 </p>
 
 ---
@@ -40,6 +40,7 @@
 - **CSV 가져오기/내보내기** -- 사이클 기록 저장 및 불러오기, 유효성 검증 포함
 - **KST 마켓 상태** -- 한국 시간 기준 미국 주식 시장 상태 + 예약 매매 시간대 표시
 - **Financial cockpit UI** -- 공식/확장 모드, 트리거 거리, 공식 해석을 한 화면에서 확인
+- **Retrofuture cockpit refresh** -- React/GitHub Pages와 Streamlit 모두 어두운 HUD, 오로라/그리드 motion, 프리미엄 카드 계층으로 재정렬
 
 ## 🚀 Quick Start
 
@@ -90,6 +91,13 @@ V_f = V_i + (Pool / G) + ((E - V_i) / (2 * sqrt(G))) + Deposit
 ```
 
 보유주식이 0주인 시작 상태에서는 첫 매수를 1주 진입 기준으로 표시합니다.
+
+## 🔄 V3.2.1 Changes
+
+### V3.2.1 — Retrofuture Trading Cockpit refresh
+- React/GitHub Pages 앱을 비대칭 cockpit shell, ambient grid/aurora motion, hero HUD, orbit signal gauge 중심으로 리디자인했습니다.
+- Streamlit 앱도 동일한 색상/타이포/카드 언어와 hero cockpit을 적용해 두 표면의 시각 경험을 맞췄습니다.
+- 공식 VR 계산과 v3.2.0 검증 로직은 유지하고, 사용자에게 보이는 정보 계층과 motion polish만 강화했습니다.
 
 ## 🔄 V3.2.0 Changes
 

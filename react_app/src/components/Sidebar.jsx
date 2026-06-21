@@ -26,14 +26,18 @@ export default function Sidebar({
   } = getMarketStatus();
 
   return (
-    <aside className="space-y-1 font-sans">
+    <aside className="glass-panel space-y-2 rounded-[28px] p-4 font-sans">
+      <div className="mb-3 border-b border-accent-cyan/10 pb-3">
+        <div className="font-display text-xl font-bold uppercase tracking-[0.18em] text-accent-cyan">Control Deck</div>
+        <div className="mt-1 text-xs leading-relaxed text-tx-muted">공식 VR 엔진을 조정하는 cockpit panel</div>
+      </div>
 
       {/* 시뮬레이션 설정 */}
       <div className="terminal-divider">
         <span className="terminal-divider-label">SETTINGS</span>
       </div>
 
-      <div className="surface-panel">
+      <div className="cockpit-card">
         {!simulationStarted ? (
           <div className="flex flex-col gap-3">
             <div>
@@ -96,7 +100,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">CALC MODE</span>
       </div>
 
-      <div className="surface-panel">
+      <div className="cockpit-card">
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setAdaptiveBandEnabled(!adaptiveBandEnabled)}
@@ -122,7 +126,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">MARKET STATUS</span>
       </div>
 
-      <div className="surface-panel">
+      <div className="cockpit-card">
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <span className="data-label">KST</span>
@@ -161,7 +165,7 @@ export default function Sidebar({
         <span className="terminal-divider-label">HELP</span>
       </div>
 
-      <div className="surface-panel">
+      <div className="cockpit-card">
         <button
           type="button"
           onClick={() => setHelpOpen(!helpOpen)}

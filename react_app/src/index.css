@@ -1,17 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --cockpit-bg: #05060a;
+  --cockpit-panel: rgba(14, 17, 28, 0.78);
+  --cockpit-line: rgba(78, 231, 255, 0.18);
+  --cockpit-cyan: #39e7ff;
+  --cockpit-green: #5dffb3;
+  --cockpit-red: #ff476f;
+  --cockpit-amber: #ffd166;
+}
+
 body {
-  background-color: #07080C;
+  background-color: var(--cockpit-bg);
   background-image:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0, 212, 255, 0.03) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(139, 92, 246, 0.02) 0%, transparent 60%);
+    radial-gradient(ellipse 90% 70% at 72% 4%, rgba(57, 231, 255, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 68% 48% at 14% 88%, rgba(255, 79, 216, 0.10) 0%, transparent 62%),
+    linear-gradient(135deg, #05060a 0%, #090c15 44%, #0f1320 100%);
   color: #E8ECF4;
   font-family: 'Noto Sans KR', system-ui, sans-serif;
   line-height: 1.6;
+  min-height: 100vh;
 }
 
 /* Noise texture overlay */
@@ -35,12 +49,95 @@ body::after {
 ::selection { background: rgba(0, 212, 255, 0.2); color: #E8ECF4; }
 
 @layer components {
+  .cockpit-shell {
+    @apply relative min-h-screen overflow-hidden bg-surface-0 text-tx-primary;
+  }
+  .cockpit-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(57, 231, 255, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57, 231, 255, 0.045) 1px, transparent 1px);
+    background-size: 76px 76px;
+    mask-image: radial-gradient(circle at 50% 18%, black 0%, transparent 72%);
+  }
+  .cockpit-aurora {
+    @apply pointer-events-none fixed inset-0 z-0 animate-aurora-drift;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(57, 231, 255, 0.16), transparent 32%),
+      radial-gradient(circle at 78% 18%, rgba(255, 79, 216, 0.12), transparent 30%),
+      radial-gradient(circle at 60% 86%, rgba(93, 255, 179, 0.10), transparent 34%);
+    filter: blur(12px);
+  }
+  .cockpit-content {
+    @apply relative z-10;
+  }
+  .cockpit-header {
+    @apply sticky top-0 z-20 border-b border-accent-cyan/15 bg-surface-0/70 px-6 py-4;
+    backdrop-filter: blur(18px) saturate(150%);
+  }
+  .brand-lockup {
+    @apply font-display text-2xl font-bold uppercase tracking-[0.24em] text-accent-cyan;
+    text-shadow: 0 0 28px rgba(57, 231, 255, 0.28);
+  }
+  .glass-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(57, 231, 255, 0.16);
+    background:
+      linear-gradient(145deg, rgba(16, 22, 38, 0.88), rgba(7, 10, 18, 0.78)),
+      radial-gradient(circle at 0% 0%, rgba(57, 231, 255, 0.12), transparent 34%);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+  }
+  .glass-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.045) 42%, transparent 56%);
+    transform: translateX(-22%);
+    animation: signal-sweep 7s ease-in-out infinite;
+  }
+  .hero-cockpit {
+    @apply glass-panel rounded-[28px] p-5 md:p-7;
+  }
+  .orbit-gauge {
+    @apply relative mx-auto flex h-40 w-40 items-center justify-center rounded-full border border-accent-cyan/20 bg-surface-0/70;
+    box-shadow: inset 0 0 48px rgba(57, 231, 255, 0.08), 0 0 42px rgba(57, 231, 255, 0.09);
+  }
+  .orbit-gauge::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border-radius: 9999px;
+    border: 1px dashed rgba(57, 231, 255, 0.28);
+    animation: orbital-scan 12s linear infinite;
+  }
+  .orbit-gauge::after {
+    content: '';
+    position: absolute;
+    inset: 22px;
+    border-radius: 9999px;
+    border: 1px solid rgba(93, 255, 179, 0.16);
+  }
+  .cockpit-card {
+    @apply rounded-2xl border border-accent-cyan/10 bg-surface-1/70 p-4 shadow-[0_16px_48px_rgba(0,0,0,0.25)];
+  }
+  .motion-safe-float {
+    animation: float-panel 8s ease-in-out infinite;
+  }
+
   /* ── Surfaces ── */
   .surface-panel {
-    @apply bg-surface-2 border border-border-default rounded-sm p-3;
+    @apply bg-surface-2/80 border border-accent-cyan/10 rounded-2xl p-3;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.035), 0 16px 52px rgba(0,0,0,0.24);
   }
   .surface-elevated {
-    @apply bg-surface-3 border border-border-active rounded-sm;
+    @apply bg-surface-3/80 border border-accent-cyan/20 rounded-2xl;
   }
 
   /* ── Data Display ── */
@@ -62,7 +159,7 @@ body::after {
     @apply flex items-baseline gap-1;
   }
   .metric-strip {
-    @apply surface-panel flex divide-x divide-border-default;
+    @apply surface-panel flex divide-x divide-accent-cyan/10 overflow-hidden;
   }
   .metric-cell {
     @apply flex-1 px-3 py-2 text-center min-w-0;
@@ -112,12 +209,12 @@ body::after {
   /* ── Buttons ── */
   .btn-primary {
     @apply px-4 py-2.5 bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 font-mono text-sm
-           rounded-sm hover:bg-accent-cyan/20 hover:border-accent-cyan/50 hover:shadow-glow-cyan
+           rounded-full hover:bg-accent-cyan/20 hover:border-accent-cyan/50 hover:shadow-glow-cyan
            transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed;
   }
   .btn-secondary {
     @apply px-4 py-2 bg-surface-3 text-tx-secondary border border-border-default font-mono text-sm
-           rounded-sm hover:bg-surface-4 hover:text-tx-primary transition-colors
+           rounded-full hover:bg-surface-4 hover:text-tx-primary transition-colors
            disabled:opacity-30 disabled:cursor-not-allowed;
   }
   .btn-danger {
@@ -192,4 +289,17 @@ body::after {
   .animate-section:nth-child(3) { animation-delay: 200ms; }
   .animate-section:nth-child(4) { animation-delay: 300ms; }
   .animate-section:nth-child(5) { animation-delay: 400ms; }
+}
+
+@keyframes float-panel {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

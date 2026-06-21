@@ -1,4 +1,4 @@
-# UI Copy Verification Report — V3.2.0 Official VR Copy
+# UI Copy Verification Report — V3.2.1 Official VR Copy
 
 Scope: Streamlit `app.py`, React `react_app/src/components/CycleViewer.jsx`, and built React assets after `npm run build`.
 

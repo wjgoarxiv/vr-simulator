@@ -58,8 +58,32 @@ export default function InitialSetup({ onStart, tickerName }) {
   const startDisabled = useCSV && (!csvStatus || csvStatus.type !== 'success');
 
   return (
-    <div className="surface-panel max-w-2xl mx-auto animate-section">
-      <div className="terminal-divider">
+    <div className="hero-cockpit animate-section">
+      <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+        <div className="space-y-4">
+          <div className="inline-flex rounded-full border border-accent-cyan/20 bg-accent-cyan/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.28em] text-accent-cyan">
+            OFFICIAL VALUE REBALANCING · 2026 HUD
+          </div>
+          <div>
+            <h2 className="font-display text-4xl font-bold uppercase leading-none tracking-[-0.03em] text-tx-primary md:text-6xl">
+              Build the next cycle before the market moves.
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-tx-secondary">
+              공식 VR ±15% 밴드를 기본으로, 매수·매도 대기 상태와 다음 주문가를 cockpit처럼 한 화면에서 추적합니다.
+            </p>
+          </div>
+        </div>
+        <div className="motion-safe-float hidden lg:flex justify-center">
+          <div className="orbit-gauge">
+            <div className="text-center">
+              <div className="font-display text-4xl font-bold text-accent-cyan">VR</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-tx-muted">±15 BAND</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="terminal-divider mt-7">
         <span className="terminal-divider-label">INITIALIZE</span>
       </div>
 
@@ -174,7 +198,7 @@ export default function InitialSetup({ onStart, tickerName }) {
         type="button"
         onClick={handleStart}
         disabled={startDisabled}
-        className="btn-primary w-full mt-4 font-mono uppercase tracking-wider"
+        className="btn-primary w-full mt-5 font-mono uppercase tracking-[0.22em]"
       >
         → 시뮬레이션 시작
       </button>

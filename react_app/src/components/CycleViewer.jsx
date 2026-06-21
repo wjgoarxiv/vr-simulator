@@ -114,15 +114,23 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
   const paddedNum = String(displayCycleNum).padStart(2, '0');
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
 
       {/* Header */}
-      <h2 className="font-mono text-h2 text-accent-cyan uppercase tracking-wider">
-        CYCLE {paddedNum}
-      </h2>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="data-label">LIVE CYCLE HUD</div>
+          <h2 className="font-display text-5xl font-bold uppercase leading-none tracking-[-0.04em] text-accent-cyan md:text-7xl">
+            CYCLE {paddedNum}
+          </h2>
+        </div>
+        <div className="rounded-full border border-accent-cyan/20 bg-surface-1/80 px-4 py-2 font-mono text-xs uppercase tracking-[0.26em] text-tx-secondary">
+          {tickerName} · G {G_display.toFixed(1)} · {officialMode ? 'OFFICIAL ±15%' : 'ADVANCED BAND'}
+        </div>
+      </div>
 
       {/* KPI Strip — shares, pool, target V, G, LBand, HBand */}
-      <div className="metric-strip">
+      <div className="metric-strip rounded-[24px]">
         <div className="metric-cell">
           <div className="data-value-md font-mono">{sharesStart}</div>
           <div className="data-label">주식 수</div>
@@ -150,52 +158,52 @@ export default function CycleViewer({ activeState, displayCycleNum, tickerName, 
       </div>
 
       {/* Official VR cockpit */}
-      <div className="surface-panel overflow-hidden border-accent-cyan/20">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+      <div className="hero-cockpit overflow-hidden border-accent-cyan/20">
+        <div className="grid gap-5 lg:grid-cols-[1fr_210px] lg:items-center">
+          <div className="space-y-4">
             <div className="data-label mb-1">이번 사이클 상태</div>
-            <div className={`font-sans text-lg font-semibold ${cycleStatusTone}`}>{cycleStatus}</div>
+            <div className={`font-display text-4xl font-bold uppercase tracking-[-0.03em] md:text-6xl ${cycleStatusTone}`}>{cycleStatus}</div>
             <div className="mt-1 text-xs leading-relaxed text-tx-secondary">
               {noImmediateTrade
                 ? waitMessage
                 : '현재가가 공식 VR 지정가 조건에 닿았습니다. 실제 주문 가능 여부는 증권사와 예약 주문 상태를 확인하세요.'}
             </div>
+
+            <div>
+              <div className="mb-2 flex justify-between font-mono text-[11px] text-tx-muted">
+                <span>BUY ${fmt(buyTargetPrice)}</span>
+                <span>LAST ${fmt(lastPrice)}</span>
+                <span>SELL {sellTargetPrice > 0 ? `$${fmt(sellTargetPrice)}` : '—'}</span>
+              </div>
+              <div className="relative h-3 overflow-hidden rounded-full bg-surface-0 ring-1 ring-accent-cyan/15">
+                <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-accent-green/25 to-transparent" />
+                <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-accent-red/25 to-transparent" />
+                <div
+                  className="absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-accent-cyan shadow-glow-cyan"
+                  style={{ left: `${triggerPosition}%` }}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 font-sans text-xs text-tx-secondary">
+                <div className="rounded-2xl border border-accent-green/20 bg-accent-green/5 px-3 py-2">
+                  <span className="text-accent-green">매수 거리</span> · {buyDistanceText}
+                </div>
+                <div className="rounded-2xl border border-accent-red/20 bg-accent-red/5 px-3 py-2 text-right">
+                  <span className="text-accent-red">매도 거리</span> · {sellDistanceText}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2 font-mono text-[11px] uppercase tracking-wider">
-            <span className="rounded-sm border border-accent-cyan/30 bg-accent-cyan/10 px-2 py-1 text-accent-cyan">
-              {officialMode ? 'OFFICIAL ±15%' : 'ADVANCED BAND'}
-            </span>
-            <span className="rounded-sm border border-border-default bg-surface-3 px-2 py-1 text-tx-secondary">
-              PRE-TRADE SHARE BASIS
-            </span>
+          <div className="motion-safe-float hidden lg:block">
+            <div className="orbit-gauge">
+              <div className="text-center">
+                <div className={`font-display text-3xl font-bold ${cycleStatusTone}`}>{noImmediateTrade ? 'HOLD' : canBuyNow ? 'BUY' : 'SELL'}</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-tx-muted">VR SIGNAL</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-4">
-          <div className="mb-2 flex justify-between font-mono text-[11px] text-tx-muted">
-            <span>BUY ${fmt(buyTargetPrice)}</span>
-            <span>LAST ${fmt(lastPrice)}</span>
-            <span>SELL {sellTargetPrice > 0 ? `$${fmt(sellTargetPrice)}` : '—'}</span>
-          </div>
-          <div className="relative h-2 overflow-hidden rounded-sm bg-surface-0 ring-1 ring-border-default">
-            <div className="absolute inset-y-0 left-0 w-1/2 bg-accent-green/10" />
-            <div className="absolute inset-y-0 right-0 w-1/2 bg-accent-red/10" />
-            <div
-              className="absolute top-1/2 h-4 w-px -translate-y-1/2 bg-accent-cyan shadow-glow-cyan"
-              style={{ left: `${triggerPosition}%` }}
-            />
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 font-sans text-xs text-tx-secondary">
-            <div className="rounded-sm border border-accent-green/20 bg-accent-green/5 px-2 py-1">
-              <span className="text-accent-green">매수 거리</span> · {buyDistanceText}
-            </div>
-            <div className="rounded-sm border border-accent-red/20 bg-accent-red/5 px-2 py-1 text-right">
-              <span className="text-accent-red">매도 거리</span> · {sellDistanceText}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-3 rounded-sm border border-border-default bg-surface-0 px-3 py-2 font-mono text-[11px] text-tx-muted">
+        <div className="mt-4 rounded-2xl border border-accent-cyan/10 bg-surface-0/70 px-3 py-2 font-mono text-[11px] text-tx-muted">
           V₂ = V₁ + Pool/G + (E−V₁)/(2√G) + 적립/인출금 · L/H = 0.85V / 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
         </div>
       </div>

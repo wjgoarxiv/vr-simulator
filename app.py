@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import copy
 
 # --- VR 버전 ---
-VR_VERSION = "3.2.0"
+VR_VERSION = "3.2.1"
 
 # --- VR 파라미터 상수 ---
 BASE_BAND_LOWER = 0.85  # 기본 LBand 비율
@@ -30,50 +30,70 @@ def inject_custom_css():
     st.markdown("""
     <style>
     /* === GOOGLE FONTS === */
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
 
     /* === CSS VARIABLES === */
     :root {
-        --primary-bg: #0D1117;
-        --secondary-bg: #161B22;
-        --card-bg: #21262D;
-        --accent-bg: #30363D;
-        --text-primary: #E6EDF3;
-        --text-secondary: #8B949E;
-        --text-muted: #6E7681;
-        --accent-blue: #58A6FF;
-        --accent-green: #3FB950;
-        --accent-red: #F85149;
-        --accent-yellow: #D29922;
-        --accent-purple: #A371F7;
-        --border-color: #30363D;
-        --border-highlight: #58A6FF;
-        --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-        --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
-        --radius-md: 10px;
-        --radius-lg: 16px;
+        --primary-bg: #05060A;
+        --secondary-bg: #0A0E18;
+        --card-bg: rgba(14, 17, 28, 0.86);
+        --accent-bg: rgba(24, 32, 52, 0.92);
+        --text-primary: #EAF2F8;
+        --text-secondary: #9AA8BA;
+        --text-muted: #637085;
+        --accent-blue: #39E7FF;
+        --accent-green: #5DFFB3;
+        --accent-red: #FF476F;
+        --accent-yellow: #FFD166;
+        --accent-purple: #FF4FD8;
+        --border-color: rgba(57, 231, 255, 0.16);
+        --border-highlight: #39E7FF;
+        --shadow-md: 0 18px 54px rgba(0,0,0,0.38);
+        --shadow-lg: 0 28px 90px rgba(0,0,0,0.54);
+        --radius-md: 14px;
+        --radius-lg: 24px;
     }
 
     /* === GLOBAL STYLES === */
     .stApp {
-        background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+        background:
+            radial-gradient(circle at 80% 0%, rgba(57, 231, 255, 0.16), transparent 32%),
+            radial-gradient(circle at 10% 82%, rgba(255, 79, 216, 0.10), transparent 34%),
+            linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+    }
+
+    .stApp::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image:
+            linear-gradient(rgba(57, 231, 255, 0.052) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(57, 231, 255, 0.044) 1px, transparent 1px);
+        background-size: 76px 76px;
+        mask-image: radial-gradient(circle at 50% 18%, black 0%, transparent 72%);
+    }
+
+    .block-container {
+        max-width: 1320px;
+        padding-top: 2.4rem;
     }
 
     [data-testid="stHeader"] {
-        background: rgba(13, 17, 23, 0.8);
-        backdrop-filter: blur(12px);
+        background: rgba(5, 6, 10, 0.72);
+        backdrop-filter: blur(18px) saturate(150%);
         border-bottom: 1px solid var(--border-color);
     }
 
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+        background: linear-gradient(180deg, rgba(14, 17, 28, 0.96) 0%, rgba(5, 6, 10, 0.96) 100%);
         border-right: 1px solid var(--border-color);
     }
 
     /* === TYPOGRAPHY === */
     h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-        font-family: 'Noto Sans KR', 'Inter', sans-serif !important;
+        font-family: 'Noto Sans KR', sans-serif !important;
         font-weight: 700 !important;
         color: var(--text-primary) !important;
     }
@@ -87,12 +107,12 @@ def inject_custom_css():
     }
 
     p, span, label, .stMarkdown, div {
-        font-family: 'Noto Sans KR', 'Inter', sans-serif;
+        font-family: 'Noto Sans KR', sans-serif;
     }
 
     /* === METRIC CARDS === */
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary-bg) 100%);
+        background: linear-gradient(145deg, rgba(16, 22, 38, 0.92) 0%, rgba(7, 10, 18, 0.82) 100%);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
         padding: 1.2rem 1rem;
@@ -101,7 +121,7 @@ def inject_custom_css():
     }
 
     [data-testid="stMetric"]:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         box-shadow: var(--shadow-lg), 0 0 20px rgba(88, 166, 255, 0.1);
         border-color: var(--border-highlight);
     }
@@ -120,29 +140,30 @@ def inject_custom_css():
 
     /* === BUTTONS === */
     .stButton > button {
-        background: linear-gradient(135deg, var(--accent-blue) 0%, #1F6FEB 100%);
-        color: white !important;
-        border: none;
-        border-radius: var(--radius-md);
+        background: rgba(57, 231, 255, 0.10);
+        color: var(--accent-blue) !important;
+        border: 1px solid rgba(57, 231, 255, 0.34);
+        border-radius: 999px;
         padding: 0.6rem 1.5rem;
         font-weight: 600;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 14px rgba(88, 166, 255, 0.3);
+        box-shadow: 0 0 28px rgba(57, 231, 255, 0.12);
     }
 
     .stButton > button:hover {
-        background: linear-gradient(135deg, #1F6FEB 0%, #1158C7 100%);
+        background: rgba(57, 231, 255, 0.18);
         transform: translateY(-2px);
     }
 
     .stDownloadButton > button {
-        background: linear-gradient(135deg, var(--accent-green) 0%, #238636 100%);
-        color: white !important;
+        background: rgba(93, 255, 179, 0.12);
+        color: var(--accent-green) !important;
+        border: 1px solid rgba(93, 255, 179, 0.34);
     }
 
     /* === FORM INPUTS === */
     [data-baseweb="input"], [data-baseweb="base-input"] {
-        background-color: var(--card-bg) !important;
+        background-color: rgba(5, 6, 10, 0.68) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: var(--radius-md) !important;
     }
@@ -186,6 +207,87 @@ def inject_custom_css():
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
         padding: 1.5rem;
+    }
+
+    /* === RETROFUTURE COCKPIT COMPONENTS === */
+    .vr-hero {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(57, 231, 255, 0.18);
+        border-radius: 32px;
+        padding: 2rem;
+        margin: 0.6rem 0 1.4rem;
+        background:
+            linear-gradient(145deg, rgba(16, 22, 38, 0.92), rgba(7, 10, 18, 0.82)),
+            radial-gradient(circle at 4% 0%, rgba(57, 231, 255, 0.18), transparent 36%);
+        box-shadow: 0 30px 100px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .vr-hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.05) 45%, transparent 58%);
+        animation: vr-sweep 7s ease-in-out infinite;
+    }
+    .vr-eyebrow {
+        display: inline-flex;
+        border: 1px solid rgba(57, 231, 255, 0.24);
+        border-radius: 999px;
+        padding: 0.28rem 0.72rem;
+        color: var(--accent-blue);
+        background: rgba(57, 231, 255, 0.09);
+        font-family: 'Chakra Petch', monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .vr-hero-title {
+        margin-top: 0.7rem;
+        font-family: 'Chakra Petch', 'Noto Sans KR', sans-serif;
+        font-size: clamp(2.3rem, 5vw, 5.6rem);
+        line-height: 0.92;
+        letter-spacing: -0.055em;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .vr-hero-copy {
+        max-width: 720px;
+        margin-top: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.8;
+    }
+    .vr-orbit {
+        width: 156px;
+        height: 156px;
+        border-radius: 999px;
+        border: 1px solid rgba(57,231,255,0.24);
+        display: grid;
+        place-items: center;
+        margin-left: auto;
+        background: rgba(5, 6, 10, 0.68);
+        box-shadow: inset 0 0 48px rgba(57,231,255,0.08), 0 0 42px rgba(57,231,255,0.08);
+    }
+    .vr-status-card {
+        border-radius: 24px !important;
+        box-shadow: 0 20px 70px rgba(0,0,0,0.34);
+    }
+    @keyframes vr-sweep {
+        0%, 100% { transform: translateX(-24%); opacity: 0.35; }
+        50% { transform: translateX(20%); opacity: 0.78; }
+    }
+    @media (max-width: 760px) {
+        .vr-hero { padding: 1.35rem; border-radius: 24px; }
+        .vr-hero > div { grid-template-columns: 1fr !important; }
+        .vr-orbit { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -470,12 +572,12 @@ def plot_results_matplotlib(history_df):
     fig.patch.set_facecolor('#0D1117')
     
     colors = {
-        'v_target': '#58A6FF',
-        'e_calc': '#A371F7',
-        'lband': '#3FB950',
-        'hband': '#F85149',
+        'v_target': '#39E7FF',
+        'e_calc': '#FF4FD8',
+        'lband': '#5DFFB3',
+        'hband': '#FF476F',
         'pool': '#39D353',
-        'shares': '#D29922'
+        'shares': '#FFD166'
     }
     
     x_axis = history_df.index if history_df.index.name == 'cycle_num_display' else history_df['cycle_num']
@@ -532,8 +634,8 @@ def create_plotly_charts(history_df):
         return None, None, None, None
     
     colors = {
-        'v_target': '#58A6FF', 'e_calc': '#A371F7', 'lband': '#3FB950',
-        'hband': '#F85149', 'pool': '#39D353', 'shares': '#D29922',
+        'v_target': '#39E7FF', 'e_calc': '#FF4FD8', 'lband': '#5DFFB3',
+        'hband': '#FF476F', 'pool': '#5DFFB3', 'shares': '#FFD166',
         'bg': '#0D1117', 'paper': '#161B22', 'grid': '#30363D', 'text': '#E6EDF3'
     }
     
@@ -542,7 +644,7 @@ def create_plotly_charts(history_df):
     layout_common = dict(
         paper_bgcolor=colors['paper'],
         plot_bgcolor=colors['bg'],
-        font=dict(family='Noto Sans KR, Inter, sans-serif', color=colors['text']),
+        font=dict(family='Noto Sans KR, Chakra Petch, sans-serif', color=colors['text']),
         xaxis=dict(gridcolor=colors['grid'], linecolor=colors['grid']),
         yaxis=dict(gridcolor=colors['grid'], linecolor=colors['grid']),
         legend=dict(bgcolor='rgba(33, 38, 45, 0.9)', bordercolor=colors['grid']),
@@ -579,12 +681,12 @@ def create_plotly_charts(history_df):
 
 # --- 커스텀 UI 컴포넌트 ---
 def create_highlight_card(title, content, icon="📊", variant="info"):
-    border_colors = {"success": "#3FB950", "warning": "#D29922", "danger": "#F85149", "info": "#58A6FF"}
-    border = border_colors.get(variant, "#58A6FF")
+    border_colors = {"success": "#5DFFB3", "warning": "#FFD166", "danger": "#FF476F", "info": "#39E7FF"}
+    border = border_colors.get(variant, "#39E7FF")
     return f"""
-    <div style="background: linear-gradient(135deg, {border}15 0%, #21262D 100%); border: 1px solid {border}40; border-left: 4px solid {border}; border-radius: 12px; padding: 1.2rem 1.5rem; margin: 0.8rem 0;">
-        <div style="font-size: 1.1rem; font-weight: 700; color: #E6EDF3; margin-bottom: 0.5rem;">{icon} {title}</div>
-        <div style="color: #8B949E; line-height: 1.6;">{content}</div>
+    <div style="background: linear-gradient(145deg, {border}16 0%, rgba(14,17,28,0.92) 100%); border: 1px solid {border}44; border-left: 4px solid {border}; border-radius: 22px; padding: 1.2rem 1.5rem; margin: 0.8rem 0; box-shadow: 0 18px 54px rgba(0,0,0,0.28);">
+        <div style="font-size: 1.05rem; font-weight: 800; color: #EAF2F8; margin-bottom: 0.5rem;">{icon} {title}</div>
+        <div style="color: #9AA8BA; line-height: 1.7;">{content}</div>
     </div>
     """
 
@@ -640,8 +742,26 @@ def calculate_portfolio_summary(history):
 # =============================================================================
 # Streamlit UI 구성
 # =============================================================================
-st.title(f"VR 시뮬레이터 V{VR_VERSION}")
-st.markdown("| Written by **[Woojin Go](https://woojingo.notion.site/)**")
+st.markdown(f"""
+<div class="vr-hero">
+  <div style="display:grid; grid-template-columns:minmax(0,1fr) 180px; gap:1.4rem; align-items:center; position:relative; z-index:1;">
+    <div>
+      <div class="vr-eyebrow">OFFICIAL VALUE REBALANCING · V{VR_VERSION}</div>
+      <div class="vr-hero-title">VR Trading Cockpit</div>
+      <div class="vr-hero-copy">
+        공식 ±15% 밴드, 체결 전 보유수 기준 주문가, 그리고 대기 사이클의 이유를 한 화면에서 읽는 레버리지 ETF 밸류 리밸런싱 HUD입니다.
+      </div>
+      <div style="margin-top:0.9rem; color:#637085; font-size:0.82rem;">Written by <a href="https://woojingo.notion.site/" target="_blank" style="color:#39E7FF; text-decoration:none;">Woojin Go</a></div>
+    </div>
+    <div class="vr-orbit">
+      <div style="text-align:center;">
+        <div style="font-family:'Chakra Petch', monospace; color:#39E7FF; font-size:2.4rem; font-weight:700; line-height:1;">VR</div>
+        <div style="font-family:'Chakra Petch', monospace; color:#637085; font-size:0.66rem; letter-spacing:0.28em;">±15 BAND</div>
+      </div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 # --- 오늘 날짜 가져오기 ---
 today_date = datetime.datetime.now().strftime("%Y%m%d")
@@ -883,7 +1003,7 @@ if st.session_state.simulation_started and st.session_state.history:
         can_sell_now = sell_target_simple > 0 and last_price_display >= sell_target_simple
         no_immediate_trade = not can_buy_now and not can_sell_now
         cycle_status = "매수 구간 진입" if can_buy_now else ("매도 구간 진입" if can_sell_now else "밴드 안쪽 대기")
-        status_color = "#3FB950" if can_buy_now else ("#F85149" if can_sell_now else "#58A6FF")
+        status_color = "#5DFFB3" if can_buy_now else ("#FF476F" if can_sell_now else "#39E7FF")
         mode_badge = "OFFICIAL ±15%" if not active_state.get('adaptive_band_enabled', False) else "ADVANCED BAND"
         buy_distance = "매수 조건 충족" if can_buy_now else f"{max(buy_gap, 0):.1f}% 하락 시 첫 매수"
         sell_distance = "매도 조건 충족" if can_sell_now else (f"{max(sell_gap, 0):.1f}% 상승 시 첫 매도" if sell_target_simple > 0 else "보유량 부족")
@@ -894,25 +1014,25 @@ if st.session_state.simulation_started and st.session_state.history:
         col_t2.metric("📈 HBand ($)", f"${HBand_display:,.2f}", help="Higher Band - 평가금이 이 값 이상으로 오르면 매도 권장")
 
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, {status_color}14 0%, #151820 100%); border: 1px solid {status_color}55; border-left: 4px solid {status_color}; border-radius: 14px; padding: 1.1rem 1.3rem; margin: 1rem 0;">
+        <div class="vr-status-card" style="background: linear-gradient(145deg, {status_color}14 0%, rgba(14,17,28,0.94) 100%); border: 1px solid {status_color}55; border-left: 4px solid {status_color}; padding: 1.25rem 1.45rem; margin: 1rem 0;">
             <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
                 <div>
                     <div style="color:#8B949E; font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; font-weight:700;">이번 사이클 상태</div>
-                    <div style="color:{status_color}; font-size:1.35rem; font-weight:800; margin-top:0.2rem;">{cycle_status}</div>
+                    <div style="font-family:'Chakra Petch','Noto Sans KR',sans-serif; color:{status_color}; font-size:clamp(1.8rem, 3vw, 3.4rem); font-weight:800; margin-top:0.2rem; letter-spacing:-0.04em;">{cycle_status}</div>
                     <div style="color:#8B949E; font-size:0.86rem; margin-top:0.25rem; line-height:1.55;">
                         {wait_message if no_immediate_trade else '현재가가 공식 VR 지정가 조건에 닿았습니다. 실제 주문 가능 여부는 증권사에서 확인하세요.'}
                     </div>
                 </div>
                 <div style="display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:flex-end;">
-                    <span style="font-family:monospace; font-size:0.72rem; color:#58A6FF; border:1px solid #58A6FF55; background:#58A6FF12; border-radius:4px; padding:0.28rem 0.45rem;">{mode_badge}</span>
-                    <span style="font-family:monospace; font-size:0.72rem; color:#8B949E; border:1px solid #30363D; background:#21262D; border-radius:4px; padding:0.28rem 0.45rem;">PRE-TRADE SHARE BASIS</span>
+                    <span style="font-family:'Chakra Petch',monospace; font-size:0.72rem; color:#39E7FF; border:1px solid #39E7FF55; background:#39E7FF12; border-radius:999px; padding:0.32rem 0.62rem;">{mode_badge}</span>
+                    <span style="font-family:'Chakra Petch',monospace; font-size:0.72rem; color:#9AA8BA; border:1px solid #39E7FF22; background:#05060A99; border-radius:999px; padding:0.32rem 0.62rem;">PRE-TRADE SHARE BASIS</span>
                 </div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.55rem; margin-top:0.9rem;">
-                <div style="border:1px solid #3FB95044; background:#3FB9500D; border-radius:8px; padding:0.55rem 0.7rem; color:#8B949E; font-size:0.82rem;"><b style="color:#3FB950;">매수 거리</b> · {buy_distance}</div>
-                <div style="border:1px solid #F8514944; background:#F851490D; border-radius:8px; padding:0.55rem 0.7rem; color:#8B949E; font-size:0.82rem; text-align:right;"><b style="color:#F85149;">매도 거리</b> · {sell_distance}</div>
+                <div style="border:1px solid #5DFFB344; background:#5DFFB30D; border-radius:16px; padding:0.65rem 0.8rem; color:#9AA8BA; font-size:0.82rem;"><b style="color:#5DFFB3;">매수 거리</b> · {buy_distance}</div>
+                <div style="border:1px solid #FF476F44; background:#FF476F0D; border-radius:16px; padding:0.65rem 0.8rem; color:#9AA8BA; font-size:0.82rem; text-align:right;"><b style="color:#FF476F;">매도 거리</b> · {sell_distance}</div>
             </div>
-            <div style="font-family:monospace; color:#8B949E; font-size:0.76rem; border:1px solid #30363D; background:#0D1117; border-radius:8px; padding:0.55rem 0.7rem; margin-top:0.65rem;">
+            <div style="font-family:'Chakra Petch',monospace; color:#9AA8BA; font-size:0.76rem; border:1px solid #39E7FF22; background:#05060ACC; border-radius:16px; padding:0.6rem 0.78rem; margin-top:0.75rem;">
                 V₂ = V₁ + Pool/G + (E−V₁)/(2√G) + 적립/인출금 · L/H = 0.85V / 1.15V · 첫 주문가 = Band ÷ 현재 보유주식
             </div>
         </div>
@@ -931,13 +1051,13 @@ if st.session_state.simulation_started and st.session_state.history:
                 buy_status, buy_icon, buy_msg = "info", "📊", f"가격이 더 내려오면 매수 ({buy_gap:.1f}%)"
 
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, {'#3FB95020' if buy_status == 'success' else '#D2992220' if buy_status == 'warning' else '#58A6FF20'} 0%, #21262D 100%); border: 1px solid {'#3FB950' if buy_status == 'success' else '#D29922' if buy_status == 'warning' else '#58A6FF'}; border-radius: 12px; padding: 1.2rem;">
+            <div style="background: linear-gradient(145deg, {'#5DFFB320' if buy_status == 'success' else '#FFD16620' if buy_status == 'warning' else '#39E7FF20'} 0%, rgba(14,17,28,0.94) 100%); border: 1px solid {'#5DFFB3' if buy_status == 'success' else '#FFD166' if buy_status == 'warning' else '#39E7FF'}; border-radius: 22px; padding: 1.2rem; box-shadow:0 18px 54px rgba(0,0,0,0.30);">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.5rem;">{buy_icon}</span>
-                    <span style="color: {'#3FB950' if buy_status == 'success' else '#D29922' if buy_status == 'warning' else '#58A6FF'}; font-weight: 700;">매수 (+1주) {buy_msg}</span>
+                    <span style="color: {'#5DFFB3' if buy_status == 'success' else '#FFD166' if buy_status == 'warning' else '#39E7FF'}; font-weight: 700;">매수 (+1주) {buy_msg}</span>
                 </div>
-                <div style="color: #E6EDF3; font-size: 1.4rem; font-weight: 700; margin: 8px 0;">${buy_target_simple:,.2f}</div>
-                <div style="color: #8B949E; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {buy_gap:.1f}%</div>
+                <div style="font-family:'Chakra Petch',monospace; color: #EAF2F8; font-size: 1.55rem; font-weight: 700; margin: 8px 0;">${buy_target_simple:,.2f}</div>
+                <div style="color: #9AA8BA; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {buy_gap:.1f}%</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -951,13 +1071,13 @@ if st.session_state.simulation_started and st.session_state.history:
                     sell_status, sell_icon, sell_msg = "info", "📊", f"가격이 더 오르면 매도 ({sell_gap:.1f}%)"
 
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, {'#F8514920' if sell_status == 'danger' else '#D2992220' if sell_status == 'warning' else '#58A6FF20'} 0%, #21262D 100%); border: 1px solid {'#F85149' if sell_status == 'danger' else '#D29922' if sell_status == 'warning' else '#58A6FF'}; border-radius: 12px; padding: 1.2rem;">
+                <div style="background: linear-gradient(145deg, {'#FF476F20' if sell_status == 'danger' else '#FFD16620' if sell_status == 'warning' else '#39E7FF20'} 0%, rgba(14,17,28,0.94) 100%); border: 1px solid {'#FF476F' if sell_status == 'danger' else '#FFD166' if sell_status == 'warning' else '#39E7FF'}; border-radius: 22px; padding: 1.2rem; box-shadow:0 18px 54px rgba(0,0,0,0.30);">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                         <span style="font-size: 1.5rem;">{sell_icon}</span>
-                        <span style="color: {'#F85149' if sell_status == 'danger' else '#D29922' if sell_status == 'warning' else '#58A6FF'}; font-weight: 700;">매도 (-1주) {sell_msg}</span>
+                        <span style="color: {'#FF476F' if sell_status == 'danger' else '#FFD166' if sell_status == 'warning' else '#39E7FF'}; font-weight: 700;">매도 (-1주) {sell_msg}</span>
                     </div>
-                    <div style="color: #E6EDF3; font-size: 1.4rem; font-weight: 700; margin: 8px 0;">${sell_target_simple:,.2f}</div>
-                    <div style="color: #8B949E; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {sell_gap:.1f}%</div>
+                    <div style="font-family:'Chakra Petch',monospace; color: #EAF2F8; font-size: 1.55rem; font-weight: 700; margin: 8px 0;">${sell_target_simple:,.2f}</div>
+                    <div style="color: #9AA8BA; font-size: 0.85rem;">현재가 ${last_price_display:,.2f} | 괴리 {sell_gap:.1f}%</div>
                 </div>
                 """, unsafe_allow_html=True)
                 # V3.1.1: 매도 목표가 괴리 경고
@@ -968,7 +1088,7 @@ if st.session_state.simulation_started and st.session_state.history:
                     )
             else:
                 st.markdown("""
-                <div style="background: linear-gradient(135deg, #30363D20 0%, #21262D 100%); border: 1px solid #30363D; border-radius: 12px; padding: 1.2rem;">
+                <div style="background: linear-gradient(145deg, #39E7FF10 0%, rgba(14,17,28,0.94) 100%); border: 1px solid #39E7FF22; border-radius: 22px; padding: 1.2rem;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.5rem;">⚠️</span>
                         <span style="color: #8B949E; font-weight: 700;">매도 불가</span>
@@ -1073,7 +1193,7 @@ if st.session_state.simulation_started and st.session_state.history:
 
                 V_next = calculate_v_next(V_i_calc, pool_end_input, E_calc, g_input, deposit_next_input)
 
-                # v3.2.0: 공식 VR 모드에서는 V/E 상한을 적용하지 않는다.
+                # v3.2+: 공식 VR 모드에서는 V/E 상한을 적용하지 않는다.
                 ve_cap_active = False
                 ve_cap_uncapped = None
 

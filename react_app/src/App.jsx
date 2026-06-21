@@ -190,15 +190,16 @@ export default function App() {
   const isLatestCycle = viewCycleIndex === history.length - 1;
 
   return (
-    <div className="min-h-screen bg-surface-0">
+    <div className="cockpit-shell">
+      <div className="cockpit-aurora" />
       {/* Header */}
-      <header className="bg-surface-1 border-b border-border-default px-6 py-3">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <div className="flex items-baseline gap-3">
-            <h1 className="font-mono text-h3 uppercase tracking-wider text-accent-cyan">
+      <header className="cockpit-header">
+        <div className="mx-auto flex max-w-[1520px] items-center justify-between">
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
+            <h1 className="brand-lockup">
               VR SIMULATOR
             </h1>
-            <span className="font-mono text-xs text-tx-muted">v{VR_VERSION}</span>
+            <span className="font-mono text-xs uppercase tracking-[0.28em] text-tx-muted">v{VR_VERSION} · OFFICIAL VR COCKPIT</span>
           </div>
           {simulationStarted && (
             <button onClick={handleReset} className="btn-danger">
@@ -208,10 +209,10 @@ export default function App() {
         </div>
       </header>
 
-      <div className="max-w-[1400px] mx-auto px-4 py-4">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <div className="cockpit-content mx-auto max-w-[1520px] px-4 py-6 md:px-6 md:py-8">
+        <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
           {/* Sidebar */}
-          <aside className="lg:w-[260px] flex-shrink-0">
+          <aside className="lg:sticky lg:top-24 lg:self-start">
             <Sidebar
               simulationStarted={simulationStarted}
               tickerName={tickerName}
@@ -226,7 +227,7 @@ export default function App() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0 space-y-4">
+          <main className="min-w-0 space-y-5">
             {!simulationStarted ? (
               /* Section 1: Initial Setup */
               <InitialSetup onStart={handleStart} tickerName={tickerName} />
@@ -236,7 +237,7 @@ export default function App() {
                 {activeState && (
                   <div className="space-y-4">
                     {/* Navigation */}
-                    <div className="flex items-center justify-between">
+                    <div className="glass-panel flex items-center justify-between rounded-full px-3 py-2">
                       <button
                         onClick={goPrevious}
                         disabled={viewCycleIndex === 0}
@@ -244,7 +245,7 @@ export default function App() {
                       >
                         &larr; 이전 사이클
                       </button>
-                      <span className="font-mono text-xs uppercase tracking-wider text-tx-muted">
+                      <span className="font-display text-xs uppercase tracking-[0.34em] text-accent-cyan">
                         CYCLE {displayCycleNum} / {history.length}
                       </span>
                       <button
